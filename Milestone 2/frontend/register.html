@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Register · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body>
+<header><span class="brand">IITM · MENTOR CONNECT</span><nav class="nav"><a href="index.html">Log in</a></nav></header>
+<main><div class="login-box card"><div class="eyebrow">New account</div><h1>Register</h1>
+<form id="f" novalidate>
+<label for="role">I am a</label><select id="role"><option value="student">Student</option><option value="mentor">Mentor</option></select>
+<label for="name">Full name</label><input id="name"><label for="email">Email</label><input id="email" type="email"><label for="pw">Password (min 6 characters)</label><input id="pw" type="password" autocomplete="new-password">
+<div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Create account</button></div></form>
+<p class="muted">Mentor profiles stay pending until the coordinator verifies them.</p></div></main>
+<script src="app.js"></script><script>
+document.getElementById('f').onsubmit = e => {
+  e.preventDefault();
+  const v = k => document.getElementById(k).value.trim(), err = document.getElementById('err'), d = load();
+  const role = v('role'), name = v('name'), email = v('email').toLowerCase(), pw = document.getElementById('pw').value;
+  if (!name) return err.textContent = 'Enter your name.';
+  if (!/^\S+@\S+\.\S+$/.test(email)) return err.textContent = 'Enter a valid email.';
+  if (pw.length < 6) return err.textContent = 'Password needs at least 6 characters.';
+  if (d.users.some(u => u.email === email)) return err.textContent = 'This email is already registered.';
+  const uid = id(d); d.users.push({ id: uid, email, password: pw, name, role });
+  if (role === 'student') d.students[uid] = { programme: '', goals: '', skills: '', preferences: '', availability: '', readiness: 'unknown' };
+  else d.mentors[uid] = { qualifications: '', experience: 0, expertise: '', bio: '', status: 'pending' };
+  d.users.filter(u => u.role === 'admin').forEach(a => notify(d, a.id, `New ${role} registered: ${name}.`));
+  save(d); location.href = 'index.html';
+};
+</script></body></html>

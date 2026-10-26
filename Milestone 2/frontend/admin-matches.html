@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Matches · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
+function draw() {
+  const d = load(), students = d.users.filter(x => x.role === 'student'), mentors = d.users.filter(x => x.role === 'mentor' && d.mentors[x.id].status === 'verified');
+  app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Matches</h1>
+  <div class="card"><h2>Propose a match</h2><p class="muted">The mentor must accept before the student is told.</p><form id="f"><div class="row"><div><label for="s">Student</label><select id="s">${students.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></div>
+  <div><label for="m">Verified mentor</label><select id="m">${mentors.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></div></div>
+  <label for="n">Notes</label><input id="n" placeholder="Why this pairing?"><div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Propose match</button></div></form></div>
+  <h2 style="margin-top:24px">All matches</h2><div class="table-wrap"><table><tr><th>Student</th><th>Mentor</th><th>Status</th><th>Proposed</th><th>Change status</th></tr>${d.matches.map(m => `<tr><td>${esc(userName(d, m.studentId))}</td><td>${esc(userName(d, m.mentorId))}</td><td>${pill(m.status)}<br><span class="muted">${m.log.length} update(s)</span></td><td>${when(m.proposedAt)}</td>
+  <td>${NEXT[m.status].length ? `<select data-m="${m.id}"><option value="">Choose…</option>${NEXT[m.status].map(s => `<option>${s}</option>`).join('')}</select>` : '<span class="muted">Final</span>'}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">No matches yet.</td></tr>'}</table></div>`;
+  document.getElementById('f').onsubmit = e => {
+    e.preventDefault(); const x = load(), sid = +document.getElementById('s').value, mid = +document.getElementById('m').value, err = document.getElementById('err');
+    if (!sid || !mid) return err.textContent = 'Choose a student and a verified mentor.';
+    if (x.matches.some(m => m.studentId === sid && ['proposed', 'confirmed', 'active'].includes(m.status))) return err.textContent = 'This student already has an open match.';
+    const m = { id: id(x), studentId: sid, mentorId: mid, status: 'proposed', notes: document.getElementById('n').value.trim(), proposedAt: new Date().toISOString(), log: [{ from: '-', to: 'proposed', at: new Date().toISOString(), by: u.name }] };
+    x.matches.push(m); notify(x, mid, 'A new student match is waiting for your response.'); save(x); toast('Match proposed'); draw();
+  };
+  app.querySelectorAll('[data-m]').forEach(sel => sel.onchange = () => { if (!sel.value) return; const x = load(); setStatus(x, x.matches.find(m => m.id === +sel.dataset.m), sel.value, u.name); save(x); toast('Status updated'); draw(); });
+}
+draw();
+</script></body></html>

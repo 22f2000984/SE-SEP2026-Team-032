@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mentor profile · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('mentor'), app = document.getElementById('app');
+function draw() {
+  const d = load(), p = d.mentors[u.id], slots = d.slots.filter(s => s.mentorId === u.id);
+  app.innerHTML = `<div class="eyebrow">Mentor</div><h1>My profile ${pill(p.status)}</h1>
+  <div class="row"><div class="card"><h2>Background</h2><form id="f"><label for="qualifications">Qualifications</label><input id="qualifications" value="${esc(p.qualifications)}">
+  <label for="experience">Years of experience</label><input id="experience" type="number" min="0" max="60" value="${esc(p.experience)}"><label for="expertise">Expertise areas</label><input id="expertise" value="${esc(p.expertise)}">
+  <label for="bio">Short bio</label><textarea id="bio" rows="4">${esc(p.bio)}</textarea><div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Save profile</button></div></form></div>
+  <div class="card"><h2>Availability</h2><ul class="list">${slots.map(s => `<li>${esc(s.day)} ${esc(s.start)} to ${esc(s.end)} <button class="btn small ghost" data-x="${s.id}">Remove</button></li>`).join('') || '<li class="muted">No slots yet.</li>'}</ul>
+  <form id="sf"><label for="day">Day</label><select id="day">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(x => `<option>${x}</option>`).join('')}</select>
+  <div class="row"><div><label for="start">From</label><input id="start" type="time" value="18:00"></div><div><label for="end">To</label><input id="end" type="time" value="19:00"></div></div>
+  <div class="err" id="serr"></div><div class="actions"><button class="btn" type="submit">Add slot</button></div></form></div></div>`;
+  document.getElementById('f').onsubmit = e => {
+    e.preventDefault(); const x = load(), q = x.mentors[u.id], v = k => document.getElementById(k).value.trim();
+    if (!v('qualifications') || !v('expertise')) return document.getElementById('err').textContent = 'Qualifications and expertise are required.';
+    q.qualifications = v('qualifications'); q.experience = +v('experience') || 0; q.expertise = v('expertise'); q.bio = v('bio'); save(x); toast('Profile saved');
+  };
+  document.getElementById('sf').onsubmit = e => {
+    e.preventDefault(); const st = document.getElementById('start').value, en = document.getElementById('end').value;
+    if (!st || !en || en <= st) return document.getElementById('serr').textContent = 'End time must be after start time.';
+    const x = load(); x.slots.push({ id: id(x), mentorId: u.id, day: document.getElementById('day').value, start: st, end: en }); save(x); toast('Slot added'); draw();
+  };
+  app.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { const x = load(); x.slots = x.slots.filter(s => s.id !== +b.dataset.x); save(x); draw(); });
+}
+draw();
+</script></body></html>

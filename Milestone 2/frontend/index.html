@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Log in · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body>
+<header><span class="brand">IITM · MENTOR CONNECT</span><nav class="nav"><a href="register.html">Register</a></nav></header>
+<main><div class="login-box card">
+<div class="eyebrow">Student Mentoring and Career Support</div><h1>Log in</h1>
+<form id="f" novalidate><label for="email">Email</label><input id="email" type="email" autocomplete="username"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"><div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Log in</button></div></form>
+<div class="info"><b>Demo accounts</b> (password <code>demo123</code>)<br>asha@student.test · meera@mentor.test · admin@client.test</div>
+<p class="muted">Students and mentors cannot browse each other. The coordinator arranges every match.</p>
+<p><a href="#" id="reset" class="muted">Reset demo data</a></p></div></main>
+<script src="app.js"></script><script>
+document.getElementById('reset').onclick = e => { e.preventDefault(); resetDemo(); };
+document.getElementById('f').onsubmit = e => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim().toLowerCase(), pw = document.getElementById('pw').value, err = document.getElementById('err');
+  if (!email || !pw) { err.textContent = 'Enter your email and password.'; return; }
+  const u = load().users.find(x => x.email === email && x.password === pw);
+  if (!u) { err.textContent = 'Wrong email or password.'; return; }
+  sessionStorage.setItem(USER_KEY, JSON.stringify({ id: u.id, name: u.name, role: u.role }));
+  location.href = NAVS[u.role][0][0];
+};
+</script></body></html>

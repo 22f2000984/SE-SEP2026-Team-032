@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student dashboard · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('student'), d = load(), app = document.getElementById('app');
+const p = d.students[u.id], m = d.matches.filter(x => x.studentId === u.id).slice(-1)[0];
+const fields = ['programme', 'goals', 'skills', 'preferences', 'availability'];
+const pct = Math.round(fields.filter(k => p[k]).length / fields.length * 100);
+const notes = d.notifications.filter(n => n.userId === u.id).slice(-4).reverse();
+const msg = !m ? 'The coordinator has not arranged a mentor for you yet. Complete your profile so they can find a good fit.'
+  : m.status === 'proposed' ? 'The coordinator is arranging your mentor and will update you soon.'
+  : m.status === 'cancelled' ? 'Your last match was cancelled. The coordinator will arrange a new one.'
+  : `Your mentor is ${esc(userName(d, m.mentorId))}.`;
+app.innerHTML = `<div class="eyebrow">Student</div><h1>Welcome, ${esc(u.name)}</h1><p class="muted">Your mentoring journey, in one place.</p>
+<section class="grid"><div class="card"><h2>Match status</h2>${m ? pill(m.status === 'proposed' ? 'pending' : m.status) : pill('none yet')}<p>${msg}</p><a class="btn" href="student-mentor.html">My mentor</a></div>
+<div class="card"><h2>Profile completeness</h2><div class="metric">${pct}%</div><div class="bar"><div style="width:${pct}%"></div></div><p>${pct < 100 ? 'Add your goals and availability to help the coordinator match you.' : 'Your profile is complete.'}</p><a class="btn ghost" href="student-profile.html">Edit profile</a></div></section>
+<div class="card"><h2>Notifications</h2><ul class="list">${notes.map(n => `<li>${esc(n.text)} <span class="muted">· ${when(n.at)}</span></li>`).join('') || '<li class="muted">No notifications yet.</li>'}</ul></div>`;
+</script></body></html>

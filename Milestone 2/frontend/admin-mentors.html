@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mentors · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
+function draw() {
+  const d = load();
+  app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Mentors</h1><p class="muted">Verify mentor profiles before they can receive matches.</p>
+  <div class="table-wrap"><table><tr><th>Name</th><th>Qualifications</th><th>Expertise</th><th>Status</th><th></th></tr>${Object.entries(d.mentors).map(([uid, m]) => `<tr><td>${esc(userName(d, +uid))}</td><td>${esc(m.qualifications || '-')}</td><td>${esc(m.expertise || '-')}</td><td>${pill(m.status)}</td>
+  <td>${m.status === 'verified' ? '' : `<button class="btn small" data-v="${uid}">Verify</button>`}</td></tr>`).join('')}</table></div>`;
+  app.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { const x = load(); x.mentors[b.dataset.v].status = 'verified'; notify(x, +b.dataset.v, 'Your mentor profile has been verified.'); save(x); toast('Mentor verified'); draw(); });
+}
+draw();
+</script></body></html>

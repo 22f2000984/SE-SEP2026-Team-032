@@ -1,0 +1,107 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Milestone 2 Report – Team 032</title>
+<style>
+@page{size:A4;margin:18mm 16mm}@page land{size:A4 landscape;margin:12mm}.land{page:land;break-before:page;break-after:page}.land h2{margin-top:0}.land img{max-height:150mm;width:auto}
+body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.5;color:#1f2d3d}
+h1{color:#12345a;font-size:22pt;margin:0 0 4px}h2{color:#12345a;font-size:15pt;border-bottom:2px solid #1769aa;padding-bottom:3px;margin-top:26px;break-after:avoid}h3{color:#1769aa;font-size:12pt;margin:16px 0 4px;break-after:avoid}
+table{border-collapse:collapse;width:100%;margin:8px 0;font-size:10pt;break-inside:auto}tr{break-inside:avoid}th,td{border:1px solid #c5d2e0;padding:5px 7px;text-align:left;vertical-align:top}th{background:#e9f2fa;color:#12345a}
+figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:100%;border:1px solid #d9e2ec}figcaption{font-size:9.5pt;color:#65758b;margin-top:4px}
+.cover{text-align:center;padding-top:60mm;break-after:page}.cover .sub{font-size:14pt;color:#1769aa;margin:6px 0 30px}
+.slot{border:2px dashed #c77818;background:#fff8ea;padding:40px 10px;text-align:center;color:#8a5200;margin:10px 0;break-inside:avoid}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.two figure{margin:6px 0}
+</style></head><body>
+<div class="cover"><div style="color:#0d8b8b;font-weight:bold;letter-spacing:2px">IIT MADRAS · SOFTWARE ENGINEERING · SEPT 2026</div>
+<h1 style="font-size:30pt;margin-top:14px">Milestone 2 Report</h1><div class="sub">Scheduling, Design and Frontend</div>
+<h2 style="border:0;font-size:18pt">Student Mentoring and Career Support Platform</h2><p>Problem Statement 2</p>
+<p style="margin-top:40px"><b>Team 032 – Himalayan Coders</b></p>
+<p>Himanshu Rathor · Ankur Maurya · Hemendra Kumar Sharma<br>Adnan Mustafa · Bojannagari Pavan Kumar Reddy</p></div>
+
+<h2>1. Project Schedule and Sprint Plan</h2>
+<h3>1.1 Scheduling tool</h3>
+<p>The team plans and tracks its work in <b>Jira</b> (project key KAN). Epics group the work of each milestone or sprint. Tasks carry one owner, a start date and a due date, and move across the board columns To Do, In Progress, In Review and Done. The Jira <b>Timeline</b> view is our Gantt chart and the <b>Board</b> view is our Kanban board. Each task records its owner, so both views show every member's contribution.</p>
+<h3>1.2 Team roles</h3>
+<table><tr><th>Member</th><th>Roles</th></tr>
+<tr><td>Himanshu Rathor</td><td>Scrum Master, Product Manager</td></tr><tr><td>Ankur Maurya</td><td>Backend Developer, Frontend Developer</td></tr>
+<tr><td>Hemendra Kumar Sharma</td><td>Frontend Developer, Backend Developer</td></tr><tr><td>Adnan Mustafa</td><td>Tester, Code Reviewer</td></tr><tr><td>Bojannagari Pavan Kumar Reddy</td><td>Code Reviewer, Tester</td></tr></table>
+<h3>1.3 Overall schedule</h3>
+<table><tr><th>Phase</th><th>Dates</th><th>Focus</th></tr>
+<tr><td>Milestone 1</td><td>until 25 Oct</td><td>User requirements</td></tr>
+<tr><td>Milestone 2</td><td>26 Oct – 1 Nov</td><td>Scheduling, design, frontend pages</td></tr>
+<tr><td>Sprint 1 (Milestone 3)</td><td>2 Nov – 22 Nov</td><td>APIs, test cases and user testing for the core flow</td></tr>
+<tr><td>Sprint 2 (Milestone 4)</td><td>23 Nov – 6 Dec</td><td>APIs, test cases and user testing for the rest of the flow</td></tr>
+<tr><td>Milestone 5</td><td>7 Dec – 20 Dec</td><td>Final report, demo video, working prototype</td></tr></table>
+<h3>1.4 Sprint 1 (2 Nov – 22 Nov): core client-mediated flow</h3>
+<table><tr><th>Jira task</th><th>User stories</th><th>Dates</th></tr>
+<tr><td>Registration and login APIs</td><td>US-S01, US-M01</td><td>2 – 8 Nov</td></tr><tr><td>Student and mentor profile APIs</td><td>US-S02, US-M02, US-C05</td><td>6 – 12 Nov</td></tr>
+<tr><td>Admin dashboard and role-based access APIs</td><td>US-C01, US-C06</td><td>9 – 15 Nov</td></tr><tr><td>Match creation APIs</td><td>US-C02</td><td>12 – 18 Nov</td></tr>
+<tr><td>Test cases, pytest and Swagger YAML</td><td>all of the above</td><td>9 – 20 Nov</td></tr><tr><td>User feedback session and Sprint 2 plan</td><td>–</td><td>20 – 22 Nov</td></tr></table>
+<h3>1.5 Sprint 2 (23 Nov – 6 Dec): confirmation, tracking and student views</h3>
+<table><tr><th>Jira task</th><th>User stories</th><th>Dates</th></tr>
+<tr><td>Match confirmation and notification APIs</td><td>US-C03</td><td>23 – 29 Nov</td></tr><tr><td>Student goals, preferences and availability APIs</td><td>US-S03 to US-S06</td><td>23 – 29 Nov</td></tr>
+<tr><td>Match status management and overview APIs</td><td>US-C04, US-C07</td><td>26 Nov – 2 Dec</td></tr><tr><td>Student connection view, readiness, concern, feedback and status APIs</td><td>US-S07 to US-S11</td><td>28 Nov – 3 Dec</td></tr>
+<tr><td>Test cases, pytest and Swagger YAML</td><td>all of the above</td><td>30 Nov – 5 Dec</td></tr><tr><td>User feedback session and final-phase plan</td><td>–</td><td>4 – 6 Dec</td></tr></table>
+<p>All 21 user stories from Milestone 1 are covered across the two sprints.</p>
+<h3>1.6 Iterations</h3>
+<p>Each sprint is split into weekly iterations. Every sprint ends with a user feedback session whose findings shape the next sprint plan. Tasks are reviewed by the Code Reviewers and tested by the Testers before they move to Done.</p>
+<h3>1.7 Gantt chart</h3>
+<div class="slot"><b>INSERT: Jira Timeline screenshot (Weeks view, epics expanded)</b></div>
+<h3>1.8 Kanban board</h3>
+<div class="slot"><b>INSERT: Jira Board screenshot (cards spread across the columns)</b></div>
+
+<h2 style="break-before:page">2. Scrum Meetings</h2>
+<p>The Scrum Master leads two scrum meetings each week. Each meeting covers what was done, what is planned next and any blockers. Minutes are kept for every meeting.</p>
+<table><tr><th>Date</th><th>Attendees</th><th>Discussed / decisions</th><th>Actions (owner, due date)</th></tr>
+<tr><td>&nbsp;</td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td></tr></table>
+
+<h2>3. Design of Components</h2>
+<p>The platform follows a client-mediated model. Students and mentors each maintain their own profile, but they cannot browse each other. The client (coordinator) reviews both sides, proposes a match, and tracks it until it ends.</p>
+<table><tr><th>Component</th><th>Responsibilities</th></tr>
+<tr><td>Authentication and roles</td><td>Registration, login, and three roles: student, mentor and administrator. Every action is checked against the role on the server, because hiding a link in the interface is not security.</td></tr>
+<tr><td>Student module</td><td>Maintain goals, skills, preferences and availability. View the assigned mentor after the match is confirmed. Give a readiness response, feedback, and raise concerns.</td></tr>
+<tr><td>Mentor module</td><td>Maintain qualifications, expertise, bio and availability slots. Accept or decline match requests, and see accepted mentees.</td></tr>
+<tr><td>Administrator module</td><td>Verify mentor profiles, propose matches, change match status, review concerns, and see delayed proposals and an overview by status.</td></tr>
+<tr><td>Match workflow</td><td>Controls the status of a match: proposed, confirmed, active, completed or cancelled. Only allowed transitions are accepted and each change is logged.</td></tr>
+<tr><td>Notifications</td><td>Tells the people involved when a match is proposed, accepted, declined or changes status.</td></tr>
+<tr><td>Data layer</td><td>A relational database holding users, profiles, availability, matches, status log, feedback, concerns and notifications.</td></tr></table>
+<p><b>Match status flow:</b> proposed → confirmed (mentor accepts) → active → completed. A proposed or confirmed or active match can be cancelled. A declined proposal becomes cancelled, and the coordinator can then propose a new match.</p>
+
+<div class="land"><h2>4. Class Diagram</h2>
+<figure><img src="diagrams/class_diagram.png"><figcaption>Figure 1. Class diagram. Student, Mentor and Administrator extend User. Every Match is proposed by an Administrator and links one Student and one Mentor.</figcaption></figure>
+
+<div class="land"><h2>5. Database Design</h2>
+<figure><img src="diagrams/er_diagram.png"><figcaption>Figure 2. Entity relationship diagram.</figcaption></figure></div>
+<table><tr><th>Table</th><th>Purpose and key constraints</th></tr>
+<tr><td>USER</td><td>One row per account. Email is unique. Role is student, mentor or admin.</td></tr>
+<tr><td>STUDENT_PROFILE</td><td>Goals, skills, preferences and readiness. One per student user (user_id unique).</td></tr>
+<tr><td>MENTOR_PROFILE</td><td>Qualifications, expertise and verification status. One per mentor user.</td></tr>
+<tr><td>AVAILABILITY_SLOT</td><td>Weekly time slots of a mentor. Many slots per mentor.</td></tr>
+<tr><td>MATCH</td><td>Links a student and a mentor. Records the administrator who proposed it and its status.</td></tr>
+<tr><td>MATCH_STATUS_LOG</td><td>History of every status change, with who changed it and when.</td></tr>
+<tr><td>FEEDBACK</td><td>Rating and comments about a match.</td></tr>
+<tr><td>CONCERN</td><td>A concern raised about a match, open until the coordinator resolves it.</td></tr>
+<tr><td>NOTIFICATION</td><td>Messages sent to users, optionally linked to a match.</td></tr></table>
+
+<h2>6. Frontend Pages and Screenshots</h2>
+<p>The frontend is a set of 11 linked pages in plain HTML, CSS and JavaScript. It runs from the file <code>index.html</code> without installing anything. Sample data is kept in the browser so the whole flow can be tried: the coordinator proposes a match, the mentor accepts, and only then does the student see the mentor. There is no backend yet; the API is built in Milestones 3 and 4.</p>
+<table><tr><th>Page</th><th>Role</th><th>Purpose</th></tr>
+<tr><td>index, register</td><td>all</td><td>Log in and create an account</td></tr><tr><td>student</td><td>student</td><td>Dashboard, match status, notifications</td></tr><tr><td>student-profile</td><td>student</td><td>Goals, skills, preferences, availability</td></tr>
+<tr><td>student-mentor</td><td>student</td><td>Assigned mentor, readiness, feedback, concerns</td></tr><tr><td>mentor</td><td>mentor</td><td>Accept or decline requests, mentees</td></tr><tr><td>mentor-profile</td><td>mentor</td><td>Background and availability</td></tr>
+<tr><td>admin</td><td>coordinator</td><td>Overview by status, delayed proposals, concerns</td></tr><tr><td>admin-mentors</td><td>coordinator</td><td>Verify mentor profiles</td></tr><tr><td>admin-matches</td><td>coordinator</td><td>Propose matches, change status</td></tr></table>
+<figure><img src="screenshots/01_login.png"><figcaption>Figure 3. Login page with demo accounts.</figcaption></figure>
+<figure><img src="screenshots/02_student_dashboard.png"><figcaption>Figure 4. Student dashboard.</figcaption></figure>
+<figure><img src="screenshots/03_student_profile.png"><figcaption>Figure 5. Student profile.</figcaption></figure>
+<figure><img src="screenshots/04_student_my_mentor.png"><figcaption>Figure 6. Student's mentor page while the coordinator is still arranging the match.</figcaption></figure>
+<figure><img src="screenshots/05_mentor_dashboard.png"><figcaption>Figure 7. Mentor dashboard with a match request to accept or decline.</figcaption></figure>
+<figure><img src="screenshots/06_mentor_profile.png"><figcaption>Figure 8. Mentor profile and availability.</figcaption></figure>
+<figure><img src="screenshots/07_admin_overview.png"><figcaption>Figure 9. Coordinator overview.</figcaption></figure>
+<figure><img src="screenshots/08_admin_mentors.png"><figcaption>Figure 10. Mentor verification.</figcaption></figure>
+<figure><img src="screenshots/09_admin_matches.png"><figcaption>Figure 11. Proposing matches and changing their status.</figcaption></figure>
+
+<h2>7. Frontend Code and README</h2>
+<p>The frontend ZIP contains the 11 pages, <code>styles.css</code>, <code>app.js</code> and a README. To run it, unzip, open the <code>frontend</code> folder and open <code>index.html</code> in a modern browser. The demo password is <code>demo123</code> for the student, mentor and coordinator accounts listed on the login page.</p>
+
+<h2>8. Open Questions and Risks</h2>
+<ul><li>Whether a mentor may decline a match, and what happens to the student after a decline (the prototype returns the student to the coordinator).</li>
+<li>Which channels are used for notifications, and whether email is needed.</li>
+<li>How long student and mentor data is kept, and who may see feedback.</li>
+<li>Time zone handling for availability slots.</li></ul>
+</body></html>

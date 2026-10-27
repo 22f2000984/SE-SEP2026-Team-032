@@ -30,7 +30,6 @@ th{background:#e9f2fa;color:#12345a;font-size:13px}
 .table-wrap{overflow-x:auto}
 .pill{display:inline-block;border-radius:18px;padding:3px 10px;font-size:12px;font-weight:bold;background:#eef2f6;color:#4a5a6e}
 .pill.proposed{background:#fff5df;color:#9a5d00}
-.pill.confirmed{background:#e3f0fb;color:#12568c}
 .pill.active{background:#e5f5ee;color:#16835b}
 .pill.completed{background:#ece8f8;color:#5b3fa6}
 .pill.cancelled{background:#fbe7e3;color:#b3402a}

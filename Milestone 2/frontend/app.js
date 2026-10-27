@@ -1,8 +1,8 @@
 /* Shared helpers for the Milestone 2 prototype.
    All data is sample data kept in the browser (localStorage). There is no backend. */
 const DB_KEY = 't32_data', USER_KEY = 't32_user';
-const STATUSES = ['proposed', 'confirmed', 'active', 'completed', 'cancelled'];
-const NEXT = { proposed: ['confirmed', 'cancelled'], confirmed: ['active', 'cancelled'], active: ['completed', 'cancelled'], completed: [], cancelled: [] };
+const STATUSES = ['proposed', 'active', 'completed', 'cancelled'];
+const NEXT = { proposed: ['active', 'cancelled'], active: ['completed', 'cancelled'], completed: [], cancelled: [] };
 const NAVS = {
   student: [['student.html', 'Dashboard'], ['student-profile.html', 'My Profile'], ['student-mentor.html', 'My Mentor']],
   mentor: [['mentor.html', 'Dashboard'], ['mentor-profile.html', 'My Profile']],

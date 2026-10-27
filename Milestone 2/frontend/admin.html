@@ -5,7 +5,7 @@ function draw() {
   const open = d.concerns.filter(c => c.status === 'open'), pend = Object.entries(d.mentors).filter(([, m]) => m.status === 'pending');
   const unmatched = d.users.filter(x => x.role === 'student' && !d.matches.some(m => m.studentId === x.id && m.status !== 'cancelled' && m.status !== 'completed'));
   app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Overview</h1><p class="muted">Track every match from proposal to completion.</p>
-  <section class="grid">${['proposed', 'confirmed', 'active', 'completed', 'cancelled'].map(s => `<div class="card">${pill(s)}<div class="metric">${count(s)}</div></div>`).join('')}</section>
+  <section class="grid">${['proposed', 'active', 'completed', 'cancelled'].map(s => `<div class="card">${pill(s)}<div class="metric">${count(s)}</div></div>`).join('')}</section>
   <section class="grid"><div class="card"><h2>Needs attention</h2><ul class="list">
   <li>${delayed.length} proposal(s) waiting more than 3 days</li><li>${pend.length} mentor profile(s) to verify · <a href="admin-mentors.html">review</a></li><li>${unmatched.length} student(s) without a mentor · <a href="admin-matches.html">create match</a></li></ul></div>
   <div class="card"><h2>Open concerns</h2><ul class="list">${open.map(c => `<li>${esc(userName(d, c.raisedBy))}: ${esc(c.text)}<div class="actions"><button class="btn small" data-c="${c.id}">Mark resolved</button></div></li>`).join('') || '<li class="muted">No open concerns.</li>'}</ul></div></section>

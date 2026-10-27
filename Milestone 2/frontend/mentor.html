@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mentor dashboard · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('mentor'), app = document.getElementById('app');
 function draw() {
   const d = load(), mp = d.mentors[u.id], mine = d.matches.filter(x => x.mentorId === u.id);
-  const props = mine.filter(x => x.status === 'proposed'), mentees = mine.filter(x => ['confirmed', 'active'].includes(x.status));
+  const props = mine.filter(x => x.status === 'proposed'), mentees = mine.filter(x => x.status === 'active');
   const notes = d.notifications.filter(n => n.userId === u.id).slice(-4).reverse();
   app.innerHTML = `<div class="eyebrow">Mentor</div><h1>Welcome, ${esc(u.name)}</h1>
   ${mp.status !== 'verified' ? '<div class="notice">Your profile is pending verification by the coordinator. You will receive matches after it is verified.</div>' : ''}
@@ -9,8 +9,8 @@ function draw() {
     <div class="actions"><button class="btn small" data-a="${m.id}">Accept</button><button class="btn small danger" data-d="${m.id}">Decline</button></div></div>`; }).join('') || '<p class="muted">No pending requests.</p>'}</div>
   <div class="card" style="margin-top:16px"><h2>My mentees</h2><ul class="list">${mentees.map(m => `<li><b>${esc(userName(d, m.studentId))}</b> ${pill(m.status)}<br><span class="muted">${esc(d.students[m.studentId].goals || '')}</span></li>`).join('') || '<li class="muted">No mentees yet.</li>'}</ul></div>
   <div class="card" style="margin-top:16px"><h2>Notifications</h2><ul class="list">${notes.map(n => `<li>${esc(n.text)} <span class="muted">· ${when(n.at)}</span></li>`).join('') || '<li class="muted">None.</li>'}</ul></div>`;
-  const act = (sel, to) => app.querySelectorAll(sel).forEach(b => b.onclick = () => { const x = load(), m = x.matches.find(y => y.id === +(b.dataset.a || b.dataset.d)); setStatus(x, m, to, u.name); save(x); toast(to === 'confirmed' ? 'Match accepted' : 'Match declined'); draw(); });
-  act('[data-a]', 'confirmed'); act('[data-d]', 'cancelled');
+  const act = (sel, to) => app.querySelectorAll(sel).forEach(b => b.onclick = () => { const x = load(), m = x.matches.find(y => y.id === +(b.dataset.a || b.dataset.d)); setStatus(x, m, to, u.name); save(x); toast(to === 'active' ? 'Match accepted' : 'Match declined'); draw(); });
+  act('[data-a]', 'active'); act('[data-d]', 'cancelled');
 }
 draw();
 </script></body></html>

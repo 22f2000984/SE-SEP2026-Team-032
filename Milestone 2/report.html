@@ -56,13 +56,13 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <p>The platform follows a client-mediated model. Students and mentors each maintain their own profile, but they cannot browse each other. The client (coordinator) reviews both sides, proposes a match, and tracks it until it ends.</p>
 <table><tr><th>Component</th><th>Responsibilities</th></tr>
 <tr><td>Authentication and roles</td><td>Registration, login, and three roles: student, mentor and administrator. Every action is checked against the role on the server, because hiding a link in the interface is not security.</td></tr>
-<tr><td>Student module</td><td>Maintain goals, skills, preferences and availability. View the assigned mentor after the match is confirmed. Give a readiness response, feedback, and raise concerns.</td></tr>
+<tr><td>Student module</td><td>Maintain goals, skills, preferences and availability. View the assigned mentor after the mentor accepts the match. Give a readiness response, feedback, and raise concerns.</td></tr>
 <tr><td>Mentor module</td><td>Maintain qualifications, expertise, bio and availability slots. Accept or decline match requests, and see accepted mentees.</td></tr>
 <tr><td>Administrator module</td><td>Verify mentor profiles, propose matches, change match status, review concerns, and see delayed proposals and an overview by status.</td></tr>
-<tr><td>Match workflow</td><td>Controls the status of a match: proposed, confirmed, active, completed or cancelled. Only allowed transitions are accepted and each change is logged.</td></tr>
+<tr><td>Match workflow</td><td>Controls the status of a match: proposed, active, completed or cancelled. Only allowed transitions are accepted and each change is logged.</td></tr>
 <tr><td>Notifications</td><td>Tells the people involved when a match is proposed, accepted, declined or changes status.</td></tr>
 <tr><td>Data layer</td><td>A relational database holding users, profiles, availability, matches, status log, feedback, concerns and notifications.</td></tr></table>
-<p><b>Match status flow:</b> proposed → confirmed (mentor accepts) → active → completed. A proposed or confirmed or active match can be cancelled. A declined proposal becomes cancelled, and the coordinator can then propose a new match.</p>
+<p><b>Match status flow:</b> proposed → active (the mentor accepts) → completed. A proposed or active match can be cancelled. A declined proposal becomes cancelled, and the coordinator can then propose a new match.</p>
 
 <div class="land"><h2>4. Class Diagram</h2>
 <figure><img src="diagrams/class_diagram.png"><figcaption>Figure 1. Class diagram. Student, Mentor and Administrator extend User. Every Match is proposed by an Administrator and links one Student and one Mentor.</figcaption></figure>

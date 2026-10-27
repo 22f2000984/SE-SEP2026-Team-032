@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Diagrams Explained - Team 032</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+@page land { size: A4 landscape; margin: 10mm; }
+* { box-sizing: border-box; }
+body { font-family: Arial, Helvetica, sans-serif; color: #243447; font-size: 11.5pt; line-height: 1.5; }
+h1 { color: #12345a; font-size: 24pt; margin: 0 0 4px; }
+h2 { color: #12345a; font-size: 16pt; border-bottom: 2px solid #1769aa; padding-bottom: 3px; margin: 26px 0 10px; page-break-after: avoid; }
+h3 { color: #1769aa; font-size: 12.5pt; margin: 16px 0 4px; page-break-after: avoid; }
+p { margin: 6px 0; }
+.sub { color: #567; margin-bottom: 14px; }
+.box { background: #f4f7fb; border-left: 4px solid #1769aa; padding: 8px 12px; margin: 10px 0; page-break-inside: avoid; }
+.warn { background: #fff7e6; border-left-color: #e0a100; }
+table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 10.5pt; page-break-inside: auto; }
+tr { page-break-inside: avoid; }
+th { background: #12345a; color: #fff; text-align: left; padding: 5px 8px; }
+td { border: 1px solid #c9d6e4; padding: 5px 8px; vertical-align: top; }
+tr:nth-child(even) td { background: #f4f7fb; }
+code { background: #eef3f8; padding: 1px 4px; border-radius: 3px; font-size: 10.5pt; }
+.land { page: land; page-break-before: always; page-break-after: always; text-align: center; }
+.land img { max-width: 100%; max-height: 172mm; }
+.land .cap { font-size: 10pt; color: #567; margin-top: 4px; }
+.pb { page-break-before: always; }
+.flow { display: flex; align-items: center; gap: 4px; margin: 12px 0; flex-wrap: wrap; }
+.st { background: #12345a; color: #fff; padding: 6px 12px; border-radius: 14px; font-weight: 700; font-size: 10.5pt; }
+.st.no { background: #a33; }
+.ar { color: #1769aa; font-weight: 700; }
+ul, ol { margin: 6px 0 6px 22px; padding: 0; }
+li { margin: 3px 0; }
+</style></head><body>
+
+<h1>The Diagrams Explained in Simple Words</h1>
+<p class="sub">Team 032 "Himalayan Coders" | Student Mentoring and Career Support Platform | Milestone 2 review guide for the team (written for Adnan's review)</p>
+
+<div class="box">
+<b>How to use this guide.</b> Read Part 1 first (the idea in plain words). Then read Part 2 (class diagram) and Part 3 (database diagram) with the picture open next to the text. Part 4 is a worked example that follows one student through the whole system. Part 5 lists review questions you can answer yes or no. You do not need to know UML or SQL beforehand; every new word is explained when it first appears.
+</div>
+
+<h2>Part 1. The idea behind both diagrams</h2>
+
+<h3>What does our system do?</h3>
+<p>Our platform helps students of the programme get a mentor for career guidance. There are three kinds of people who use it:</p>
+<table>
+<tr><th style="width:22%">Person</th><th>What they do on the platform</th></tr>
+<tr><td><b>Student</b></td><td>Registers, fills a profile (career goals, skills, preferences, when they are free), later sees the mentor who was assigned, and can give feedback or raise a concern.</td></tr>
+<tr><td><b>Mentor</b></td><td>Registers, fills a profile (qualifications, experience, areas of expertise), sets the time slots when they are free, and accepts or declines a match that was proposed to them.</td></tr>
+<tr><td><b>Administrator</b> (coordinator)</td><td>Checks mentor profiles, proposes which mentor suits which student, and follows the progress of every match.</td></tr>
+</table>
+
+<h3>The one rule that shapes everything: "client-mediated"</h3>
+<p>Students and mentors <b>cannot search or browse each other</b>. A student cannot pick a mentor and a mentor cannot pick a student. Only the administrator makes the pairing. The pairing is called a <b>Match</b>. This is why you will see a <b>Match</b> box in the middle of both diagrams: almost everything connects to it.</p>
+
+<div class="box">
+<b>Why did we choose this?</b> It matches the problem statement (the platform acts as a middle party) and keeps control with the coordinator, who knows the students. It also means the screens are simple: a student never sees a list of mentors, only the one mentor assigned to them.
+</div>
+
+<h3>Why two diagrams?</h3>
+<table>
+<tr><th style="width:24%">Diagram</th><th>Question it answers</th><th style="width:26%">Who cares most</th></tr>
+<tr><td><b>Class diagram</b></td><td>What are the "things" in our program, what information does each hold, and what can each one <i>do</i>?</td><td>Developers writing code</td></tr>
+<tr><td><b>ER diagram</b> (Entity Relationship)</td><td>How do we store the information in the database tables, and how are the tables linked?</td><td>Whoever builds the database and the APIs</td></tr>
+</table>
+<p>They describe the same system from two angles, so the names are almost the same (Student, Mentor, Match, Feedback and so on). The class diagram adds <i>actions</i> (like "accept a match"). The ER diagram adds <i>database details</i> (like keys that link the tables).</p>
+
+<h3>How to read the lines</h3>
+<table>
+<tr><th style="width:30%">What you see</th><th>What it means</th></tr>
+<tr><td>A box with a dark top</td><td>One "thing" (a class) or one database table. The top is its name.</td></tr>
+<tr><td>Numbers on a line, like <code>1</code>, <code>N</code>, <code>0..*</code></td><td>How many. <code>1</code> = exactly one. <code>N</code> or <code>*</code> = many. <code>0..*</code> = zero or many. Example: <code>1</code> on the Student side and <code>0..*</code> on the Match side means one student can be in zero, one or many matches.</td></tr>
+<tr><td>Line with a hollow white triangle (class diagram)</td><td>"Is a kind of". Student, Mentor and Administrator are each a kind of User.</td></tr>
+<tr><td>Dashed line with an arrow</td><td>"Uses". Match uses the list of allowed statuses.</td></tr>
+<tr><td><code>-</code> before a name</td><td>Private: information kept inside the object.</td></tr>
+<tr><td><code>+</code> before a name</td><td>Public: an action others can ask the object to do.</td></tr>
+<tr><td><code>PK</code> (ER diagram)</td><td>Primary key: a number that uniquely identifies each row, like a roll number.</td></tr>
+<tr><td><code>FK</code> (ER diagram)</td><td>Foreign key: a number that points to a row in another table, like writing a student's roll number on a form to say whose form it is.</td></tr>
+</table>
+
+<!-- ================= CLASS DIAGRAM ================= -->
+<div class="land"><img src="diagrams/class_diagram.png" alt="Class diagram"><div class="cap">Figure 1. Class diagram. Keep this page open while reading Part 2.</div></div>
+
+<h2>Part 2. The class diagram, box by box</h2>
+<p>Look at the picture in three layers: the <b>top</b> (User and its three kinds), the <b>middle</b> (Match), and the <b>bottom</b> (things that belong to a Match).</p>
+
+<h3>Layer 1: User and its three kinds</h3>
+<p><b>User</b> (marked <code>&lt;&lt;abstract&gt;&gt;</code>) is the common base. "Abstract" simply means we never create a plain User; every real person is a Student, a Mentor or an Administrator. User holds what every person has: an id, email, password (stored scrambled, as a hash), full name and a role. Its actions are <code>login()</code>, <code>logout()</code> and <code>updateAccount()</code>.</p>
+<p>The three boxes under it, joined by hollow triangles, are kinds of User. They automatically get everything User has, and add their own:</p>
+
+<table>
+<tr><th style="width:18%">Class</th><th style="width:38%">Extra information it keeps</th><th>Actions it can do</th></tr>
+<tr><td><b>Student</b></td><td>programme level, career goals, skills, preferences, availability note, readiness (ready or not ready to be matched)</td><td><code>updateProfile()</code>, <code>viewAssignedMentor()</code> (see the mentor chosen for them), <code>respondToReadiness()</code>, <code>submitFeedback()</code>, <code>raiseConcern()</code></td></tr>
+<tr><td><b>Mentor</b></td><td>qualifications, years of experience, expertise areas, short bio, profile status (pending or verified)</td><td><code>updateProfile()</code>, <code>setAvailability(slots)</code>, <code>acceptMatch(m)</code>, <code>declineMatch(m)</code>, <code>submitFeedback()</code></td></tr>
+<tr><td><b>Administrator</b></td><td>an admin id</td><td><code>verifyMentorProfile()</code>, <code>proposeMatch(s, m)</code>, <code>changeStatus(m, status)</code>, <code>viewOverview()</code>, <code>resolveConcern()</code></td></tr>
+</table>
+<p><b>AvailabilitySlot</b> (to the right of Mentor) is one free time window: a day of the week, a start time and an end time. The line says one Mentor has zero or many slots (<code>1</code> to <code>0..*</code>). A new mentor starts with zero slots and adds them later.</p>
+
+<div class="box">
+<b>Notice what is missing.</b> Student has no "search mentors" action and Mentor has no "pick student" action. Only the Administrator has <code>proposeMatch</code>. That is the client-mediated rule written into the diagram.
+</div>
+
+<h3>Layer 2: Match, the heart of the system</h3>
+<p><b>Match</b> is one pairing of one student and one mentor. It stores a match id, the status, optional notes, when it was proposed and when the mentor responded. Its actions are the steps in its life: <code>accept()</code>, <code>decline()</code>, <code>complete()</code> and <code>cancel()</code>.</p>
+<p>The lines into Match, all with <code>0..*</code> on the Match side:</p>
+<ul>
+<li><b>Student to Match:</b> one student can appear in many matches over time (for example if the first one is cancelled and a new mentor is proposed).</li>
+<li><b>Mentor to Match:</b> one mentor can mentor several students.</li>
+<li><b>Administrator to Match:</b> one administrator can propose many matches. This is the line labelled "proposes".</li>
+</ul>
+
+<h3>Layer 3: things that hang off a Match</h3>
+<table>
+<tr><th style="width:20%">Class</th><th>What it is</th></tr>
+<tr><td><b>Feedback</b></td><td>A rating (1 to 5) and comments that a student or mentor gives about a match.</td></tr>
+<tr><td><b>Concern</b></td><td>A problem someone raises about a match (for example "my mentor has not replied"). It has a status (open or resolved) so the administrator can follow it up.</td></tr>
+<tr><td><b>Notification</b></td><td>A message sent to a user (for example "You have a new match proposal"). It remembers whether it was read.</td></tr>
+<tr><td><b>MatchStatus</b> (<code>&lt;&lt;enumeration&gt;&gt;</code>)</td><td>An "enumeration" is a fixed list of allowed values. Here: proposed, active, completed, cancelled. A match can only ever hold one of these five words. It is drawn with a dashed arrow because Match <i>uses</i> it.</td></tr>
+</table>
+
+<h3>The life of a Match (status flow)</h3>
+<p>This is the most important rule for the developers and the testers. A match moves forward in these steps only. There is no separate "confirmed" step: the moment the mentor accepts, the match is active.</p>
+<div class="flow">
+<span class="st">proposed</span><span class="ar">&rarr;</span><span class="st">active</span><span class="ar">&rarr;</span><span class="st">completed</span>
+</div>
+<div class="flow">
+<span>Any step before <b>completed</b> can also go to</span><span class="ar">&rarr;</span><span class="st no">cancelled</span>
+</div>
+<table>
+<tr><th style="width:20%">From</th><th style="width:30%">Can go to</th><th>Meaning in real life</th></tr>
+<tr><td>proposed</td><td>active or cancelled</td><td>The admin suggested the pair. The mentor accepts (the match becomes active at once and the student can now see the mentor) or declines (the match is cancelled).</td></tr>
+<tr><td>active</td><td>completed or cancelled</td><td>Mentoring is running (the student can see the mentor). It ends normally (completed) or stops early (cancelled).</td></tr>
+<tr><td>completed, cancelled</td><td>nothing</td><td>These are final. A finished or cancelled match is never reopened; a new match is proposed instead.</td></tr>
+</table>
+<p>The prototype frontend already follows exactly this table, so the testers can check it by trying to make an illegal jump (for example proposed straight to completed) and confirming it is not allowed.</p>
+
+<!-- ================= ER DIAGRAM ================= -->
+<div class="land"><img src="diagrams/er_diagram.png" alt="ER diagram"><div class="cap">Figure 2. Entity Relationship diagram. Keep this page open while reading Part 3.</div></div>
+
+<h2>Part 3. The ER (database) diagram, table by table</h2>
+<p>Every box here is a <b>table</b> in the database. Think of each table as an Excel sheet: the field names are the column headings and each person or record is one row. Tables are linked by keys so we do not have to copy the same data twice.</p>
+
+<h3>Why is there a separate USER table and a STUDENT_PROFILE table?</h3>
+<p>Login details (email, password, role) are the same for everybody, so they live once in <b>USER</b>. The details that only students have live in <b>STUDENT_PROFILE</b>, and the details that only mentors have live in <b>MENTOR_PROFILE</b>. Each profile has a <code>user_id</code> that points back to its USER row. The note "UNIQUE" means one user can have only one profile. This is the database version of "a Student is a kind of User" from the class diagram.</p>
+
+<h3>The top row: people and their profiles</h3>
+<table>
+<tr><th style="width:22%">Table</th><th style="width:36%">Columns (plain meaning)</th><th>Notes</th></tr>
+<tr><td><b>USER</b></td><td>user_id (PK), email (unique), password_hash, full_name, role (student, mentor or admin), is_active, created_at</td><td>One row per person who can log in. The password is stored as a scrambled hash, never as plain text. <code>role</code> decides which screens the person sees.</td></tr>
+<tr><td><b>STUDENT_PROFILE</b></td><td>student_id (PK), user_id (FK, unique), programme_level, career_goals, skills, preferences, availability_note, readiness, updated_at</td><td>Linked 1-to-1 with USER. <code>readiness</code> is ready or not_ready.</td></tr>
+<tr><td><b>MENTOR_PROFILE</b></td><td>mentor_id (PK), user_id (FK, unique), qualifications, experience_years, expertise_areas, bio, profile_status, updated_at</td><td>Linked 1-to-1 with USER. <code>profile_status</code> is pending until the admin verifies it.</td></tr>
+<tr><td><b>AVAILABILITY_SLOT</b></td><td>slot_id (PK), mentor_id (FK), day_of_week, start_time, end_time, timezone, is_active</td><td>One row per free time window. One mentor has many slots (the 1 to N line).</td></tr>
+</table>
+
+<h3>The middle: MATCH</h3>
+<table>
+<tr><th style="width:22%">Table</th><th style="width:36%">Columns</th><th>Notes</th></tr>
+<tr><td><b>MATCH</b></td><td>match_id (PK), student_id (FK), mentor_id (FK), proposed_by (FK to an admin USER), status, notes, proposed_at, responded_at</td><td>One row per pairing. It has <b>three</b> foreign keys: which student, which mentor and which admin proposed it. <code>status</code> holds one of the five allowed words.</td></tr>
+</table>
+<p>The three lines into MATCH in the picture are therefore: student to match (1 to N), mentor to match (1 to N) and admin user to match (1 to N, labelled "proposes").</p>
+
+<h3>The bottom row: records about a match</h3>
+<p>Each of these has a <code>match_id</code> foreign key, so one match can have many of them (1 to N).</p>
+<table>
+<tr><th style="width:24%">Table</th><th style="width:36%">Columns</th><th>Why we need it</th></tr>
+<tr><td><b>MATCH_STATUS_LOG</b></td><td>log_id (PK), match_id (FK), old_status, new_status, changed_by (FK to USER), changed_at</td><td>A history. Every time a status changes, one row is added. This lets the admin see who changed what and when, and it is useful evidence during testing.</td></tr>
+<tr><td><b>FEEDBACK</b></td><td>feedback_id (PK), match_id (FK), author_id (FK to USER), rating 1 to 5, comments, created_at</td><td>Feedback from either side. <code>author_id</code> says who wrote it.</td></tr>
+<tr><td><b>CONCERN</b></td><td>concern_id (PK), match_id (FK), raised_by (FK to USER), description, status (open or resolved), created_at</td><td>Problems reported about a match, followed up by the admin.</td></tr>
+<tr><td><b>NOTIFICATION</b></td><td>notification_id (PK), user_id (FK), match_id (FK, may be empty), message, is_read, sent_at</td><td>Messages shown to a user. <code>match_id</code> may be empty because some notices (for example "your mentor profile was verified") are not about any match.</td></tr>
+</table>
+
+<div class="box">
+<b>Class diagram and ER diagram side by side.</b>
+<table>
+<tr><th>Class diagram</th><th>ER diagram table</th><th>Difference to remember</th></tr>
+<tr><td>User, Student, Mentor, Administrator</td><td>USER, STUDENT_PROFILE, MENTOR_PROFILE</td><td>Administrator has no table of its own: an admin is just a USER whose role is "admin".</td></tr>
+<tr><td>AvailabilitySlot</td><td>AVAILABILITY_SLOT</td><td>Same.</td></tr>
+<tr><td>Match and its enumeration</td><td>MATCH (status column)</td><td>The enumeration becomes the allowed values of the status column.</td></tr>
+<tr><td>Feedback, Concern, Notification</td><td>FEEDBACK, CONCERN, NOTIFICATION</td><td>Same.</td></tr>
+<tr><td>(not shown)</td><td>MATCH_STATUS_LOG</td><td>Only in the database, as a history record.</td></tr>
+</table>
+</div>
+
+<h2 class="pb">Part 4. Worked example: one student from start to finish</h2>
+<p>Follow this story and point at the tables and classes as you go. The names are made up.</p>
+<ol>
+<li><b>Riya registers as a student.</b> A row is added to USER (role = student) and one to STUDENT_PROFILE with her goals and skills. <i>(Classes: User, Student.)</i></li>
+<li><b>Mr. Rao registers as a mentor.</b> A row goes to USER (role = mentor) and MENTOR_PROFILE with profile_status = pending. He adds two free slots, which become two rows in AVAILABILITY_SLOT. <i>(Classes: Mentor, AvailabilitySlot.)</i></li>
+<li><b>The admin verifies Mr. Rao.</b> profile_status changes from pending to verified. <i>(Action: verifyMentorProfile().)</i></li>
+<li><b>The admin proposes a match.</b> The admin reads both profiles, then creates a row in MATCH with Riya's student_id, Mr. Rao's mentor_id, proposed_by = the admin and status = <b>proposed</b>. A row is added to MATCH_STATUS_LOG and a NOTIFICATION row is created for Mr. Rao. <i>(Action: proposeMatch(s, m).)</i> Riya sees nothing yet.</li>
+<li><b>Mr. Rao accepts.</b> status becomes <b>active</b> straight away, responded_at is filled, another log row and notifications are added. Riya can now see Mr. Rao on her mentor page. <i>(Action: acceptMatch(m).)</i> If he had declined, status would become <b>cancelled</b> and the admin would propose someone else.</li>
+<li><b>Mentoring begins.</b> The match stays <b>active</b>. Riya opens her mentor page and sees Mr. Rao. <i>(Action: viewAssignedMentor().)</i></li>
+<li><b>During mentoring.</b> Riya can raise a concern (a row in CONCERN, status open). The admin resolves it (status resolved). <i>(Actions: raiseConcern(), resolveConcern().)</i></li>
+<li><b>Mentoring ends.</b> status becomes <b>completed</b>. Both give feedback (rows in FEEDBACK with a rating from 1 to 5). The match is now closed for ever.</li>
+</ol>
+
+<h2>Part 5. Review checklist for Adnan</h2>
+<p>Tick each question yes or no. Write any "no" in the meeting notes with a short reason, so the team can fix it before submission.</p>
+<table>
+<tr><th style="width:6%">#</th><th>Question</th><th style="width:12%">Yes / No</th></tr>
+<tr><td>1</td><td>Can a student or mentor browse the other side anywhere in the diagrams? (Answer should be <b>no</b>.)</td><td></td></tr>
+<tr><td>2</td><td>Is the Administrator the only one who can propose a match?</td><td></td></tr>
+<tr><td>3</td><td>Does the status flow cover: propose, mentor accepts (match becomes active) or declines, complete, cancel?</td><td></td></tr>
+<tr><td>4</td><td>Can every field in the class diagram be found in an ER table (or is its absence explained, like Administrator)?</td><td></td></tr>
+<tr><td>5</td><td>Does every user story in the Milestone 1 report have a class action and a place to store its data?</td><td></td></tr>
+<tr><td>6</td><td>Can a student have more than one match over time (for example after a cancellation)?</td><td></td></tr>
+<tr><td>7</td><td>Is it clear who changed a status and when (MATCH_STATUS_LOG)?</td><td></td></tr>
+<tr><td>8</td><td>Are the multiplicities (1, N, 0..*) believable? Example: one mentor has many slots; one match has one student and one mentor.</td><td></td></tr>
+<tr><td>9</td><td>Is anything missing that the users would expect (for example the mentor's reason for declining, a calendar, chat)? Note it; do not add it without the team's approval.</td><td></td></tr>
+</table>
+
+<h3>Questions the team still needs to decide</h3>
+<ul>
+<li>Does a declined proposal go straight to <b>cancelled</b>, or do we want a separate "declined" status? (The diagrams and prototype use cancelled.)</li>
+<li>Should a mentor be allowed to see the student's full profile before accepting? (The prototype shows a short summary.)</li>
+<li>Which database will store these tables? This is part of the tech stack decision in Jira card KAN-17.</li>
+</ul>
+
+<h2>Glossary</h2>
+<table>
+<tr><th style="width:22%">Word</th><th>Meaning</th></tr>
+<tr><td>Class</td><td>A blueprint for a "thing" in the program, with its information and actions.</td></tr>
+<tr><td>Entity / table</td><td>A kind of record kept in the database, like a sheet in Excel.</td></tr>
+<tr><td>Primary key (PK)</td><td>The unique number of a row.</td></tr>
+<tr><td>Foreign key (FK)</td><td>A number in one table that points to a row in another table.</td></tr>
+<tr><td>Multiplicity</td><td>How many items sit on each side of a line (1, N, 0..*).</td></tr>
+<tr><td>Inheritance</td><td>"Is a kind of". The child gets everything the parent has.</td></tr>
+<tr><td>Abstract class</td><td>A class that is never created on its own, only through its kinds.</td></tr>
+<tr><td>Enumeration</td><td>A fixed list of allowed values.</td></tr>
+<tr><td>Hash</td><td>A scrambled form of a password that cannot be turned back into the password.</td></tr>
+<tr><td>Client-mediated</td><td>Pairing is done by a middle party (the admin), not chosen by the two sides themselves.</td></tr>
+</table>
+
+</body></html>

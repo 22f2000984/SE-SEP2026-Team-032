@@ -10,7 +10,7 @@ function draw() {
   document.getElementById('f').onsubmit = e => {
     e.preventDefault(); const x = load(), sid = +document.getElementById('s').value, mid = +document.getElementById('m').value, err = document.getElementById('err');
     if (!sid || !mid) return err.textContent = 'Choose a student and a verified mentor.';
-    if (x.matches.some(m => m.studentId === sid && ['proposed', 'confirmed', 'active'].includes(m.status))) return err.textContent = 'This student already has an open match.';
+    if (x.matches.some(m => m.studentId === sid && ['proposed', 'active'].includes(m.status))) return err.textContent = 'This student already has an open match.';
     const m = { id: id(x), studentId: sid, mentorId: mid, status: 'proposed', notes: document.getElementById('n').value.trim(), proposedAt: new Date().toISOString(), log: [{ from: '-', to: 'proposed', at: new Date().toISOString(), by: u.name }] };
     x.matches.push(m); notify(x, mid, 'A new student match is waiting for your response.'); save(x); toast('Match proposed'); draw();
   };

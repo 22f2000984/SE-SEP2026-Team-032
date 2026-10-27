@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My mentor · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('student'), app = document.getElementById('app');
 function draw() {
   const d = load(), p = d.students[u.id], m = d.matches.filter(x => x.studentId === u.id).slice(-1)[0];
-  const visible = m && ['confirmed', 'active', 'completed'].includes(m.status);
+  const visible = m && ['active', 'completed'].includes(m.status);
   const mp = visible ? d.mentors[m.mentorId] : null;
   const concerns = d.concerns.filter(c => c.raisedBy === u.id);
   let h = `<div class="eyebrow">Student</div><h1>My mentor</h1>`;

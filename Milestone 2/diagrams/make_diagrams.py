@@ -95,7 +95,7 @@ def er():
         ["PK slot_id", "FK mentor_id", "day_of_week", "start_time", "end_time", "timezone", "is_active"]])
     match = d.box(500, 470, W, "MATCH", [
         ["PK match_id", "FK student_id", "FK mentor_id", "FK proposed_by  (admin USER)",
-         "status (proposed | confirmed | active |", "           completed | cancelled)", "notes", "proposed_at", "responded_at"]])
+         "status (proposed | active |", "           completed | cancelled)", "notes", "proposed_at", "responded_at"]])
     ys = 80 + 120
     d.line([(student["right"], ys), (user["x"], ys)], "1", "1")
     d.line([(user["right"], ys), (mentor["x"], ys)], "1", "1")
@@ -144,7 +144,7 @@ def cls():
         ["+ verifyMentorProfile()", "+ proposeMatch(s, m): Match", "+ changeStatus(m, status)", "+ viewOverview()", "+ resolveConcern()"]])
     match = d.box(680, 800, 440, "Match", [
         ["- matchId: int", "- status: MatchStatus", "- notes: string", "- proposedAt: datetime", "- respondedAt: datetime"],
-        ["+ confirm()", "+ decline()", "+ activate()", "+ complete()", "+ cancel()"]])
+        ["+ accept()", "+ decline()", "+ complete()", "+ cancel()"]])
     # inheritance (hollow triangle at User)
     bus = user["bottom"] + 30
     for b in (student, mentor, admin):
@@ -165,7 +165,7 @@ def cls():
     fb = d.box(40, row4, 400, "Feedback", [["- feedbackId: int", "- rating: int", "- comments: string", "- createdAt: datetime"]])
     co = d.box(520, row4, 400, "Concern", [["- concernId: int", "- description: string", "- status: ConcernStatus", "- createdAt: datetime"]])
     no = d.box(1000, row4, 400, "Notification", [["- notificationId: int", "- message: string", "- channel: string", "- isRead: bool"]])
-    en = d.box(1500, row4, 400, "MatchStatus", [["proposed", "confirmed", "active", "completed", "cancelled"]], stereo="<<enumeration>>", head=BLUE)
+    en = d.box(1500, row4, 400, "MatchStatus", [["proposed", "active", "completed", "cancelled"]], stereo="<<enumeration>>", head=BLUE)
     for b, m in ((fb, "1..*"), (co, "0..*"), (no, "0..*")):
         d.line([(match["cx"], match["bottom"]), (match["cx"], busy), (b["cx"], busy), (b["cx"], b["y"])], None, m)
     d.line([(match["right"], match["y"] + 220), (en["cx"], match["y"] + 220), (en["cx"], en["y"])], dashed=True, arrow=True)

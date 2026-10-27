@@ -26,7 +26,7 @@ Student Mentoring and Career Support Platform. Plain HTML, CSS and JavaScript. N
 Shared files: `styles.css`, `app.js` (sample data, navigation, helpers).
 
 ## Workflow shown
-The coordinator proposes a match, the mentor accepts or declines, and only then does the student see the mentor. Statuses: proposed, confirmed, active, completed, cancelled. Students and mentors never browse each other.
+The coordinator proposes a match, the mentor accepts or declines, and only then does the student see the mentor. Statuses: proposed, active (the mentor accepted), completed, cancelled. Students and mentors never browse each other.
 
 ## Limitations
 Sample data is stored in the browser (localStorage) so the flow can be tried. There is no backend, real authentication or email. Passwords are stored in plain text for the demo only. Use "Reset demo data" on the login page to start over.

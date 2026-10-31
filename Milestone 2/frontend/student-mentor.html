@@ -1,24 +1,26 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My mentor · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('student'), app = document.getElementById('app');
 function draw() {
-  const d = load(), p = d.students[u.id], m = d.matches.filter(x => x.studentId === u.id).slice(-1)[0];
-  const visible = m && ['active', 'completed'].includes(m.status);
-  const mp = visible ? d.mentors[m.mentorId] : null;
+  const d = load(), m = d.matches.filter(x => x.studentId === u.id).slice(-1)[0];
+  const shown = m && ['proposed', 'active', 'completed'].includes(m.status);
+  const mp = shown ? d.mentors[m.mentorId] : null, live = m && ['active', 'completed'].includes(m.status);
   const concerns = d.concerns.filter(c => c.raisedBy === u.id);
   let h = `<div class="eyebrow">Student</div><h1>My mentor</h1>`;
   if (m) h += `<div class="info"><b>Status:</b> ${pill(m.status)} &nbsp; <b>Next step:</b> ${esc(NEXT_STEP[m.status])}</div>`;
-  if (!visible) h += `<div class="info">${m && m.status === 'proposed' ? 'The coordinator is arranging your mentor. You will be notified here.' : 'No mentor assigned yet. The coordinator will arrange one after reviewing your profile.'}</div>
+  if (!shown) h += `<div class="info">${m ? 'Your last match was cancelled. The coordinator will arrange a new one.' : 'No mentor proposed yet. The coordinator will arrange one after reviewing your profile.'}</div>
     <p class="muted">You cannot browse mentors. The coordinator chooses the match for you.</p>`;
   else {
-    h += `<div class="card"><h2>${esc(userName(d, m.mentorId))} ${pill(m.status)}</h2><p><b>Qualifications:</b> ${esc(mp.qualifications)}<br><b>Expertise:</b> ${esc(mp.expertise)}<br><b>Experience:</b> ${esc(mp.experience)} years</p><p>${esc(mp.bio)}</p></div>
-    <div class="card" style="margin-top:16px"><h2>Are you ready to start?</h2><p>Current response: ${pill(readiness(p))}${p.readinessAt ? ` <span class="muted">recorded ${when(p.readinessAt)}</span>` : ''}</p><div class="actions"><button class="btn" data-r="ready">I am ready</button><button class="btn ghost" data-r="not_ready">Not ready yet</button></div></div>`;
-    if (['active', 'completed'].includes(m.status)) h += `<div class="card" style="margin-top:16px"><h2>Give feedback</h2>${d.feedback.filter(z => z.matchId === m.id && z.authorId === u.id).map(z => `<p class="muted">You rated this match ${z.rating}/5 on ${when(z.at)}.</p>`).join('')}<form id="fb"><label for="rating">Rating</label><select id="rating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select><label for="comments">Comments</label><textarea id="comments" rows="3"></textarea><div class="actions"><button class="btn" type="submit">Send feedback</button></div></form></div>`;
+    h += `<div class="card"><h2>${esc(userName(d, m.mentorId))} ${live ? pill(m.status) : ''}</h2><p><b>Qualifications:</b> ${esc(mp.qualifications)}<br><b>Expertise:</b> ${esc(mp.expertise)}<br><b>Experience:</b> ${esc(mp.experience)} years</p><p>${esc(mp.bio)}</p></div>`;
+    if (m.status === 'proposed') h += `<div class="card" style="margin-top:16px"><h2>Do you accept this mentor?</h2>
+      <p>Mentor's response: ${pill(m.mentorResponse)} &nbsp; Your response: ${pill(m.studentResponse)}${m.studentRespondedAt ? ` <span class="muted">recorded ${when(m.studentRespondedAt)}</span>` : ''}</p>
+      ${m.studentResponse === 'pending' ? '<div class="actions"><button class="btn" data-r="accepted">Accept</button><button class="btn danger" data-r="declined">Decline</button></div>' : '<p class="muted">The coordinator confirms the match once both of you have accepted.</p>'}</div>`;
+    if (live) h += `<div class="card" style="margin-top:16px"><h2>Give feedback</h2>${d.feedback.filter(z => z.matchId === m.id && z.authorId === u.id).map(z => `<p class="muted">You rated this match ${z.rating}/5 on ${when(z.at)}.</p>`).join('')}<form id="fb"><label for="rating">Rating</label><select id="rating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select><label for="comments">Comments</label><textarea id="comments" rows="3"></textarea><div class="actions"><button class="btn" type="submit">Send feedback</button></div></form></div>`;
   }
   if (m) h += `<div class="card" style="margin-top:16px"><h2>Raise a concern</h2><p class="muted">Use this if the match is not working. The coordinator will review it.</p><form id="cf"><textarea id="ctext" rows="3"></textarea><div class="err" id="cerr"></div><div class="actions"><button class="btn danger" type="submit">Submit concern</button></div></form>
     <ul class="list">${concerns.map(c => `<li>${esc(c.text)} ${pill(c.status)}</li>`).join('')}</ul></div>`;
   app.innerHTML = h;
-  app.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const x = load(); x.students[u.id].readiness = b.dataset.r; x.students[u.id].readinessAt = new Date().toISOString(); x.users.filter(a => a.role === 'admin').forEach(a => notify(x, a.id, `${u.name} responded: ${b.dataset.r === 'ready' ? 'ready' : 'not ready'} to start mentoring.`)); save(x); toast('Response saved'); draw(); });
+  app.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { const x = load(); respond(x, x.matches.find(y => y.id === m.id), 'student', b.dataset.r); save(x); toast(b.dataset.r === 'accepted' ? 'You accepted the proposal' : 'You declined the proposal'); draw(); });
   const fb = document.getElementById('fb');
-  if (fb) fb.onsubmit = e => { e.preventDefault(); const x = load(); x.feedback.push({ id: id(x), matchId: m.id, authorId: u.id, rating: +document.getElementById('rating').value, comments: document.getElementById('comments').value.trim(), at: new Date().toISOString() }); save(x); toast('Thank you for your feedback'); fb.reset(); draw(); };
+  if (fb) fb.onsubmit = e => { e.preventDefault(); const x = load(); x.feedback.push({ id: id(x), matchId: m.id, authorId: u.id, rating: +document.getElementById('rating').value, comments: document.getElementById('comments').value.trim(), at: new Date().toISOString() }); save(x); toast('Thank you for your feedback'); draw(); };
   const cf = document.getElementById('cf');
   if (cf) cf.onsubmit = e => { e.preventDefault(); const t = document.getElementById('ctext').value.trim(); if (!t) return document.getElementById('cerr').textContent = 'Describe your concern first.';
     const x = load(); x.concerns.push({ id: id(x), matchId: m.id, raisedBy: u.id, text: t, status: 'open', at: new Date().toISOString() });

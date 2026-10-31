@@ -84,8 +84,7 @@ def er():
     W = 360
     student = d.box(40, 80, W, "STUDENT_PROFILE", [
         ["PK student_id", "FK user_id  (UNIQUE)", "programme_level", "career_goals", "skills", "expected_mentor_expertise",
-         "mentoring_format", "expected_duration", "preferences", "availability_note",
-         "readiness (unknown | ready | not_ready)", "readiness_at", "updated_at"]])
+         "mentoring_format", "expected_duration", "preferences", "availability_note", "updated_at"]])
     user = d.box(500, 80, W, "USER", [
         ["PK user_id", "email  (UNIQUE)", "password_hash", "full_name",
          "role (student | mentor | admin)", "is_active", "created_at"]])
@@ -96,7 +95,8 @@ def er():
         ["PK slot_id", "FK mentor_id", "day_of_week", "start_time", "end_time", "timezone", "is_active"]])
     match = d.box(500, 470, W, "MATCH", [
         ["PK match_id", "FK student_id", "FK mentor_id", "FK proposed_by  (admin USER)",
-         "status (proposed | active |", "           completed | cancelled)", "notes", "proposed_at", "responded_at"]])
+         "status (proposed | active |", "           completed | cancelled)", "mentor_response (pending |", "           accepted | declined)", "mentor_responded_at",
+         "student_response (pending |", "           accepted | declined)", "student_responded_at", "notes", "proposed_at", "confirmed_at"]])
     ys = 80 + 120
     d.line([(student["right"], ys), (user["x"], ys)], "1", "1")
     d.line([(user["right"], ys), (mentor["x"], ys)], "1", "1")
@@ -127,15 +127,15 @@ def er():
 
 
 def cls():
-    d = Diagram(1960, 1420, "Class Diagram: Student Mentoring Platform (client-mediated)")
+    d = Diagram(1960, 1560, "Class Diagram: Student Mentoring Platform (client-mediated)")
     user = d.box(700, 80, 400, "User", [
         ["- userId: int", "- email: string", "- passwordHash: string", "- fullName: string", "- role: Role"],
         ["+ login(): Token", "+ logout()", "+ updateAccount()"]], stereo="<<abstract>>")
     student = d.box(40, 380, 420, "Student", [
         ["- programmeLevel: string", "- careerGoals: string", "- skills: string[]", "- expectedMentorExpertise: string",
          "- mentoringFormat: Format", "- expectedDuration: string", "- preferences: string",
-         "- availabilityNote: string", "- readiness: Readiness", "- readinessAt: datetime"],
-        ["+ updateProfile()", "+ viewAssignedMentor(): Match", "+ respondToReadiness()", "+ submitFeedback()", "+ raiseConcern()"]])
+         "- availabilityNote: string"],
+        ["+ updateProfile()", "+ viewAssignedMentor(): Match", "+ acceptMatch(m: Match)", "+ declineMatch(m: Match)", "+ submitFeedback()", "+ raiseConcern()"]])
     mentor = d.box(680, 380, 440, "Mentor", [
         ["- qualifications: string", "- experienceYears: int", "- expertiseAreas: string[]", "- bio: string", "- profileStatus: ProfileStatus"],
         ["+ updateProfile()", "+ setAvailability(slots)", "+ acceptMatch(m: Match)", "+ declineMatch(m: Match)"]])
@@ -143,10 +143,11 @@ def cls():
         ["- slotId: int", "- dayOfWeek: string", "- startTime: time", "- endTime: time", "- isActive: bool"]])
     admin = d.box(1560, 380, 360, "Administrator", [
         ["- adminId: int"],
-        ["+ viewStudentProfiles()", "+ editMentorProfile()", "+ verifyMentorProfile()", "+ proposeMatch(s, m): Match", "+ changeStatus(m, status)", "+ viewOverview()", "+ viewFeedback()", "+ resolveConcern()"]])
+        ["+ viewStudentProfiles()", "+ editMentorProfile()", "+ verifyMentorProfile()", "+ proposeMatch(s, m): Match", "+ confirmMatch(m: Match)", "+ changeStatus(m, status)", "+ viewOverview()", "+ viewFeedback()", "+ resolveConcern()"]])
     match = d.box(680, 800, 440, "Match", [
-        ["- matchId: int", "- status: MatchStatus", "- notes: string", "- proposedAt: datetime", "- respondedAt: datetime"],
-        ["+ accept()", "+ decline()", "+ complete()", "+ cancel()"]])
+        ["- matchId: int", "- status: MatchStatus", "- notes: string", "- proposedAt: datetime", "- mentorResponse: Response", "- studentResponse: Response",
+         "- mentorRespondedAt: datetime", "- studentRespondedAt: datetime", "- confirmedAt: datetime"],
+        ["+ recordResponse(by, answer)", "+ bothAccepted(): bool", "+ confirm()  [only if both accepted]", "+ complete()", "+ cancel()"]])
     # inheritance (hollow triangle at User)
     bus = user["bottom"] + 30
     for b in (student, mentor, admin):
@@ -162,19 +163,22 @@ def cls():
     d.text(student["cx"] + 16, ym - 10, "is matched in", anchor="start")
     d.text(admin["cx"] - 16, ym - 10, "proposes", anchor="end")
     # row 4
-    row4 = 1160
+    row4 = 1300
     busy = row4 - 40
-    W4, STEP = 320, 380
+    W4, STEP = 290, 320
     fb = d.box(40, row4, W4, "Feedback", [["- feedbackId: int", "- rating: int", "- comments: string", "- createdAt: datetime"]])
     co = d.box(40 + STEP, row4, W4, "Concern", [["- concernId: int", "- description: string", "- status: ConcernStatus", "- createdAt: datetime"]])
     no = d.box(40 + 2 * STEP, row4, W4, "Notification", [["- notificationId: int", "- message: string", "- isRead: bool", "- sentAt: datetime"]])
     lg = d.box(40 + 3 * STEP, row4, W4, "MatchStatusLog", [["- logId: int", "- oldStatus: MatchStatus", "- newStatus: MatchStatus", "- changedAt: datetime"]])
     en = d.box(40 + 4 * STEP, row4, W4, "MatchStatus", [["proposed", "active", "completed", "cancelled"]], stereo="<<enumeration>>", head=BLUE)
+    rs = d.box(40 + 5 * STEP, row4, W4, "Response", [["pending", "accepted", "declined"]], stereo="<<enumeration>>", head=BLUE)
     for b, m in ((fb, "0..*"), (co, "0..*"), (no, "0..*"), (lg, "0..*")):
         d.line([(match["cx"], match["bottom"]), (match["cx"], busy), (b["cx"], busy), (b["cx"], b["y"])], None, m)
-    d.line([(match["right"], match["y"] + 220), (en["cx"], match["y"] + 220), (en["cx"], en["y"])], dashed=True, arrow=True)
-    d.text(en["cx"] - 10, match["y"] + 208, "uses", anchor="end")
-    d.text(980, 1390, "Students and mentors never browse each other: every Match is proposed by an Administrator, who tracks its status.", size=13)
+    d.line([(match["right"], match["y"] + 240), (en["cx"], match["y"] + 240), (en["cx"], en["y"])], dashed=True, arrow=True)
+    d.text(en["cx"] - 10, match["y"] + 228, "uses", anchor="end")
+    d.line([(match["right"], match["y"] + 270), (rs["cx"], match["y"] + 270), (rs["cx"], rs["y"])], dashed=True, arrow=True)
+    d.text(rs["cx"] - 10, match["y"] + 258, "uses", anchor="end")
+    d.text(980, 1530, "Students and mentors never browse each other: every Match is proposed by an Administrator, who tracks its status.", size=13)
     d.save("class_diagram.svg")
 
 

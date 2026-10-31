@@ -9,7 +9,7 @@ const NAVS = {
   admin: [['admin.html', 'Overview'], ['admin-students.html', 'Students'], ['admin-mentors.html', 'Mentors'], ['admin-matches.html', 'Matches']]
 };
 const FORMATS = ['No preference', 'Video call', 'Phone call', 'Messaging'], DURATIONS = ['Not sure yet', '1 month', '3 months', '6 months'];
-const NEXT_STEP = { proposed: 'Waiting for the mentor to accept. The coordinator will tell you when it is decided.', active: 'Confirm that you are ready, then agree the first session with your mentor. Share feedback or a concern at any time.', completed: 'Mentoring has finished. Please leave feedback if you have not yet.', cancelled: 'This match has ended. The coordinator will arrange a new one.' };
+const NEXT_STEP = { proposed: 'Accept or decline the proposed match. The coordinator confirms it once both the mentor and the student have accepted.', active: 'Agree the first session with your mentor. Share feedback or a concern at any time.', completed: 'Mentoring has finished. Please leave feedback if you have not yet.', cancelled: 'This match has ended. The coordinator will arrange a new one.' };
 const daysAgo = n => new Date(Date.now() - n * 864e5).toISOString();
 
 function seed() {
@@ -23,17 +23,17 @@ function seed() {
       { id: 5, email: 'admin@client.test', password: 'demo123', name: 'Coordinator', role: 'admin' }
     ],
     students: {
-      1: { programme: 'Diploma', goals: 'Move into data analytics', skills: 'Python, SQL', expertise: 'Analytics, career transitions', format: 'Video call', duration: '3 months', preferences: 'Weekend calls', availability: 'Sat-Sun evenings', readiness: 'unknown', readinessAt: null },
-      2: { programme: 'Foundation', goals: '', skills: '', expertise: '', format: 'No preference', duration: 'Not sure yet', preferences: '', availability: '', readiness: 'unknown', readinessAt: null }
+      1: { programme: 'Diploma', goals: 'Move into data analytics', skills: 'Python, SQL', expertise: 'Analytics, career transitions', format: 'Video call', duration: '3 months', preferences: 'Weekend calls', availability: 'Sat-Sun evenings' },
+      2: { programme: 'Foundation', goals: '', skills: '', expertise: '', format: 'No preference', duration: 'Not sure yet', preferences: '', availability: '' }
     },
     mentors: {
       3: { qualifications: 'PhD, Data Science', experience: 12, expertise: 'Analytics, career transitions', bio: 'Leads an analytics team and mentors early-career students.', status: 'verified' },
       4: { qualifications: 'B.Tech', experience: 5, expertise: 'Web development', bio: '', status: 'pending' }
     },
     slots: [{ id: 1, mentorId: 3, day: 'Saturday', start: '18:00', end: '20:00' }],
-    matches: [{ id: 1, studentId: 1, mentorId: 3, status: 'proposed', notes: 'Goal fit: analytics', proposedAt: daysAgo(5), respondedAt: null, log: [{ from: '-', to: 'proposed', at: daysAgo(5), by: 'Coordinator' }] }],
+    matches: [{ id: 1, studentId: 1, mentorId: 3, status: 'proposed', notes: 'Goal fit: analytics', proposedAt: daysAgo(5), mentorResponse: 'pending', studentResponse: 'pending', mentorRespondedAt: null, studentRespondedAt: null, confirmedAt: null, log: [{ from: '-', to: 'proposed', at: daysAgo(5), by: 'Coordinator' }] }],
     concerns: [], feedback: [],
-    notifications: [{ id: 1, userId: 3, text: 'A new student match is waiting for your response.', at: daysAgo(5), read: false }]
+    notifications: [{ id: 1, userId: 3, text: 'A new student match is waiting for your response.', at: daysAgo(5), read: false }, { id: 2, userId: 1, text: 'A mentor has been proposed for you. Please accept or decline.', at: daysAgo(5), read: false }]
   };
 }
 function load() {
@@ -65,14 +65,25 @@ function toast(msg) {
   const t = document.getElementById('toast'); if (!t) return;
   t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200);
 }
+function bothAccepted(m) { return m.mentorResponse === 'accepted' && m.studentResponse === 'accepted'; }
 function setStatus(d, m, to, by) {
-  if (m.status === 'proposed' && !m.respondedAt) m.respondedAt = new Date().toISOString();
+  if (m.status === 'proposed' && to === 'active' && !bothAccepted(m)) return false;
+  if (to === 'active') m.confirmedAt = new Date().toISOString();
   m.log.push({ from: m.status, to, at: new Date().toISOString(), by });
   m.status = to;
   const sName = userName(d, m.studentId), mName = userName(d, m.mentorId);
   notify(d, m.studentId, `Your mentoring match with ${mName} is now ${to}. Next step: ${NEXT_STEP[to]}`);
   notify(d, m.mentorId, `Your match with ${sName} is now ${to}.${to === 'active' ? ' Next step: contact the student to agree the first session.' : ''}`);
   d.users.filter(u => u.role === 'admin').forEach(a => notify(d, a.id, `Match ${sName} / ${mName} is now ${to}.`));
+  return true;
+}
+/* who is 'mentor' or 'student'; answer is 'accepted' or 'declined'. The coordinator is told, and when both accept, can confirm. */
+function respond(d, m, who, answer) {
+  m[who + 'Response'] = answer; m[who + 'RespondedAt'] = new Date().toISOString();
+  const sName = userName(d, m.studentId), mName = userName(d, m.mentorId), name = who === 'mentor' ? mName : sName;
+  const admins = d.users.filter(u => u.role === 'admin');
+  admins.forEach(a => notify(d, a.id, `${name} (${who}) ${answer} the proposed match ${sName} / ${mName}.`));
+  if (bothAccepted(m)) admins.forEach(a => notify(d, a.id, `Both accepted: ${sName} / ${mName} is ready for you to confirm.`));
 }
 
 /* Demo shortcut used for screenshots: page.html?as=student|mentor|admin signs in as the sample user. */
@@ -83,5 +94,4 @@ function setStatus(d, m, to, by) {
   try { sessionStorage.setItem(USER_KEY, JSON.stringify({ id: u.id, name: u.name, role: u.role })); } catch (e) {}
 })();
 
-function readiness(p) { return p.readiness === 'ready' ? 'ready' : p.readiness === 'not_ready' ? 'not ready' : 'no response yet'; }
 function slotText(d, mid) { const t = d.slots.filter(x => x.mentorId === mid).map(x => `${x.day} ${x.start}-${x.end}`).join(', '); return t || 'no slots added'; }

@@ -36,7 +36,12 @@ th{background:#e9f2fa;color:#12345a;font-size:13px}
 .pill.pending{background:#fff5df;color:#9a5d00}
 .pill.verified{background:#e5f5ee;color:#16835b}
 .pill.open{background:#fbe7e3;color:#b3402a}
-.pill.resolved{background:#e5f5ee;color:#16835b}
+.pill.resolved,.pill.ready{background:#e5f5ee;color:#16835b}
+.pill.notready{background:#fbe7e3;color:#b3402a}
+.sidebyside{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+.sidebyside .card{background:#f7fafd}
+.sidebyside dl{margin:0}.sidebyside dt{font-size:12px;font-weight:bold;color:#567;margin-top:8px}.sidebyside dd{margin:0}
+@media(max-width:700px){.sidebyside{grid-template-columns:1fr}}
 .notice{background:#fff5df;border-left:4px solid #c77818;padding:12px;margin:16px 0;border-radius:4px}
 .info{background:#e9f2fa;border-left:4px solid #1769aa;padding:12px;margin:16px 0;border-radius:4px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}

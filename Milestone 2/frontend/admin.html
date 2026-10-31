@@ -5,11 +5,13 @@ function draw() {
   const open = d.concerns.filter(c => c.status === 'open'), pend = Object.entries(d.mentors).filter(([, m]) => m.status === 'pending');
   const unmatched = d.users.filter(x => x.role === 'student' && !d.matches.some(m => m.studentId === x.id && m.status !== 'cancelled' && m.status !== 'completed'));
   app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Overview</h1><p class="muted">Track every match from proposal to completion.</p>
-  <section class="grid">${['proposed', 'active', 'completed', 'cancelled'].map(s => `<div class="card">${pill(s)}<div class="metric">${count(s)}</div></div>`).join('')}</section>
+  <section class="grid"><div class="card"><h2>Student profiles</h2><div class="metric">${d.users.filter(x => x.role === 'student').length}</div><a href="admin-students.html">view students</a></div><div class="card"><h2>Mentor profiles</h2><div class="metric">${Object.keys(d.mentors).length}</div><a href="admin-mentors.html">view mentors</a></div></section>
+  <section class="grid">${['proposed', 'active', 'completed', 'cancelled'].map(s => `<div class="card">${pill(s)}<div class="metric">${count(s)}</div><a href="admin-matches.html">open matches</a></div>`).join('')}</section>
   <section class="grid"><div class="card"><h2>Needs attention</h2><ul class="list">
   <li>${delayed.length} proposal(s) waiting more than 3 days</li><li>${pend.length} mentor profile(s) to verify · <a href="admin-mentors.html">review</a></li><li>${unmatched.length} student(s) without a mentor · <a href="admin-matches.html">create match</a></li></ul></div>
   <div class="card"><h2>Open concerns</h2><ul class="list">${open.map(c => `<li>${esc(userName(d, c.raisedBy))}: ${esc(c.text)}<div class="actions"><button class="btn small" data-c="${c.id}">Mark resolved</button></div></li>`).join('') || '<li class="muted">No open concerns.</li>'}</ul></div></section>
-  <div class="card"><h2>Recent notifications</h2><ul class="list">${d.notifications.filter(n => n.userId === u.id).slice(-5).reverse().map(n => `<li>${esc(n.text)} <span class="muted">· ${when(n.at)}</span></li>`).join('') || '<li class="muted">None.</li>'}</ul></div>`;
+  <div class="card"><h2>Student feedback</h2><ul class="list">${d.feedback.slice(-5).reverse().map(f => { const m = d.matches.find(y => y.id === f.matchId); return `<li><b>${f.rating}/5</b> · ${esc(userName(d, f.authorId))} about ${esc(m ? userName(d, m.mentorId) : 'a mentor')}<br><span class="muted">${esc(f.comments || 'No comment')} · ${when(f.at)}</span></li>`; }).join('') || '<li class="muted">No feedback yet.</li>'}</ul></div>
+  <div class="card" style="margin-top:16px"><h2>Recent notifications</h2><ul class="list">${d.notifications.filter(n => n.userId === u.id).slice(-5).reverse().map(n => `<li>${esc(n.text)} <span class="muted">· ${when(n.at)}</span></li>`).join('') || '<li class="muted">None.</li>'}</ul></div>`;
   app.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { const x = load(); x.concerns.find(c => c.id === +b.dataset.c).status = 'resolved'; save(x); toast('Concern resolved'); draw(); });
 }
 draw();

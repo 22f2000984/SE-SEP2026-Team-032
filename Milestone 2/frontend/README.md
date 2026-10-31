@@ -15,13 +15,14 @@ Student Mentoring and Career Support Platform. Plain HTML, CSS and JavaScript. N
 |---|---|---|
 | `index.html`, `register.html` | all | Log in, create an account |
 | `student.html` | student | Dashboard, match status, notifications |
-| `student-profile.html` | student | Goals, skills, preferences, availability |
-| `student-mentor.html` | student | Assigned mentor, readiness, feedback, concerns |
+| `student-profile.html` | student | Goals, skills, expected mentor expertise, format, duration, availability |
+| `student-mentor.html` | student | Status and next step, assigned mentor, readiness, feedback, concerns |
 | `mentor.html` | mentor | Accept or decline match requests, mentees |
 | `mentor-profile.html` | mentor | Background and availability slots |
-| `admin.html` | coordinator | Status overview, delayed proposals, concerns |
-| `admin-mentors.html` | coordinator | Verify mentor profiles |
-| `admin-matches.html` | coordinator | Propose matches, change match status |
+| `admin.html` | coordinator | Profile counts, matches by status, delayed proposals, concerns, feedback |
+| `admin-students.html` | coordinator | View, search and filter student profiles and readiness |
+| `admin-mentors.html` | coordinator | Review, edit and verify mentor profiles and availability |
+| `admin-matches.html` | coordinator | Compare student and mentor, propose matches, change match status |
 
 Shared files: `styles.css`, `app.js` (sample data, navigation, helpers).
 

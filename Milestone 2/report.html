@@ -56,11 +56,11 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <p>The platform follows a client-mediated model. Students and mentors each maintain their own profile, but they cannot browse each other. The client (coordinator) reviews both sides, proposes a match, and tracks it until it ends.</p>
 <table><tr><th>Component</th><th>Responsibilities</th></tr>
 <tr><td>Authentication and roles</td><td>Registration, login, and three roles: student, mentor and administrator. Every action is checked against the role on the server, because hiding a link in the interface is not security.</td></tr>
-<tr><td>Student module</td><td>Maintain goals, skills, preferences and availability. View the assigned mentor after the mentor accepts the match. Give a readiness response, feedback, and raise concerns.</td></tr>
+<tr><td>Student module</td><td>Maintain goals, skills, expected mentor expertise, preferred format and duration, and availability. See the status and next step of the match, and view the assigned mentor after the mentor accepts. Give a readiness response (stored with its date), feedback, and raise concerns.</td></tr>
 <tr><td>Mentor module</td><td>Maintain qualifications, expertise, bio and availability slots. Accept or decline match requests, and see accepted mentees.</td></tr>
-<tr><td>Administrator module</td><td>Verify mentor profiles, propose matches, change match status, review concerns, and see delayed proposals and an overview by status.</td></tr>
+<tr><td>Administrator module</td><td>View and search student profiles, review, edit and verify mentor profiles, propose matches with the student's needs and the mentor's offer side by side, change match status, review concerns and student feedback, and see delayed proposals and an overview with profile counts and matches by status.</td></tr>
 <tr><td>Match workflow</td><td>Controls the status of a match: proposed, active, completed or cancelled. Only allowed transitions are accepted and each change is logged.</td></tr>
-<tr><td>Notifications</td><td>Tells the people involved when a match is proposed, accepted, declined or changes status.</td></tr>
+<tr><td>Notifications</td><td>Tells the people involved when a match is proposed, accepted, declined or changes status, and tells the student the agreed next step.</td></tr>
 <tr><td>Data layer</td><td>A relational database holding users, profiles, availability, matches, status log, feedback, concerns and notifications.</td></tr></table>
 <p><b>Match status flow:</b> proposed → active (the mentor accepts) → completed. A proposed or active match can be cancelled. A declined proposal becomes cancelled, and the coordinator can then propose a new match.</p>
 
@@ -71,7 +71,7 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <figure><img src="diagrams/er_diagram.png"><figcaption>Figure 2. Entity relationship diagram.</figcaption></figure></div>
 <table><tr><th>Table</th><th>Purpose and key constraints</th></tr>
 <tr><td>USER</td><td>One row per account. Email is unique. Role is student, mentor or admin.</td></tr>
-<tr><td>STUDENT_PROFILE</td><td>Goals, skills, preferences and readiness. One per student user (user_id unique).</td></tr>
+<tr><td>STUDENT_PROFILE</td><td>Goals, skills, expected mentor expertise, mentoring format and duration, preferences, availability, and the readiness response with its date. One per student user (user_id unique).</td></tr>
 <tr><td>MENTOR_PROFILE</td><td>Qualifications, expertise and verification status. One per mentor user.</td></tr>
 <tr><td>AVAILABILITY_SLOT</td><td>Weekly time slots of a mentor. Many slots per mentor.</td></tr>
 <tr><td>MATCH</td><td>Links a student and a mentor. Records the administrator who proposed it and its status.</td></tr>
@@ -83,18 +83,20 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <h2>6. Frontend Pages and Screenshots</h2>
 <p>The frontend is a set of 11 linked pages in plain HTML, CSS and JavaScript. It runs from the file <code>index.html</code> without installing anything. Sample data is kept in the browser so the whole flow can be tried: the coordinator proposes a match, the mentor accepts, and only then does the student see the mentor. There is no backend yet; the API is built in Milestones 3 and 4.</p>
 <table><tr><th>Page</th><th>Role</th><th>Purpose</th></tr>
-<tr><td>index, register</td><td>all</td><td>Log in and create an account</td></tr><tr><td>student</td><td>student</td><td>Dashboard, match status, notifications</td></tr><tr><td>student-profile</td><td>student</td><td>Goals, skills, preferences, availability</td></tr>
-<tr><td>student-mentor</td><td>student</td><td>Assigned mentor, readiness, feedback, concerns</td></tr><tr><td>mentor</td><td>mentor</td><td>Accept or decline requests, mentees</td></tr><tr><td>mentor-profile</td><td>mentor</td><td>Background and availability</td></tr>
-<tr><td>admin</td><td>coordinator</td><td>Overview by status, delayed proposals, concerns</td></tr><tr><td>admin-mentors</td><td>coordinator</td><td>Verify mentor profiles</td></tr><tr><td>admin-matches</td><td>coordinator</td><td>Propose matches, change status</td></tr></table>
+<tr><td>index, register</td><td>all</td><td>Log in and create an account</td></tr><tr><td>student</td><td>student</td><td>Dashboard, match status, notifications</td></tr><tr><td>student-profile</td><td>student</td><td>Goals, skills, expected expertise, format, duration, availability</td></tr>
+<tr><td>student-mentor</td><td>student</td><td>Status and next step, assigned mentor, readiness, feedback, concerns</td></tr><tr><td>mentor</td><td>mentor</td><td>Accept or decline requests, mentees</td></tr><tr><td>mentor-profile</td><td>mentor</td><td>Background and availability</td></tr>
+<tr><td>admin</td><td>coordinator</td><td>Profile counts, matches by status, delayed proposals, concerns, feedback</td></tr><tr><td>admin-students</td><td>coordinator</td><td>View, search and filter student profiles and readiness</td></tr><tr><td>admin-mentors</td><td>coordinator</td><td>Review, edit and verify mentor profiles and availability</td></tr><tr><td>admin-matches</td><td>coordinator</td><td>Compare student and mentor, propose matches, change status</td></tr></table>
 <figure><img src="screenshots/01_login.png"><figcaption>Figure 3. Login page with demo accounts.</figcaption></figure>
 <figure><img src="screenshots/02_student_dashboard.png"><figcaption>Figure 4. Student dashboard.</figcaption></figure>
 <figure><img src="screenshots/03_student_profile.png"><figcaption>Figure 5. Student profile.</figcaption></figure>
-<figure><img src="screenshots/04_student_my_mentor.png"><figcaption>Figure 6. Student's mentor page while the coordinator is still arranging the match.</figcaption></figure>
+<figure><img src="screenshots/04_student_my_mentor.png"><figcaption>Figure 6. Student's mentor page while the match is still proposed.</figcaption></figure>
 <figure><img src="screenshots/05_mentor_dashboard.png"><figcaption>Figure 7. Mentor dashboard with a match request to accept or decline.</figcaption></figure>
 <figure><img src="screenshots/06_mentor_profile.png"><figcaption>Figure 8. Mentor profile and availability.</figcaption></figure>
 <figure><img src="screenshots/07_admin_overview.png"><figcaption>Figure 9. Coordinator overview.</figcaption></figure>
 <figure><img src="screenshots/08_admin_mentors.png"><figcaption>Figure 10. Mentor verification.</figcaption></figure>
-<figure><img src="screenshots/09_admin_matches.png"><figcaption>Figure 11. Proposing matches and changing their status.</figcaption></figure>
+<figure><img src="screenshots/09_admin_matches.png"><figcaption>Figure 11. Proposing a match with the student's needs and the mentor's offer side by side, and changing match status.</figcaption></figure>
+<figure><img src="screenshots/12_admin_students.png"><figcaption>Figure 12. Coordinator view of student profiles with search and filters.</figcaption></figure>
+<figure><img src="screenshots/13_student_mentor_active.png"><figcaption>Figure 13. Student's mentor page after the mentor accepts: status, next step, mentor details, readiness, feedback and concern forms.</figcaption></figure>
 
 <h2>7. Frontend Code and README</h2>
 <p>The frontend ZIP contains the 11 pages, <code>styles.css</code>, <code>app.js</code> and a README. To run it, unzip, open the <code>frontend</code> folder and open <code>index.html</code> in a modern browser. The demo password is <code>demo123</code> for the student, mentor and coordinator accounts listed on the login page.</p>
@@ -103,5 +105,6 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <ul><li>Whether a mentor may decline a match, and what happens to the student after a decline (the prototype returns the student to the coordinator).</li>
 <li>Which channels are used for notifications, and whether email is needed.</li>
 <li>How long student and mentor data is kept, and who may see feedback.</li>
-<li>Time zone handling for availability slots.</li></ul>
+<li>Time zone handling for availability slots.</li>
+<li>User story US-C03 says the client confirms a match. In our flow the mentor's acceptance confirms it and the coordinator is informed and can cancel. We ask the TA to confirm this is acceptable.</li></ul>
 </body></html>

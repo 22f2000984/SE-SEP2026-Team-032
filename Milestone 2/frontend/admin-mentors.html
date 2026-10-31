@@ -1,10 +1,26 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mentors · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
+let q = '', editing = null;
 function draw() {
-  const d = load();
-  app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Mentors</h1><p class="muted">Verify mentor profiles before they can receive matches.</p>
-  <div class="table-wrap"><table><tr><th>Name</th><th>Qualifications</th><th>Expertise</th><th>Status</th><th></th></tr>${Object.entries(d.mentors).map(([uid, m]) => `<tr><td>${esc(userName(d, +uid))}</td><td>${esc(m.qualifications || '-')}</td><td>${esc(m.expertise || '-')}</td><td>${pill(m.status)}</td>
-  <td>${m.status === 'verified' ? '' : `<button class="btn small" data-v="${uid}">Verify</button>`}</td></tr>`).join('')}</table></div>`;
+  const d = load(), mentors = Object.entries(d.mentors).filter(([uid, m]) => !q || [userName(d, +uid), m.qualifications, m.expertise, m.bio].join(' ').toLowerCase().includes(q.toLowerCase()));
+  app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Mentors</h1><p class="muted">Review mentor profiles, correct them if needed, and verify them before they can receive matches.</p>
+  <div class="card"><label for="q">Search name, qualification or expertise</label><input id="q" value="${esc(q)}" placeholder="e.g. data"></div>
+  <div class="table-wrap" style="margin-top:16px"><table><tr><th>Mentor</th><th>Background</th><th>Availability</th><th>Status</th><th></th></tr>${mentors.map(([uid, m]) => editing === uid ? `<tr><td colspan="5"><form data-f="${uid}"><b>Edit ${esc(userName(d, +uid))}</b>
+    <div class="row"><div><label>Qualifications</label><input name="qualifications" value="${esc(m.qualifications)}"></div><div><label>Expertise areas</label><input name="expertise" value="${esc(m.expertise)}"></div></div>
+    <div class="row"><div><label>Years of experience</label><input name="experience" type="number" min="0" max="60" value="${esc(m.experience)}"></div><div><label>Short bio</label><input name="bio" value="${esc(m.bio)}"></div></div>
+    <div class="err"></div><div class="actions"><button class="btn small" type="submit">Save changes</button><button class="btn small ghost" type="button" data-cancel>Cancel</button></div></form></td></tr>`
+    : `<tr><td><b>${esc(userName(d, +uid))}</b></td><td>${esc(m.qualifications || '-')} · ${esc(m.experience)} yrs<br><span class="muted">Expertise:</span> ${esc(m.expertise || '-')}<br><span class="muted">${esc(m.bio || '')}</span></td>
+    <td>${esc(slotText(d, +uid))}</td><td>${pill(m.status)}</td>
+    <td><div class="actions"><button class="btn small ghost" data-e="${uid}">Edit</button>${m.status === 'verified' ? '' : `<button class="btn small" data-v="${uid}">Verify</button>`}</div></td></tr>`).join('') || '<tr><td colspan="5" class="muted">No mentors match.</td></tr>'}</table></div>`;
+  const qi = document.getElementById('q'); qi.oninput = () => { q = qi.value; const pos = qi.selectionStart; draw(); const n = document.getElementById('q'); n.focus(); n.setSelectionRange(pos, pos); };
   app.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { const x = load(); x.mentors[b.dataset.v].status = 'verified'; notify(x, +b.dataset.v, 'Your mentor profile has been verified.'); save(x); toast('Mentor verified'); draw(); });
+  app.querySelectorAll('[data-e]').forEach(b => b.onclick = () => { editing = b.dataset.e; draw(); });
+  app.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => { editing = null; draw(); });
+  app.querySelectorAll('[data-f]').forEach(f => f.onsubmit = e => {
+    e.preventDefault(); const v = k => f.elements[k].value.trim();
+    if (!v('qualifications') || !v('expertise')) return f.querySelector('.err').textContent = 'Qualifications and expertise are required.';
+    const x = load(), m = x.mentors[f.dataset.f]; m.qualifications = v('qualifications'); m.expertise = v('expertise'); m.experience = +v('experience') || 0; m.bio = v('bio');
+    notify(x, +f.dataset.f, 'The coordinator updated your mentor profile.'); save(x); editing = null; toast('Mentor profile updated'); draw();
+  });
 }
 draw();
 </script></body></html>

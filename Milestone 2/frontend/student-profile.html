@@ -1,11 +1,15 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student profile · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('student'), d = load(), p = d.students[u.id], app = document.getElementById('app');
-const f = [['programme', 'Programme level', 'input'], ['goals', 'Career goals', 'textarea'], ['skills', 'Skills', 'input'], ['preferences', 'Mentoring preferences', 'textarea'], ['availability', 'Availability', 'input']];
+const f = [['programme', 'Programme level', 'input'], ['goals', 'Career goals and the guidance you need (max 500 characters)', 'textarea'], ['skills', 'Skills', 'input'], ['expertise', 'Mentor expertise you would like (subjects or career areas)', 'input'], ['format', 'Preferred format', FORMATS], ['duration', 'Expected duration', DURATIONS], ['preferences', 'Other mentoring preferences', 'textarea'], ['availability', 'Availability (days or time windows)', 'input']];
 app.innerHTML = `<div class="eyebrow">Student</div><h1>My profile</h1><div class="card"><form id="f">${f.map(([k, l, t]) =>
-  `<label for="${k}">${l}</label>${t === 'textarea' ? `<textarea id="${k}" rows="3">${esc(p[k])}</textarea>` : `<input id="${k}" value="${esc(p[k])}">`}`).join('')}
-<div class="actions"><button class="btn" type="submit">Save profile</button></div></form></div>`;
+  `<label for="${k}">${l}</label>${Array.isArray(t) ? `<select id="${k}">${t.map(o => `<option ${o === p[k] ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>` : t === 'textarea' ? `<textarea id="${k}" rows="3">${esc(p[k])}</textarea>` : `<input id="${k}" value="${esc(p[k])}">`}`).join('')}
+<div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Save profile</button></div></form></div>`;
 document.getElementById('f').onsubmit = e => {
   e.preventDefault();
-  f.forEach(([k]) => p[k] = document.getElementById(k).value.trim());
+  const v = k => document.getElementById(k).value.trim(), err = document.getElementById('err');
+  if (!v('programme') || !v('goals')) return err.textContent = 'Programme level and career goals are required.';
+  if (v('goals').length > 500) return err.textContent = 'Career goals must be 500 characters or fewer.';
+  err.textContent = '';
+  f.forEach(([k]) => p[k] = v(k));
   save(d); toast('Profile saved');
 };
 </script></body></html>

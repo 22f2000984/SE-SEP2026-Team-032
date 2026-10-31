@@ -83,8 +83,9 @@ def er():
     d = Diagram(1840, 1190, "Entity Relationship Diagram: Student Mentoring Platform (client-mediated)")
     W = 360
     student = d.box(40, 80, W, "STUDENT_PROFILE", [
-        ["PK student_id", "FK user_id  (UNIQUE)", "programme_level", "career_goals", "skills", "preferences",
-         "availability_note", "readiness (ready | not_ready)", "updated_at"]])
+        ["PK student_id", "FK user_id  (UNIQUE)", "programme_level", "career_goals", "skills", "expected_mentor_expertise",
+         "mentoring_format", "expected_duration", "preferences", "availability_note",
+         "readiness (unknown | ready | not_ready)", "readiness_at", "updated_at"]])
     user = d.box(500, 80, W, "USER", [
         ["PK user_id", "email  (UNIQUE)", "password_hash", "full_name",
          "role (student | mentor | admin)", "is_active", "created_at"]])
@@ -131,17 +132,18 @@ def cls():
         ["- userId: int", "- email: string", "- passwordHash: string", "- fullName: string", "- role: Role"],
         ["+ login(): Token", "+ logout()", "+ updateAccount()"]], stereo="<<abstract>>")
     student = d.box(40, 380, 420, "Student", [
-        ["- programmeLevel: string", "- careerGoals: string", "- skills: string[]", "- preferences: string",
-         "- availabilityNote: string", "- readiness: Readiness"],
+        ["- programmeLevel: string", "- careerGoals: string", "- skills: string[]", "- expectedMentorExpertise: string",
+         "- mentoringFormat: Format", "- expectedDuration: string", "- preferences: string",
+         "- availabilityNote: string", "- readiness: Readiness", "- readinessAt: datetime"],
         ["+ updateProfile()", "+ viewAssignedMentor(): Match", "+ respondToReadiness()", "+ submitFeedback()", "+ raiseConcern()"]])
     mentor = d.box(680, 380, 440, "Mentor", [
         ["- qualifications: string", "- experienceYears: int", "- expertiseAreas: string[]", "- bio: string", "- profileStatus: ProfileStatus"],
-        ["+ updateProfile()", "+ setAvailability(slots)", "+ acceptMatch(m: Match)", "+ declineMatch(m: Match)", "+ submitFeedback()"]])
+        ["+ updateProfile()", "+ setAvailability(slots)", "+ acceptMatch(m: Match)", "+ declineMatch(m: Match)"]])
     slot = d.box(1200, 380, 300, "AvailabilitySlot", [
         ["- slotId: int", "- dayOfWeek: string", "- startTime: time", "- endTime: time", "- isActive: bool"]])
     admin = d.box(1560, 380, 360, "Administrator", [
         ["- adminId: int"],
-        ["+ verifyMentorProfile()", "+ proposeMatch(s, m): Match", "+ changeStatus(m, status)", "+ viewOverview()", "+ resolveConcern()"]])
+        ["+ viewStudentProfiles()", "+ editMentorProfile()", "+ verifyMentorProfile()", "+ proposeMatch(s, m): Match", "+ changeStatus(m, status)", "+ viewOverview()", "+ viewFeedback()", "+ resolveConcern()"]])
     match = d.box(680, 800, 440, "Match", [
         ["- matchId: int", "- status: MatchStatus", "- notes: string", "- proposedAt: datetime", "- respondedAt: datetime"],
         ["+ accept()", "+ decline()", "+ complete()", "+ cancel()"]])
@@ -162,11 +164,13 @@ def cls():
     # row 4
     row4 = 1160
     busy = row4 - 40
-    fb = d.box(40, row4, 400, "Feedback", [["- feedbackId: int", "- rating: int", "- comments: string", "- createdAt: datetime"]])
-    co = d.box(520, row4, 400, "Concern", [["- concernId: int", "- description: string", "- status: ConcernStatus", "- createdAt: datetime"]])
-    no = d.box(1000, row4, 400, "Notification", [["- notificationId: int", "- message: string", "- channel: string", "- isRead: bool"]])
-    en = d.box(1500, row4, 400, "MatchStatus", [["proposed", "active", "completed", "cancelled"]], stereo="<<enumeration>>", head=BLUE)
-    for b, m in ((fb, "1..*"), (co, "0..*"), (no, "0..*")):
+    W4, STEP = 320, 380
+    fb = d.box(40, row4, W4, "Feedback", [["- feedbackId: int", "- rating: int", "- comments: string", "- createdAt: datetime"]])
+    co = d.box(40 + STEP, row4, W4, "Concern", [["- concernId: int", "- description: string", "- status: ConcernStatus", "- createdAt: datetime"]])
+    no = d.box(40 + 2 * STEP, row4, W4, "Notification", [["- notificationId: int", "- message: string", "- isRead: bool", "- sentAt: datetime"]])
+    lg = d.box(40 + 3 * STEP, row4, W4, "MatchStatusLog", [["- logId: int", "- oldStatus: MatchStatus", "- newStatus: MatchStatus", "- changedAt: datetime"]])
+    en = d.box(40 + 4 * STEP, row4, W4, "MatchStatus", [["proposed", "active", "completed", "cancelled"]], stereo="<<enumeration>>", head=BLUE)
+    for b, m in ((fb, "0..*"), (co, "0..*"), (no, "0..*"), (lg, "0..*")):
         d.line([(match["cx"], match["bottom"]), (match["cx"], busy), (b["cx"], busy), (b["cx"], b["y"])], None, m)
     d.line([(match["right"], match["y"] + 220), (en["cx"], match["y"] + 220), (en["cx"], en["y"])], dashed=True, arrow=True)
     d.text(en["cx"] - 10, match["y"] + 208, "uses", anchor="end")

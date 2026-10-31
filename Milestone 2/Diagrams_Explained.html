@@ -89,14 +89,14 @@ li { margin: 3px 0; }
 
 <table>
 <tr><th style="width:18%">Class</th><th style="width:38%">Extra information it keeps</th><th>Actions it can do</th></tr>
-<tr><td><b>Student</b></td><td>programme level, career goals, skills, preferences, availability note, readiness (ready or not ready to be matched)</td><td><code>updateProfile()</code>, <code>viewAssignedMentor()</code> (see the mentor chosen for them), <code>respondToReadiness()</code>, <code>submitFeedback()</code>, <code>raiseConcern()</code></td></tr>
-<tr><td><b>Mentor</b></td><td>qualifications, years of experience, expertise areas, short bio, profile status (pending or verified)</td><td><code>updateProfile()</code>, <code>setAvailability(slots)</code>, <code>acceptMatch(m)</code>, <code>declineMatch(m)</code>, <code>submitFeedback()</code></td></tr>
-<tr><td><b>Administrator</b></td><td>an admin id</td><td><code>verifyMentorProfile()</code>, <code>proposeMatch(s, m)</code>, <code>changeStatus(m, status)</code>, <code>viewOverview()</code>, <code>resolveConcern()</code></td></tr>
+<tr><td><b>Student</b></td><td>programme level, career goals, skills, expected mentor expertise, preferred format (video, phone, messaging), expected duration, preferences, availability note, readiness (ready or not ready) and the date it was given</td><td><code>updateProfile()</code>, <code>viewAssignedMentor()</code> (see the mentor chosen for them), <code>respondToReadiness()</code>, <code>submitFeedback()</code>, <code>raiseConcern()</code></td></tr>
+<tr><td><b>Mentor</b></td><td>qualifications, years of experience, expertise areas, short bio, profile status (pending or verified)</td><td><code>updateProfile()</code>, <code>setAvailability(slots)</code>, <code>acceptMatch(m)</code>, <code>declineMatch(m)</code></td></tr>
+<tr><td><b>Administrator</b></td><td>an admin id</td><td><code>viewStudentProfiles()</code>, <code>editMentorProfile()</code>, <code>verifyMentorProfile()</code>, <code>proposeMatch(s, m)</code>, <code>changeStatus(m, status)</code>, <code>viewOverview()</code>, <code>viewFeedback()</code>, <code>resolveConcern()</code></td></tr>
 </table>
 <p><b>AvailabilitySlot</b> (to the right of Mentor) is one free time window: a day of the week, a start time and an end time. The line says one Mentor has zero or many slots (<code>1</code> to <code>0..*</code>). A new mentor starts with zero slots and adds them later.</p>
 
 <div class="box">
-<b>Notice what is missing.</b> Student has no "search mentors" action and Mentor has no "pick student" action. Only the Administrator has <code>proposeMatch</code>. That is the client-mediated rule written into the diagram.
+<b>Notice what is missing.</b> Student has no "search mentors" action and Mentor has no "pick student" action. Only the Administrator has <code>proposeMatch</code>, and only the Administrator can view all student profiles. Feedback is given by the student only, because the Milestone 1 stories have no mentor feedback. That is the client-mediated rule written into the diagram.
 </div>
 
 <h3>Layer 2: Match, the heart of the system</h3>
@@ -111,9 +111,10 @@ li { margin: 3px 0; }
 <h3>Layer 3: things that hang off a Match</h3>
 <table>
 <tr><th style="width:20%">Class</th><th>What it is</th></tr>
-<tr><td><b>Feedback</b></td><td>A rating (1 to 5) and comments that a student or mentor gives about a match.</td></tr>
+<tr><td><b>Feedback</b></td><td>A rating (1 to 5) and comments that the student gives about a match. The administrator can read it. A match has zero or many feedback entries.</td></tr>
+<tr><td><b>MatchStatusLog</b></td><td>One entry for every status change: the old status, the new status and when it happened. It is the history of a match.</td></tr>
 <tr><td><b>Concern</b></td><td>A problem someone raises about a match (for example "my mentor has not replied"). It has a status (open or resolved) so the administrator can follow it up.</td></tr>
-<tr><td><b>Notification</b></td><td>A message sent to a user (for example "You have a new match proposal"). It remembers whether it was read.</td></tr>
+<tr><td><b>Notification</b></td><td>A message sent to a user (for example "You have a new match proposal"). It stores when it was sent and whether it was read. When a match becomes active, the student's message also tells the next step.</td></tr>
 <tr><td><b>MatchStatus</b> (<code>&lt;&lt;enumeration&gt;&gt;</code>)</td><td>An "enumeration" is a fixed list of allowed values. Here: proposed, active, completed, cancelled. A match can only ever hold one of these five words. It is drawn with a dashed arrow because Match <i>uses</i> it.</td></tr>
 </table>
 
@@ -146,7 +147,7 @@ li { margin: 3px 0; }
 <table>
 <tr><th style="width:22%">Table</th><th style="width:36%">Columns (plain meaning)</th><th>Notes</th></tr>
 <tr><td><b>USER</b></td><td>user_id (PK), email (unique), password_hash, full_name, role (student, mentor or admin), is_active, created_at</td><td>One row per person who can log in. The password is stored as a scrambled hash, never as plain text. <code>role</code> decides which screens the person sees.</td></tr>
-<tr><td><b>STUDENT_PROFILE</b></td><td>student_id (PK), user_id (FK, unique), programme_level, career_goals, skills, preferences, availability_note, readiness, updated_at</td><td>Linked 1-to-1 with USER. <code>readiness</code> is ready or not_ready.</td></tr>
+<tr><td><b>STUDENT_PROFILE</b></td><td>student_id (PK), user_id (FK, unique), programme_level, career_goals, skills, expected_mentor_expertise, mentoring_format, expected_duration, preferences, availability_note, readiness, readiness_at, updated_at</td><td>Linked 1-to-1 with USER. <code>readiness</code> is unknown, ready or not_ready, and <code>readiness_at</code> records when the student answered.</td></tr>
 <tr><td><b>MENTOR_PROFILE</b></td><td>mentor_id (PK), user_id (FK, unique), qualifications, experience_years, expertise_areas, bio, profile_status, updated_at</td><td>Linked 1-to-1 with USER. <code>profile_status</code> is pending until the admin verifies it.</td></tr>
 <tr><td><b>AVAILABILITY_SLOT</b></td><td>slot_id (PK), mentor_id (FK), day_of_week, start_time, end_time, timezone, is_active</td><td>One row per free time window. One mentor has many slots (the 1 to N line).</td></tr>
 </table>
@@ -163,7 +164,7 @@ li { margin: 3px 0; }
 <table>
 <tr><th style="width:24%">Table</th><th style="width:36%">Columns</th><th>Why we need it</th></tr>
 <tr><td><b>MATCH_STATUS_LOG</b></td><td>log_id (PK), match_id (FK), old_status, new_status, changed_by (FK to USER), changed_at</td><td>A history. Every time a status changes, one row is added. This lets the admin see who changed what and when, and it is useful evidence during testing.</td></tr>
-<tr><td><b>FEEDBACK</b></td><td>feedback_id (PK), match_id (FK), author_id (FK to USER), rating 1 to 5, comments, created_at</td><td>Feedback from either side. <code>author_id</code> says who wrote it.</td></tr>
+<tr><td><b>FEEDBACK</b></td><td>feedback_id (PK), match_id (FK), author_id (FK to USER), rating 1 to 5, comments, created_at</td><td>The student's feedback on the match, which the administrator can read. <code>author_id</code> says who wrote it.</td></tr>
 <tr><td><b>CONCERN</b></td><td>concern_id (PK), match_id (FK), raised_by (FK to USER), description, status (open or resolved), created_at</td><td>Problems reported about a match, followed up by the admin.</td></tr>
 <tr><td><b>NOTIFICATION</b></td><td>notification_id (PK), user_id (FK), match_id (FK, may be empty), message, is_read, sent_at</td><td>Messages shown to a user. <code>match_id</code> may be empty because some notices (for example "your mentor profile was verified") are not about any match.</td></tr>
 </table>
@@ -176,7 +177,7 @@ li { margin: 3px 0; }
 <tr><td>AvailabilitySlot</td><td>AVAILABILITY_SLOT</td><td>Same.</td></tr>
 <tr><td>Match and its enumeration</td><td>MATCH (status column)</td><td>The enumeration becomes the allowed values of the status column.</td></tr>
 <tr><td>Feedback, Concern, Notification</td><td>FEEDBACK, CONCERN, NOTIFICATION</td><td>Same.</td></tr>
-<tr><td>(not shown)</td><td>MATCH_STATUS_LOG</td><td>Only in the database, as a history record.</td></tr>
+<tr><td>MatchStatusLog</td><td>MATCH_STATUS_LOG</td><td>Same: the history of every status change.</td></tr>
 </table>
 </div>
 
@@ -190,7 +191,7 @@ li { margin: 3px 0; }
 <li><b>Mr. Rao accepts.</b> status becomes <b>active</b> straight away, responded_at is filled, another log row and notifications are added. Riya can now see Mr. Rao on her mentor page. <i>(Action: acceptMatch(m).)</i> If he had declined, status would become <b>cancelled</b> and the admin would propose someone else.</li>
 <li><b>Mentoring begins.</b> The match stays <b>active</b>. Riya opens her mentor page and sees Mr. Rao. <i>(Action: viewAssignedMentor().)</i></li>
 <li><b>During mentoring.</b> Riya can raise a concern (a row in CONCERN, status open). The admin resolves it (status resolved). <i>(Actions: raiseConcern(), resolveConcern().)</i></li>
-<li><b>Mentoring ends.</b> status becomes <b>completed</b>. Both give feedback (rows in FEEDBACK with a rating from 1 to 5). The match is now closed for ever.</li>
+<li><b>Mentoring ends.</b> status becomes <b>completed</b>. Riya gives feedback (a row in FEEDBACK with a rating from 1 to 5) and the admin can read it. The match is now closed for ever.</li>
 </ol>
 
 <h2>Part 5. Review checklist for Adnan</h2>
@@ -201,7 +202,7 @@ li { margin: 3px 0; }
 <tr><td>2</td><td>Is the Administrator the only one who can propose a match?</td><td></td></tr>
 <tr><td>3</td><td>Does the status flow cover: propose, mentor accepts (match becomes active) or declines, complete, cancel?</td><td></td></tr>
 <tr><td>4</td><td>Can every field in the class diagram be found in an ER table (or is its absence explained, like Administrator)?</td><td></td></tr>
-<tr><td>5</td><td>Does every user story in the Milestone 1 report have a class action and a place to store its data?</td><td></td></tr>
+<tr><td>5</td><td>Does every user story in the Milestone 1 report have a class action and a place to store its data? Check these in particular: US-S04 and US-S05 (expected expertise, format, duration), US-S08 (readiness with date), US-C01 and US-C05 (admin views students and edits mentors), US-S10 (feedback readable by the admin).</td><td></td></tr>
 <tr><td>6</td><td>Can a student have more than one match over time (for example after a cancellation)?</td><td></td></tr>
 <tr><td>7</td><td>Is it clear who changed a status and when (MATCH_STATUS_LOG)?</td><td></td></tr>
 <tr><td>8</td><td>Are the multiplicities (1, N, 0..*) believable? Example: one mentor has many slots; one match has one student and one mentor.</td><td></td></tr>
@@ -210,6 +211,7 @@ li { margin: 3px 0; }
 
 <h3>Questions the team still needs to decide</h3>
 <ul>
+<li>US-C03 says the client confirms a match, but in our design the mentor's acceptance activates it and the admin can cancel. Is that acceptable?</li>
 <li>Does a declined proposal go straight to <b>cancelled</b>, or do we want a separate "declined" status? (The diagrams and prototype use cancelled.)</li>
 <li>Should a mentor be allowed to see the student's full profile before accepting? (The prototype shows a short summary.)</li>
 <li>Which database will store these tables? This is part of the tech stack decision in Jira card KAN-17.</li>

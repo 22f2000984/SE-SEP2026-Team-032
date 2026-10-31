@@ -16,7 +16,7 @@ document.getElementById('f').onsubmit = e => {
   if (pw.length < 6) return err.textContent = 'Password needs at least 6 characters.';
   if (d.users.some(u => u.email === email)) return err.textContent = 'This email is already registered.';
   const uid = id(d); d.users.push({ id: uid, email, password: pw, name, role });
-  if (role === 'student') d.students[uid] = { programme: '', goals: '', skills: '', preferences: '', availability: '', readiness: 'unknown' };
+  if (role === 'student') d.students[uid] = { programme: '', goals: '', skills: '', expertise: '', format: 'No preference', duration: 'Not sure yet', preferences: '', availability: '', readiness: 'unknown', readinessAt: null };
   else d.mentors[uid] = { qualifications: '', experience: 0, expertise: '', bio: '', status: 'pending' };
   d.users.filter(u => u.role === 'admin').forEach(a => notify(d, a.id, `New ${role} registered: ${name}.`));
   save(d); location.href = 'index.html';

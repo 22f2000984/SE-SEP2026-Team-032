@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Students · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
+let q = '', prog = '', ready = '';
+function draw() {
+  const d = load(), students = d.users.filter(x => x.role === 'student').filter(x => {
+    const p = d.students[x.id], hay = [x.name, p.goals, p.skills, p.expertise, p.preferences].join(' ').toLowerCase();
+    return (!q || hay.includes(q.toLowerCase())) && (!prog || p.programme === prog) && (!ready || p.readiness === ready);
+  });
+  const progs = [...new Set(d.users.filter(x => x.role === 'student').map(x => d.students[x.id].programme).filter(Boolean))];
+  app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Students</h1><p class="muted">Review student needs before proposing a match. Only the coordinator can see these profiles.</p>
+  <div class="card"><div class="row"><div><label for="q">Search name, goal, skill or expertise</label><input id="q" value="${esc(q)}" placeholder="e.g. analytics"></div>
+  <div class="row"><div><label for="prog">Programme level</label><select id="prog"><option value="">All</option>${progs.map(x => `<option ${x === prog ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+  <div><label for="ready">Readiness</label><select id="ready"><option value="">All</option>${['ready', 'not_ready', 'unknown'].map(x => `<option value="${x}" ${x === ready ? 'selected' : ''}>${x === 'unknown' ? 'no response yet' : x.replace('_', ' ')}</option>`).join('')}</select></div></div></div></div>
+  <div class="table-wrap" style="margin-top:16px"><table><tr><th>Student</th><th>Programme</th><th>Goals and needs</th><th>Mentoring preferences</th><th>Readiness</th><th>Match</th></tr>${students.map(x => {
+    const p = d.students[x.id], m = d.matches.filter(y => y.studentId === x.id).slice(-1)[0];
+    return `<tr><td><b>${esc(x.name)}</b><br><span class="muted">${esc(x.email)}</span></td><td>${esc(p.programme || '-')}</td>
+    <td>${esc(p.goals || 'not added yet')}<br><span class="muted">Skills: ${esc(p.skills || '-')}</span></td>
+    <td><span class="muted">Expertise:</span> ${esc(p.expertise || '-')}<br><span class="muted">Format:</span> ${esc(p.format || '-')} · <span class="muted">Duration:</span> ${esc(p.duration || '-')}<br><span class="muted">Available:</span> ${esc(p.availability || '-')}</td>
+    <td>${pill(readiness(p))}${p.readinessAt ? `<br><span class="muted">${when(p.readinessAt)}</span>` : ''}</td><td>${m ? pill(m.status) : '<span class="muted">none</span>'}</td></tr>`;
+  }).join('') || '<tr><td colspan="6" class="muted">No students match the filters.</td></tr>'}</table></div>`;
+  const bind = (id, set) => { const el = document.getElementById(id); el.oninput = el.onchange = () => { set(el.value); const pos = el.selectionStart; draw(); const n = document.getElementById(id); n.focus(); if (n.setSelectionRange && n.type !== 'select-one') n.setSelectionRange(pos, pos); }; };
+  bind('q', v => q = v); bind('prog', v => prog = v); bind('ready', v => ready = v);
+}
+draw();
+</script></body></html>

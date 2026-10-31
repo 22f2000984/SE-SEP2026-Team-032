@@ -1,13 +1,15 @@
 /* Shared helpers for the Milestone 2 prototype.
    All data is sample data kept in the browser (localStorage). There is no backend. */
-const DB_KEY = 't32_data', USER_KEY = 't32_user';
+const DB_KEY = 't32_data_v2', USER_KEY = 't32_user';
 const STATUSES = ['proposed', 'active', 'completed', 'cancelled'];
 const NEXT = { proposed: ['active', 'cancelled'], active: ['completed', 'cancelled'], completed: [], cancelled: [] };
 const NAVS = {
   student: [['student.html', 'Dashboard'], ['student-profile.html', 'My Profile'], ['student-mentor.html', 'My Mentor']],
   mentor: [['mentor.html', 'Dashboard'], ['mentor-profile.html', 'My Profile']],
-  admin: [['admin.html', 'Overview'], ['admin-mentors.html', 'Mentors'], ['admin-matches.html', 'Matches']]
+  admin: [['admin.html', 'Overview'], ['admin-students.html', 'Students'], ['admin-mentors.html', 'Mentors'], ['admin-matches.html', 'Matches']]
 };
+const FORMATS = ['No preference', 'Video call', 'Phone call', 'Messaging'], DURATIONS = ['Not sure yet', '1 month', '3 months', '6 months'];
+const NEXT_STEP = { proposed: 'Waiting for the mentor to accept. The coordinator will tell you when it is decided.', active: 'Confirm that you are ready, then agree the first session with your mentor. Share feedback or a concern at any time.', completed: 'Mentoring has finished. Please leave feedback if you have not yet.', cancelled: 'This match has ended. The coordinator will arrange a new one.' };
 const daysAgo = n => new Date(Date.now() - n * 864e5).toISOString();
 
 function seed() {
@@ -21,15 +23,15 @@ function seed() {
       { id: 5, email: 'admin@client.test', password: 'demo123', name: 'Coordinator', role: 'admin' }
     ],
     students: {
-      1: { programme: 'Diploma', goals: 'Move into data analytics', skills: 'Python, SQL', preferences: 'Weekend calls', availability: 'Sat-Sun evenings', readiness: 'unknown' },
-      2: { programme: 'Foundation', goals: '', skills: '', preferences: '', availability: '', readiness: 'unknown' }
+      1: { programme: 'Diploma', goals: 'Move into data analytics', skills: 'Python, SQL', expertise: 'Analytics, career transitions', format: 'Video call', duration: '3 months', preferences: 'Weekend calls', availability: 'Sat-Sun evenings', readiness: 'unknown', readinessAt: null },
+      2: { programme: 'Foundation', goals: '', skills: '', expertise: '', format: 'No preference', duration: 'Not sure yet', preferences: '', availability: '', readiness: 'unknown', readinessAt: null }
     },
     mentors: {
       3: { qualifications: 'PhD, Data Science', experience: 12, expertise: 'Analytics, career transitions', bio: 'Leads an analytics team and mentors early-career students.', status: 'verified' },
       4: { qualifications: 'B.Tech', experience: 5, expertise: 'Web development', bio: '', status: 'pending' }
     },
     slots: [{ id: 1, mentorId: 3, day: 'Saturday', start: '18:00', end: '20:00' }],
-    matches: [{ id: 1, studentId: 1, mentorId: 3, status: 'proposed', notes: 'Goal fit: analytics', proposedAt: daysAgo(5), log: [{ from: '-', to: 'proposed', at: daysAgo(5), by: 'Coordinator' }] }],
+    matches: [{ id: 1, studentId: 1, mentorId: 3, status: 'proposed', notes: 'Goal fit: analytics', proposedAt: daysAgo(5), respondedAt: null, log: [{ from: '-', to: 'proposed', at: daysAgo(5), by: 'Coordinator' }] }],
     concerns: [], feedback: [],
     notifications: [{ id: 1, userId: 3, text: 'A new student match is waiting for your response.', at: daysAgo(5), read: false }]
   };
@@ -43,7 +45,7 @@ function resetDemo() { try { localStorage.removeItem(DB_KEY); sessionStorage.rem
 function id(d) { return d.nextId++; }
 function me() { try { return JSON.parse(sessionStorage.getItem(USER_KEY)); } catch (e) { return null; } }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function pill(s) { return `<span class="pill ${esc(s)}">${esc(s)}</span>`; }
+function pill(s) { return `<span class="pill ${esc(s).replace(/[^a-z]/g, '')}">${esc(s)}</span>`; }
 function when(iso) { return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
 function userName(d, uid) { const u = d.users.find(x => x.id === uid); return u ? u.name : 'Unknown'; }
 function notify(d, userId, text) { d.notifications.push({ id: id(d), userId, text, at: new Date().toISOString(), read: false }); }
@@ -64,11 +66,12 @@ function toast(msg) {
   t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200);
 }
 function setStatus(d, m, to, by) {
+  if (m.status === 'proposed' && !m.respondedAt) m.respondedAt = new Date().toISOString();
   m.log.push({ from: m.status, to, at: new Date().toISOString(), by });
   m.status = to;
   const sName = userName(d, m.studentId), mName = userName(d, m.mentorId);
-  notify(d, m.studentId, `Your mentoring match with ${mName} is now ${to}.`);
-  notify(d, m.mentorId, `Your match with ${sName} is now ${to}.`);
+  notify(d, m.studentId, `Your mentoring match with ${mName} is now ${to}. Next step: ${NEXT_STEP[to]}`);
+  notify(d, m.mentorId, `Your match with ${sName} is now ${to}.${to === 'active' ? ' Next step: contact the student to agree the first session.' : ''}`);
   d.users.filter(u => u.role === 'admin').forEach(a => notify(d, a.id, `Match ${sName} / ${mName} is now ${to}.`));
 }
 
@@ -79,3 +82,6 @@ function setStatus(d, m, to, by) {
   const u = load().users.find(x => x.id === ids[as]);
   try { sessionStorage.setItem(USER_KEY, JSON.stringify({ id: u.id, name: u.name, role: u.role })); } catch (e) {}
 })();
+
+function readiness(p) { return p.readiness === 'ready' ? 'ready' : p.readiness === 'not_ready' ? 'not ready' : 'no response yet'; }
+function slotText(d, mid) { const t = d.slots.filter(x => x.mentorId === mid).map(x => `${x.day} ${x.start}-${x.end}`).join(', '); return t || 'no slots added'; }

@@ -80,13 +80,12 @@ class Diagram:
 
 
 def er():
-    d = Diagram(2300, 1480, "Entity Relationship Diagram: Student Mentoring Platform (client-mediated)")
+    d = Diagram(1840, 1480, "Entity Relationship Diagram: Student Mentoring Platform (client-mediated)")
     W = 360
-    c = [40, 500, 960, 1420, 1880]
-    sa = d.box(c[0], 80, W, "STUDENT_AVAILABILITY_SLOT", [["PK slot_id", "FK student_id", "day_of_week", "time_band (morning | afternoon |", "           evening)"]])
+    c = [None, 40, 500, 960, 1420]
     student = d.box(c[1], 80, W, "STUDENT_PROFILE", [
         ["PK student_id", "FK user_id  (UNIQUE)", "programme_level", "career_goals", "skills", "mentoring_format",
-         "expected_duration", "preferences", "availability_note", "updated_at"]])
+         "expected_duration", "preferences", "availability_note  (days or time windows)", "updated_at"]])
     user = d.box(c[2], 80, W, "USER", [
         ["PK user_id", "email  (UNIQUE)", "password_hash", "full_name", "role (student | mentor | admin)", "is_active", "created_at"]])
     mentor = d.box(c[3], 80, W, "MENTOR_PROFILE", [
@@ -95,15 +94,14 @@ def er():
     slot = d.box(c[4], 80, W, "AVAILABILITY_SLOT", [
         ["PK slot_id", "FK mentor_id", "day_of_week", "start_time", "end_time", "timezone", "is_active"]])
     ys = 80 + 120
-    d.line([(sa["right"], ys), (student["x"], ys)], "N", "1")
     d.line([(student["right"], ys), (user["x"], ys)], "1", "1")
     d.line([(user["right"], ys), (mentor["x"], ys)], "1", "1")
     d.line([(mentor["right"], ys), (slot["x"], ys)], "1", "N")
     # shared topic list: STUDENT_TOPIC - EXPERTISE_TOPIC - MENTOR_TOPIC
     ty = 470
-    st = d.box(620, ty, 240, "STUDENT_TOPIC", [["FK student_id", "FK topic_id"]])
-    tp = d.box(1020, ty, 240, "EXPERTISE_TOPIC", [["PK topic_id", "name  (UNIQUE)"]])
-    mt = d.box(1420, ty, 240, "MENTOR_TOPIC", [["FK mentor_id", "FK topic_id"]])
+    st = d.box(160, ty, 240, "STUDENT_TOPIC", [["FK student_id", "FK topic_id"]])
+    tp = d.box(560, ty, 240, "EXPERTISE_TOPIC", [["PK topic_id", "name  (UNIQUE)"]])
+    mt = d.box(960, ty, 240, "MENTOR_TOPIC", [["FK mentor_id", "FK topic_id"]])
     d.line([(student["x"] + 240, student["bottom"]), (st["cx"], st["y"])], "1", "N")
     d.line([(mentor["x"] + 120, mentor["bottom"]), (mt["cx"], mt["y"])], "1", "N")
     my = ty + 50
@@ -131,12 +129,12 @@ def er():
     for i, (n, f) in enumerate(boxes):
         b = d.box(40 + i * 460, row3, W, n, [f])
         d.line([(match["cx"], match["bottom"]), (match["cx"], busy), (b["cx"], busy), (b["cx"], b["y"])], "1" if i == 1 else None, "N")
-    d.text(1150, 1460, "PK = primary key, FK = foreign key. 1 / N shows how many rows on each side of a relationship. Match scores are calculated on request; only the score at proposal time is stored.", size=13)
+    d.text(920, 1460, "PK = primary key, FK = foreign key. 1 / N shows how many rows on each side of a relationship. Match scores are calculated on request; only the score at proposal time is stored.", size=13)
     d.save("er_diagram.svg")
 
 
 def cls():
-    d = Diagram(1960, 1860, "Class Diagram: Student Mentoring Platform (client-mediated)")
+    d = Diagram(1960, 1820, "Class Diagram: Student Mentoring Platform (client-mediated)")
     user = d.box(700, 80, 400, "User", [
         ["- userId: int", "- email: string", "- passwordHash: string", "- fullName: string", "- role: Role"],
         ["+ login(): Token", "+ logout()", "+ updateAccount()"]], stereo="<<abstract>>")
@@ -144,11 +142,10 @@ def cls():
         ["- programmeLevel: string", "- careerGoals: string", "- skills: string[]", "- expectedTopics: Topic[]",
          "- mentoringFormat: Format", "- expectedDuration: string", "- preferences: string",
          "- availabilityNote: string"],
-        ["+ updateProfile()", "+ setAvailability(slots)", "+ viewAssignedMentor(): Match", "+ acceptMatch(m: Match)", "+ declineMatch(m: Match)", "+ submitFeedback()", "+ raiseConcern()"]])
+        ["+ updateProfile()", "+ viewAssignedMentor(): Match", "+ acceptMatch(m: Match)", "+ declineMatch(m: Match)", "+ submitFeedback()", "+ raiseConcern()"]])
     mentor = d.box(680, 380, 440, "Mentor", [
         ["- qualifications: string", "- experienceYears: int", "- topics: Topic[]", "- bio: string", "- profileStatus: ProfileStatus", "- maxStudents: int"],
         ["+ updateProfile()", "+ setAvailability(slots)", "+ setCapacity(n: int)", "+ freePlaces(): int", "+ acceptMatch(m: Match)", "+ declineMatch(m: Match)"]])
-    sslot = d.box(40, 130, 420, "StudentSlot", [["- slotId: int", "- dayOfWeek: string", "- timeBand: TimeBand"]])
     slot = d.box(1200, 380, 300, "AvailabilitySlot", [
         ["- slotId: int", "- dayOfWeek: string", "- startTime: time", "- endTime: time", "- isActive: bool"]])
     admin = d.box(1560, 380, 360, "Administrator", [
@@ -165,7 +162,6 @@ def cls():
               [(b["cx"], b["y"]), (user["cx"], user["bottom"])]
         d.line(pts, hollow=True)
     d.line([(mentor["right"], 520), (slot["x"], 520)], "1", "0..*")
-    d.line([(120, sslot["bottom"]), (120, student["y"])], "0..*", "1")
     # associations to Match
     ym = match["y"] + 90
     d.line([(student["cx"], student["bottom"]), (student["cx"], ym), (match["x"], ym)], "1", "0..*")
@@ -190,15 +186,14 @@ def cls():
     d.line([(match["right"], match["y"] + 270), (rs["cx"], match["y"] + 270), (rs["cx"], rs["y"])], dashed=True, arrow=True)
     d.text(rs["cx"] - 10, match["y"] + 258, "uses", anchor="end")
     row5 = 1520
-    ms = d.box(40, row5, 420, "MatchingService", [["- expertiseWeight: int = 40", "- availabilityWeight: int = 30", "- capacityWeight: int = 15", "- experienceWeight: int = 15", "- minGoodScore: int = 40"],
+    ms = d.box(40, row5, 420, "MatchingService", [["- topicWeight: int = 70", "- experienceWeight: int = 30", "- minGoodScore: int = 40"],
         ["+ isEligible(s: Student, m: Mentor): bool", "+ score(s: Student, m: Mentor): MatchScore", "+ recommend(s: Student, n: int): MatchScore[]"]], stereo="<<service>>")
-    sc = d.box(540, row5, 340, "MatchScore", [["- total: int", "- expertisePoints: int", "- availabilityPoints: int", "- capacityPoints: int", "- experiencePoints: int", "- reasons: string[]"]])
+    sc = d.box(540, row5, 340, "MatchScore", [["- total: int", "- topicPoints: int", "- experiencePoints: int", "- reasons: string[]"]])
     d.line([(ms["right"], row5 + 110), (sc["x"], row5 + 110)], dashed=True, arrow=True)
     d.text((ms["right"] + sc["x"]) / 2, row5 + 98, "creates", size=12)
     d.box(960, row5, 300, "Topic", [["Data Science", "Web Development", "Career Switching", "Interview Preparation", "Product Management", "Higher Studies", "Entrepreneurship", "Cloud and DevOps"]], stereo="<<enumeration>>", head=BLUE)
-    d.box(1300, row5, 260, "TimeBand", [["morning", "afternoon", "evening"]], stereo="<<enumeration>>", head=BLUE)
-    d.box(1600, row5, 300, "Format", [["No preference", "Video call", "Phone call", "Messaging"]], stereo="<<enumeration>>", head=BLUE)
-    d.text(980, 1830, "Students and mentors never browse each other. The Administrator asks the MatchingService for scored recommendations, then proposes, confirms or cancels each Match.", size=13)
+    d.box(1300, row5, 300, "Format", [["No preference", "Video call", "Phone call", "Messaging"]], stereo="<<enumeration>>", head=BLUE)
+    d.text(980, 1795, "Students and mentors never browse each other. The Administrator asks the MatchingService for scored recommendations, then proposes, confirms or cancels each Match.", size=13)
     d.save("class_diagram.svg")
 
 

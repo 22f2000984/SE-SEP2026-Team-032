@@ -2,7 +2,7 @@
 let q = '', editing = null;
 function draw() {
   const d = load(), mentors = Object.entries(d.mentors).filter(([uid, m]) => !q || [userName(d, +uid), m.qualifications, (m.topics || []).join(' '), m.bio].join(' ').toLowerCase().includes(q.toLowerCase()));
-  app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Mentors</h1><p class="muted">Review mentor profiles, correct them if needed, and verify them before they can receive matches.</p>
+  app.innerHTML = `<div class="eyebrow">Admin</div><h1>Mentors</h1><p class="muted">Review mentor profiles, correct them if needed, and verify them before they can receive matches.</p>
   <div class="card"><label for="q">Search name, qualification or topic</label><input id="q" value="${esc(q)}" placeholder="e.g. data"></div>
   <div class="table-wrap" style="margin-top:16px"><table><tr><th>Mentor</th><th>Background</th><th>Availability and capacity</th><th>Status</th><th></th></tr>${mentors.map(([uid, m]) => editing === uid ? `<tr><td colspan="5"><form data-f="${uid}"><b>Edit ${esc(userName(d, +uid))}</b>
     <div class="row"><div><label>Qualifications</label><input name="qualifications" value="${esc(m.qualifications)}"></div><div><label>Years of experience</label><input name="experience" type="number" min="0" max="60" value="${esc(m.experience)}"></div></div>
@@ -22,7 +22,7 @@ function draw() {
     if (!(mx >= 1 && mx <= 10)) return err.textContent = 'Maximum students must be between 1 and 10.';
     if (mx < used(x, +f.dataset.f)) return err.textContent = `This mentor already has ${used(x, +f.dataset.f)} open matches, so the maximum cannot be lower.`;
     m.qualifications = v('qualifications'); m.topics = topics; m.experience = +v('experience') || 0; m.maxStudents = mx; m.bio = v('bio');
-    notify(x, +f.dataset.f, 'The coordinator updated your mentor profile.'); save(x); editing = null; toast('Mentor profile updated'); draw();
+    notify(x, +f.dataset.f, 'The admin updated your mentor profile.'); save(x); editing = null; toast('Mentor profile updated'); draw();
   });
 }
 draw();

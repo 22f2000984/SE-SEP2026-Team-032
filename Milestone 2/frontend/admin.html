@@ -1,11 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coordinator overview · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin overview · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
 function draw() {
   const d = load(), count = s => d.matches.filter(m => m.status === s).length;
   const ready = d.matches.filter(m => m.status === 'proposed' && bothAccepted(m)), declined = d.matches.filter(m => m.status === 'proposed' && (m.mentorResponse === 'declined' || m.studentResponse === 'declined'));
   const delayed = d.matches.filter(m => m.status === 'proposed' && Date.now() - new Date(m.proposedAt) > 3 * 864e5);
   const open = d.concerns.filter(c => c.status === 'open'), pend = Object.entries(d.mentors).filter(([, m]) => m.status === 'pending'), waiting = waitingStudents(d);
   const card = (n, label, href, cta) => `<div class="stat alert ${n ? '' : 'zero'}"><div class="metric">${n}</div><div class="lbl">${label}</div>${n ? `<a href="${href}">${cta}</a>` : ''}</div>`;
-  app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Overview</h1><p class="muted">What needs your attention first, then the recommended matches.</p>
+  app.innerHTML = `<div class="eyebrow">Admin</div><h1>Overview</h1><p class="muted">What needs your attention first, then the recommended matches.</p>
   <section class="stats">${card(ready.length, 'matches ready to confirm', 'admin-matches.html', 'confirm')}${card(declined.length, 'proposals declined by a side', 'admin-matches.html', 'decide')}${card(pend.length, 'mentors to verify', 'admin-mentors.html', 'review')}${card(waiting.length, 'students waiting for a match', 'admin-matches.html', 'match')}${card(open.length, 'open concerns', '#concerns', 'resolve')}</section>
   <div class="card"><h2>Recommended matches</h2><p class="muted">Best mentor for each waiting student, scored out of 100. <a href="admin-matches.html">See top 3 and more</a></p>${recoHtml(d, 1)}</div>
   <section class="grid"><div class="card"><h2>Mentor capacity</h2><ul class="list">${Object.keys(d.mentors).map(Number).map(mid => `<li><b>${esc(userName(d, mid))}</b> ${pill(d.mentors[mid].status)}<br>${capBar(d, mid)}</li>`).join('')}</ul></div>

@@ -9,11 +9,9 @@ const NAVS = {
   admin: [['admin.html', 'Overview'], ['admin-students.html', 'Students'], ['admin-mentors.html', 'Mentors'], ['admin-matches.html', 'Matches']]
 };
 const FORMATS = ['No preference', 'Video call', 'Phone call', 'Messaging'], DURATIONS = ['Not sure yet', '1 month', '3 months', '6 months'];
-const NEXT_STEP = { proposed: 'Accept or decline the proposed match. The coordinator confirms it once both the mentor and the student have accepted.', active: 'Agree the first session with your mentor. Share feedback or a concern at any time.', completed: 'Mentoring has finished. Please leave feedback if you have not yet.', cancelled: 'This match has ended. The coordinator will arrange a new one.' };
+const NEXT_STEP = { proposed: 'Accept or decline the proposed match. The admin confirms it once both the mentor and the student have accepted.', active: 'Agree the first session with your mentor. Share feedback or a concern at any time.', completed: 'Mentoring has finished. Please leave feedback if you have not yet.', cancelled: 'This match has ended. The admin will arrange a new one.' };
 const TOPICS = ['Data Science', 'Web Development', 'Career Switching', 'Interview Preparation', 'Product Management', 'Higher Studies', 'Entrepreneurship', 'Cloud and DevOps'];
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const BANDS = { morning: [6, 12], afternoon: [12, 17], evening: [17, 22] };
-const WEIGHTS = { expertise: 40, availability: 30, capacity: 15, experience: 15 };
+const WEIGHTS = { topics: 70, experience: 30 };
 const MIN_SCORE = 40, DEFAULT_CAPACITY = 3;
 const daysAgo = n => new Date(Date.now() - n * 864e5).toISOString();
 
@@ -25,7 +23,7 @@ function seed() {
       { id: 2, email: 'rohan@student.test', password: 'demo123', name: 'Rohan Das', role: 'student' },
       { id: 3, email: 'meera@mentor.test', password: 'demo123', name: 'Dr. Meera Iyer', role: 'mentor' },
       { id: 4, email: 'karan@mentor.test', password: 'demo123', name: 'Karan Shah', role: 'mentor' },
-      { id: 5, email: 'admin@client.test', password: 'demo123', name: 'Coordinator', role: 'admin' },
+      { id: 5, email: 'admin@client.test', password: 'demo123', name: 'Admin', role: 'admin' },
       { id: 6, email: 'neha@student.test', password: 'demo123', name: 'Neha Joshi', role: 'student' },
       { id: 7, email: 'priya@mentor.test', password: 'demo123', name: 'Priya Nair', role: 'mentor' }
     ],
@@ -34,11 +32,6 @@ function seed() {
       2: { programme: 'Foundation', goals: 'Prepare for software interviews', skills: 'HTML, JavaScript', topics: ['Interview Preparation', 'Web Development'], format: 'Messaging', duration: '1 month', preferences: '', availability: 'Sunday afternoons' },
       6: { programme: 'Degree', goals: 'Plan a product management career', skills: 'Excel, communication', topics: ['Product Management', 'Career Switching'], format: 'Phone call', duration: '6 months', preferences: 'Short weekly calls', availability: 'Sunday and Wednesday evenings' }
     },
-    studentSlots: [
-      { id: 1, studentId: 1, day: 'Saturday', band: 'evening' }, { id: 2, studentId: 1, day: 'Sunday', band: 'evening' },
-      { id: 3, studentId: 2, day: 'Sunday', band: 'afternoon' }, { id: 4, studentId: 2, day: 'Sunday', band: 'evening' },
-      { id: 5, studentId: 6, day: 'Sunday', band: 'evening' }, { id: 6, studentId: 6, day: 'Wednesday', band: 'evening' }
-    ],
     mentors: {
       3: { qualifications: 'PhD, Data Science', experience: 12, topics: ['Data Science', 'Career Switching'], bio: 'Leads an analytics team and mentors early-career students.', status: 'verified', maxStudents: 3 },
       4: { qualifications: 'B.Tech', experience: 5, topics: ['Web Development'], bio: '', status: 'pending', maxStudents: 2 },
@@ -49,7 +42,7 @@ function seed() {
       { id: 2, mentorId: 7, day: 'Sunday', start: '17:00', end: '19:00' },
       { id: 3, mentorId: 7, day: 'Wednesday', start: '18:00', end: '19:30' }
     ],
-    matches: [{ id: 1, studentId: 1, mentorId: 3, status: 'proposed', notes: 'Goal fit: analytics', proposedAt: daysAgo(5), mentorResponse: 'pending', studentResponse: 'pending', mentorRespondedAt: null, studentRespondedAt: null, confirmedAt: null, log: [{ from: '-', to: 'proposed', at: daysAgo(5), by: 'Coordinator' }] }],
+    matches: [{ id: 1, studentId: 1, mentorId: 3, status: 'proposed', notes: 'Goal fit: analytics', proposedAt: daysAgo(5), mentorResponse: 'pending', studentResponse: 'pending', mentorRespondedAt: null, studentRespondedAt: null, confirmedAt: null, log: [{ from: '-', to: 'proposed', at: daysAgo(5), by: 'Admin' }] }],
     concerns: [], feedback: [],
     notifications: [{ id: 1, userId: 3, text: 'A new student match is waiting for your response.', at: daysAgo(5), read: false }, { id: 2, userId: 1, text: 'A mentor has been proposed for you. Please accept or decline.', at: daysAgo(5), read: false }]
   };
@@ -76,7 +69,7 @@ function guard(role) {
   if (role && u.role !== role) { location.href = 'index.html'; return null; }
   const links = NAVS[u.role].map(([h, t]) => `<a href="${h}" class="${location.pathname.endsWith(h) ? 'active' : ''}">${t}</a>`).join('');
   document.body.insertAdjacentHTML('afterbegin',
-    `<header><a class="brand" href="${NAVS[u.role][0][0]}">IITM · MENTOR CONNECT</a><nav class="nav">${links}<span class="who">${esc(u.name)} (${u.role})</span><a href="#" id="logout">Log out</a></nav></header>`);
+    `<header><a class="brand" href="${NAVS[u.role][0][0]}">IITM · MENTOR CONNECT</a><nav class="nav">${links}<span class="who">${esc(u.name)}${u.role === 'admin' ? '' : ` (${u.role})`}</span><a href="#" id="logout">Log out</a></nav></header>`);
   document.getElementById('logout').onclick = e => { e.preventDefault(); sessionStorage.removeItem(USER_KEY); location.href = 'index.html'; };
   document.body.insertAdjacentHTML('beforeend', '<div class="toast" id="toast"></div><footer>Team 032 – Himalayan Coders · Milestone 2 frontend prototype (sample data, no backend)</footer>');
   return u;
@@ -97,7 +90,7 @@ function setStatus(d, m, to, by) {
   d.users.filter(u => u.role === 'admin').forEach(a => notify(d, a.id, `Match ${sName} / ${mName} is now ${to}.`));
   return true;
 }
-/* who is 'mentor' or 'student'; answer is 'accepted' or 'declined'. The coordinator is told, and when both accept, can confirm. */
+/* who is 'mentor' or 'student'; answer is 'accepted' or 'declined'. The admin is told, and when both accept, can confirm. */
 function respond(d, m, who, answer) {
   m[who + 'Response'] = answer; m[who + 'RespondedAt'] = new Date().toISOString();
   const sName = userName(d, m.studentId), mName = userName(d, m.mentorId), name = who === 'mentor' ? mName : sName;
@@ -117,13 +110,11 @@ function respond(d, m, who, answer) {
 
 /* ---------- Mentor availability and capacity ---------- */
 function slotText(d, mid) { const t = d.slots.filter(x => x.mentorId === mid).map(x => `${x.day} ${x.start}-${x.end}`).join(', '); return t || 'no slots added'; }
-function studentSlotText(d, sid) { const t = d.studentSlots.filter(x => x.studentId === sid).map(x => `${x.day} ${x.band}`).join(', '); return t || 'no slots shared'; }
 function used(d, mid) { return d.matches.filter(m => m.mentorId === mid && ['proposed', 'active'].includes(m.status)).length; }
 function maxOf(d, mid) { return d.mentors[mid].maxStudents || DEFAULT_CAPACITY; }
 function hasOpenMatch(d, sid) { return d.matches.some(m => m.studentId === sid && ['proposed', 'active'].includes(m.status)); }
 function capBar(d, mid) { const u = used(d, mid), mx = maxOf(d, mid); return `<span class="scorebar cap ${u >= mx ? 'full' : ''}"><span style="width:${Math.min(100, u / mx * 100)}%"></span></span> ${u} of ${mx} places used`; }
 function topicsText(a) { return (a && a.length) ? a.join(', ') : '-'; }
-function mins(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 
 /* ---------- Matching: eligibility, score, recommendations ---------- */
 /* Returns null when the pair may be proposed, otherwise the reason it may not. */
@@ -133,20 +124,18 @@ function eligible(d, sid, mid) {
   if (hasOpenMatch(d, sid)) return 'This student already has an open match.';
   return null;
 }
-/* Score out of 100: expertise 40, availability 30, free capacity 15, experience 15. */
+/* Score out of 100: topics 70 (share of the student's wanted topics the mentor covers) and experience 30 (years, up to 10).
+   Free places do not add points; they decide whether a pair is allowed at all. */
 function scoreMatch(d, sid, mid) {
   const s = d.students[sid], m = d.mentors[mid], reasons = [];
   const shared = (s.topics || []).filter(t => (m.topics || []).includes(t));
-  const expertise = s.topics && s.topics.length ? Math.round(WEIGHTS.expertise * shared.length / s.topics.length) : 0;
+  const topics = s.topics && s.topics.length ? Math.round(WEIGHTS.topics * shared.length / s.topics.length) : 0;
   reasons.push(shared.length ? `Shared topics: ${shared.join(', ')}` : 'No shared topics');
-  const mine = d.studentSlots.filter(x => x.studentId === sid), hits = mine.filter(x => d.slots.some(y => y.mentorId === mid && y.day === x.day && mins(y.start) < BANDS[x.band][1] * 60 && mins(y.end) > BANDS[x.band][0] * 60));
-  const availability = mine.length ? Math.round(WEIGHTS.availability * hits.length / mine.length) : 0;
-  reasons.push(hits.length ? `Overlapping time: ${hits.map(x => `${x.day} ${x.band}`).join(', ')}` : mine.length ? 'No overlapping time' : 'Student has not shared availability');
-  const mx = maxOf(d, mid), free = Math.max(0, mx - used(d, mid)), capacity = Math.round(WEIGHTS.capacity * free / mx);
-  reasons.push(`${free} of ${mx} places free`);
   const experience = Math.round(WEIGHTS.experience * Math.min(m.experience || 0, 10) / 10);
   reasons.push(`${m.experience || 0} years of experience`);
-  return { total: expertise + availability + capacity + experience, parts: { expertise, availability, capacity, experience }, reasons };
+  const free = Math.max(0, maxOf(d, mid) - used(d, mid));
+  reasons.push(`${free} of ${maxOf(d, mid)} places free`);
+  return { total: topics + experience, parts: { topics, experience }, reasons };
 }
 /* Best eligible mentors for one student, highest score first. */
 function recommend(d, sid, n) {

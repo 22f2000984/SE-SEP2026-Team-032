@@ -1,9 +1,8 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student profile · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('student'), app = document.getElementById('app');
-const BAND_NAMES = Object.keys(BANDS);
 function draw() {
-  const d = load(), p = d.students[u.id], mine = d.studentSlots.filter(x => x.studentId === u.id);
+  const d = load(), p = d.students[u.id];
   const sel = (k, opts) => `<select id="${k}">${opts.map(o => `<option ${o === p[k] ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
-  app.innerHTML = `<div class="eyebrow">Student</div><h1>My profile</h1><p class="muted">The coordinator uses this to find you a suitable mentor. Other students and mentors cannot see it.</p>
+  app.innerHTML = `<div class="eyebrow">Student</div><h1>My profile</h1><p class="muted">The admin uses this to find you a suitable mentor. Other students and mentors cannot see it.</p>
   <div class="card"><form id="f">
   <label for="programme">Programme level</label><input id="programme" value="${esc(p.programme)}">
   <label for="goals">Career goals and the guidance you need (max 500 characters)</label><textarea id="goals" rows="3">${esc(p.goals)}</textarea>
@@ -11,22 +10,19 @@ function draw() {
   <label>Topics you would like a mentor for</label><div class="checks">${TOPICS.map(t => `<label><input type="checkbox" name="topic" value="${esc(t)}" ${(p.topics || []).includes(t) ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div>
   <label for="format">Preferred format</label>${sel('format', FORMATS)}
   <label for="duration">Expected duration</label>${sel('duration', DURATIONS)}
-  <label>When are you free? Tick the times</label>
-  <div class="table-wrap"><table class="slotgrid"><tr><th>Day</th>${BAND_NAMES.map(b => `<th>${b}</th>`).join('')}</tr>${DAYS.map(day => `<tr><td>${day}</td>${BAND_NAMES.map(b => `<td><input type="checkbox" name="slot" value="${day}|${b}" ${mine.some(x => x.day === day && x.band === b) ? 'checked' : ''} aria-label="${day} ${b}"></td>`).join('')}</tr>`).join('')}</table></div>
-  <label for="availability">Availability note (optional)</label><input id="availability" value="${esc(p.availability)}">
+  <label for="availability">Availability (days or time windows you are free, optional)</label><input id="availability" value="${esc(p.availability)}">
   <label for="preferences">Other mentoring preferences</label><textarea id="preferences" rows="2">${esc(p.preferences)}</textarea>
   <div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Save profile</button></div></form></div>`;
   document.getElementById('f').onsubmit = e => {
     e.preventDefault();
     const v = k => document.getElementById(k).value.trim(), err = document.getElementById('err');
-    const topics = [...app.querySelectorAll('[name=topic]:checked')].map(x => x.value), slots = [...app.querySelectorAll('[name=slot]:checked')].map(x => x.value.split('|'));
+    const topics = [...app.querySelectorAll('[name=topic]:checked')].map(x => x.value);
     if (!v('programme') || !v('goals')) return err.textContent = 'Programme level and career goals are required.';
     if (v('goals').length > 500) return err.textContent = 'Career goals must be 500 characters or fewer.';
-    if (!topics.length) return err.textContent = 'Choose at least one topic so the coordinator can match you.';
+    if (!topics.length) return err.textContent = 'Choose at least one topic so the admin can match you.';
     err.textContent = '';
     const x = load(), q = x.students[u.id];
     Object.assign(q, { programme: v('programme'), goals: v('goals'), skills: v('skills'), topics, format: v('format'), duration: v('duration'), availability: v('availability'), preferences: v('preferences') });
-    x.studentSlots = x.studentSlots.filter(s => s.studentId !== u.id).concat(slots.map(([day, band]) => ({ id: id(x), studentId: u.id, day, band })));
     save(x); toast('Profile saved');
   };
 }

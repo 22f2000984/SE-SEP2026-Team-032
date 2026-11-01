@@ -1,24 +1,27 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mentors · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
 let q = '', editing = null;
 function draw() {
-  const d = load(), mentors = Object.entries(d.mentors).filter(([uid, m]) => !q || [userName(d, +uid), m.qualifications, m.expertise, m.bio].join(' ').toLowerCase().includes(q.toLowerCase()));
+  const d = load(), mentors = Object.entries(d.mentors).filter(([uid, m]) => !q || [userName(d, +uid), m.qualifications, (m.topics || []).join(' '), m.bio].join(' ').toLowerCase().includes(q.toLowerCase()));
   app.innerHTML = `<div class="eyebrow">Coordinator</div><h1>Mentors</h1><p class="muted">Review mentor profiles, correct them if needed, and verify them before they can receive matches.</p>
-  <div class="card"><label for="q">Search name, qualification or expertise</label><input id="q" value="${esc(q)}" placeholder="e.g. data"></div>
-  <div class="table-wrap" style="margin-top:16px"><table><tr><th>Mentor</th><th>Background</th><th>Availability</th><th>Status</th><th></th></tr>${mentors.map(([uid, m]) => editing === uid ? `<tr><td colspan="5"><form data-f="${uid}"><b>Edit ${esc(userName(d, +uid))}</b>
-    <div class="row"><div><label>Qualifications</label><input name="qualifications" value="${esc(m.qualifications)}"></div><div><label>Expertise areas</label><input name="expertise" value="${esc(m.expertise)}"></div></div>
-    <div class="row"><div><label>Years of experience</label><input name="experience" type="number" min="0" max="60" value="${esc(m.experience)}"></div><div><label>Short bio</label><input name="bio" value="${esc(m.bio)}"></div></div>
+  <div class="card"><label for="q">Search name, qualification or topic</label><input id="q" value="${esc(q)}" placeholder="e.g. data"></div>
+  <div class="table-wrap" style="margin-top:16px"><table><tr><th>Mentor</th><th>Background</th><th>Availability and capacity</th><th>Status</th><th></th></tr>${mentors.map(([uid, m]) => editing === uid ? `<tr><td colspan="5"><form data-f="${uid}"><b>Edit ${esc(userName(d, +uid))}</b>
+    <div class="row"><div><label>Qualifications</label><input name="qualifications" value="${esc(m.qualifications)}"></div><div><label>Years of experience</label><input name="experience" type="number" min="0" max="60" value="${esc(m.experience)}"></div></div>
+    <label>Topics</label><div class="checks">${TOPICS.map(t => `<label><input type="checkbox" name="topic" value="${esc(t)}" ${(m.topics || []).includes(t) ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div>
+    <div class="row"><div><label>Maximum students (1 to 10)</label><input name="max" type="number" min="1" max="10" value="${esc(m.maxStudents || DEFAULT_CAPACITY)}"></div><div><label>Short bio</label><input name="bio" value="${esc(m.bio)}"></div></div>
     <div class="err"></div><div class="actions"><button class="btn small" type="submit">Save changes</button><button class="btn small ghost" type="button" data-cancel>Cancel</button></div></form></td></tr>`
-    : `<tr><td><b>${esc(userName(d, +uid))}</b></td><td>${esc(m.qualifications || '-')} · ${esc(m.experience)} yrs<br><span class="muted">Expertise:</span> ${esc(m.expertise || '-')}<br><span class="muted">${esc(m.bio || '')}</span></td>
-    <td>${esc(slotText(d, +uid))}</td><td>${pill(m.status)}</td>
+    : `<tr><td><b>${esc(userName(d, +uid))}</b></td><td>${esc(m.qualifications || '-')} · ${esc(m.experience)} yrs<br>${(m.topics || []).map(t => `<span class="chip">${esc(t)}</span>`).join('') || '-'}<br><span class="muted">${esc(m.bio || '')}</span></td>
+    <td>${esc(slotText(d, +uid))}<br>${capBar(d, +uid)}</td><td>${pill(m.status)}</td>
     <td><div class="actions"><button class="btn small ghost" data-e="${uid}">Edit</button>${m.status === 'verified' ? '' : `<button class="btn small" data-v="${uid}">Verify</button>`}</div></td></tr>`).join('') || '<tr><td colspan="5" class="muted">No mentors match.</td></tr>'}</table></div>`;
   const qi = document.getElementById('q'); qi.oninput = () => { q = qi.value; const pos = qi.selectionStart; draw(); const n = document.getElementById('q'); n.focus(); n.setSelectionRange(pos, pos); };
   app.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { const x = load(); x.mentors[b.dataset.v].status = 'verified'; notify(x, +b.dataset.v, 'Your mentor profile has been verified.'); save(x); toast('Mentor verified'); draw(); });
   app.querySelectorAll('[data-e]').forEach(b => b.onclick = () => { editing = b.dataset.e; draw(); });
   app.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => { editing = null; draw(); });
   app.querySelectorAll('[data-f]').forEach(f => f.onsubmit = e => {
-    e.preventDefault(); const v = k => f.elements[k].value.trim();
-    if (!v('qualifications') || !v('expertise')) return f.querySelector('.err').textContent = 'Qualifications and expertise are required.';
-    const x = load(), m = x.mentors[f.dataset.f]; m.qualifications = v('qualifications'); m.expertise = v('expertise'); m.experience = +v('experience') || 0; m.bio = v('bio');
+    e.preventDefault(); const v = k => f.elements[k].value.trim(), topics = [...f.querySelectorAll('[name=topic]:checked')].map(t => t.value), mx = +v('max'), x = load(), m = x.mentors[f.dataset.f], err = f.querySelector('.err');
+    if (!v('qualifications') || !topics.length) return err.textContent = 'Qualifications and at least one topic are required.';
+    if (!(mx >= 1 && mx <= 10)) return err.textContent = 'Maximum students must be between 1 and 10.';
+    if (mx < used(x, +f.dataset.f)) return err.textContent = `This mentor already has ${used(x, +f.dataset.f)} open matches, so the maximum cannot be lower.`;
+    m.qualifications = v('qualifications'); m.topics = topics; m.experience = +v('experience') || 0; m.maxStudents = mx; m.bio = v('bio');
     notify(x, +f.dataset.f, 'The coordinator updated your mentor profile.'); save(x); editing = null; toast('Mentor profile updated'); draw();
   });
 }

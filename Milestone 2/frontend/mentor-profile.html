@@ -3,7 +3,8 @@ function draw() {
   const d = load(), p = d.mentors[u.id], slots = d.slots.filter(s => s.mentorId === u.id);
   app.innerHTML = `<div class="eyebrow">Mentor</div><h1>My profile ${pill(p.status)}</h1>
   <div class="row"><div class="card"><h2>Background</h2><form id="f"><label for="qualifications">Qualifications</label><input id="qualifications" value="${esc(p.qualifications)}">
-  <label for="experience">Years of experience</label><input id="experience" type="number" min="0" max="60" value="${esc(p.experience)}"><label for="expertise">Expertise areas</label><input id="expertise" value="${esc(p.expertise)}">
+  <label for="experience">Years of experience</label><input id="experience" type="number" min="0" max="60" value="${esc(p.experience)}"><label>Topics you can mentor</label><div class="checks">${TOPICS.map(t => `<label><input type="checkbox" name="topic" value="${esc(t)}" ${(p.topics || []).includes(t) ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div>
+  <label for="max">Maximum students you can mentor at the same time (1 to 10)</label><input id="max" type="number" min="1" max="10" value="${esc(p.maxStudents || DEFAULT_CAPACITY)}"><p class="muted">${capBar(d, u.id)}</p>
   <label for="bio">Short bio</label><textarea id="bio" rows="4">${esc(p.bio)}</textarea><div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Save profile</button></div></form></div>
   <div class="card"><h2>Availability</h2><ul class="list">${slots.map(s => `<li>${esc(s.day)} ${esc(s.start)} to ${esc(s.end)} <button class="btn small ghost" data-x="${s.id}">Remove</button></li>`).join('') || '<li class="muted">No slots yet.</li>'}</ul>
   <form id="sf"><label for="day">Day</label><select id="day">${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(x => `<option>${x}</option>`).join('')}</select>
@@ -11,8 +12,11 @@ function draw() {
   <div class="err" id="serr"></div><div class="actions"><button class="btn" type="submit">Add slot</button></div></form></div></div>`;
   document.getElementById('f').onsubmit = e => {
     e.preventDefault(); const x = load(), q = x.mentors[u.id], v = k => document.getElementById(k).value.trim();
-    if (!v('qualifications') || !v('expertise')) return document.getElementById('err').textContent = 'Qualifications and expertise are required.';
-    q.qualifications = v('qualifications'); q.experience = +v('experience') || 0; q.expertise = v('expertise'); q.bio = v('bio'); save(x); toast('Profile saved');
+    const topics = [...app.querySelectorAll('[name=topic]:checked')].map(t => t.value), mx = +v('max');
+    if (!v('qualifications') || !topics.length) return document.getElementById('err').textContent = 'Qualifications and at least one topic are required.';
+    if (!(mx >= 1 && mx <= 10)) return document.getElementById('err').textContent = 'Maximum students must be between 1 and 10.';
+    if (mx < used(x, u.id)) return document.getElementById('err').textContent = `You already have ${used(x, u.id)} open matches, so the maximum cannot be lower.`;
+    q.qualifications = v('qualifications'); q.experience = +v('experience') || 0; q.topics = topics; q.maxStudents = mx; q.bio = v('bio'); save(x); toast('Profile saved'); draw();
   };
   document.getElementById('sf').onsubmit = e => {
     e.preventDefault(); const st = document.getElementById('start').value, en = document.getElementById('end').value;

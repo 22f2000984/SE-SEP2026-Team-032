@@ -89,9 +89,9 @@ li { margin: 3px 0; }
 
 <table>
 <tr><th style="width:18%">Class</th><th style="width:38%">Extra information it keeps</th><th>Actions it can do</th></tr>
-<tr><td><b>Student</b></td><td>programme level, career goals, skills, expected mentor expertise, preferred format (video, phone, messaging), expected duration, preferences, availability note</td><td><code>updateProfile()</code>, <code>viewAssignedMentor()</code> (see the mentor chosen for them), <code>acceptMatch(m)</code>, <code>declineMatch(m)</code>, <code>submitFeedback()</code>, <code>raiseConcern()</code></td></tr>
-<tr><td><b>Mentor</b></td><td>qualifications, years of experience, expertise areas, short bio, profile status (pending or verified)</td><td><code>updateProfile()</code>, <code>setAvailability(slots)</code>, <code>acceptMatch(m)</code>, <code>declineMatch(m)</code></td></tr>
-<tr><td><b>Administrator</b></td><td>an admin id</td><td><code>viewStudentProfiles()</code>, <code>editMentorProfile()</code>, <code>verifyMentorProfile()</code>, <code>proposeMatch(s, m)</code>, <code>changeStatus(m, status)</code>, <code>viewOverview()</code>, <code>viewFeedback()</code>, <code>resolveConcern()</code></td></tr>
+<tr><td><b>Student</b></td><td>programme level, career goals, skills, wanted topics (chosen from a fixed list), preferred format (video, phone, messaging), expected duration, preferences, availability note (their free times are kept as StudentSlot entries: a day and a time band)</td><td><code>updateProfile()</code>, <code>setAvailability(slots)</code>, <code>viewAssignedMentor()</code> (see the mentor chosen for them), <code>acceptMatch(m)</code>, <code>declineMatch(m)</code>, <code>submitFeedback()</code>, <code>raiseConcern()</code></td></tr>
+<tr><td><b>Mentor</b></td><td>qualifications, years of experience, topics (from the same fixed list), short bio, profile status (pending or verified), and <b>maxStudents</b>: how many students the mentor can handle at the same time</td><td><code>updateProfile()</code>, <code>setAvailability(slots)</code>, <code>setCapacity(n)</code>, <code>freePlaces()</code>, <code>acceptMatch(m)</code>, <code>declineMatch(m)</code></td></tr>
+<tr><td><b>Administrator</b></td><td>an admin id</td><td><code>viewStudentProfiles()</code>, <code>editMentorProfile()</code>, <code>verifyMentorProfile()</code>, <code>viewRecommendations()</code>, <code>proposeMatch(s, m)</code>, <code>changeStatus(m, status)</code>, <code>viewOverview()</code>, <code>viewFeedback()</code>, <code>resolveConcern()</code></td></tr>
 </table>
 <p><b>AvailabilitySlot</b> (to the right of Mentor) is one free time window: a day of the week, a start time and an end time. The line says one Mentor has zero or many slots (<code>1</code> to <code>0..*</code>). A new mentor starts with zero slots and adds them later.</p>
 
@@ -116,6 +116,9 @@ li { margin: 3px 0; }
 <tr><td><b>Concern</b></td><td>A problem someone raises about a match (for example "my mentor has not replied"). It has a status (open or resolved) so the administrator can follow it up.</td></tr>
 <tr><td><b>Notification</b></td><td>A message sent to a user (for example "You have a new match proposal"). It stores when it was sent and whether it was read. When a match becomes active, the student's message also tells the next step.</td></tr>
 <tr><td><b>MatchStatus</b> (<code>&lt;&lt;enumeration&gt;&gt;</code>)</td><td>An "enumeration" is a fixed list of allowed values. Here: proposed, active, completed, cancelled. A match can only ever hold one of these four words. It is drawn with a dashed arrow because Match <i>uses</i> it.</td></tr>
+<tr><td><b>MatchingService</b> (<code>&lt;&lt;service&gt;&gt;</code>)</td><td>The helper that prepares recommendations for the administrator. It checks if a pair is allowed (<code>isEligible</code>), gives it a score out of 100 (<code>score</code>) and lists the best mentors for a student (<code>recommend</code>). Its four weights are shown as attributes. See Part 3A.</td></tr>
+<tr><td><b>MatchScore</b></td><td>The result of scoring one pair: the total and the points for each part (topics, time, free places, experience), plus the reasons in words. The chosen total and reasons are copied into the Match when it is proposed.</td></tr>
+<tr><td><b>Topic, TimeBand, Format</b> (enumerations)</td><td>Fixed lists. Topic: the subjects students can ask for and mentors can cover. TimeBand: morning, afternoon, evening. Format: no preference, video call, phone call, messaging.</td></tr>
 <tr><td><b>Response</b> (<code>&lt;&lt;enumeration&gt;&gt;</code>)</td><td>The answer of the mentor or of the student to a proposed match: pending (not answered yet), accepted or declined. Match keeps one Response for the mentor and one for the student.</td></tr>
 </table>
 
@@ -149,15 +152,18 @@ li { margin: 3px 0; }
 <table>
 <tr><th style="width:22%">Table</th><th style="width:36%">Columns (plain meaning)</th><th>Notes</th></tr>
 <tr><td><b>USER</b></td><td>user_id (PK), email (unique), password_hash, full_name, role (student, mentor or admin), is_active, created_at</td><td>One row per person who can log in. The password is stored as a scrambled hash, never as plain text. <code>role</code> decides which screens the person sees.</td></tr>
-<tr><td><b>STUDENT_PROFILE</b></td><td>student_id (PK), user_id (FK, unique), programme_level, career_goals, skills, expected_mentor_expertise, mentoring_format, expected_duration, preferences, availability_note, updated_at</td><td>Linked 1-to-1 with USER. The student's answer to a proposal is stored on the MATCH, not here.</td></tr>
-<tr><td><b>MENTOR_PROFILE</b></td><td>mentor_id (PK), user_id (FK, unique), qualifications, experience_years, expertise_areas, bio, profile_status, updated_at</td><td>Linked 1-to-1 with USER. <code>profile_status</code> is pending until the admin verifies it.</td></tr>
+<tr><td><b>STUDENT_PROFILE</b></td><td>student_id (PK), user_id (FK, unique), programme_level, career_goals, skills, mentoring_format, expected_duration, preferences, availability_note, updated_at</td><td>Linked 1-to-1 with USER. The topics the student wants are in STUDENT_TOPIC and the free times in STUDENT_AVAILABILITY_SLOT. The student's answer to a proposal is stored on the MATCH, not here.</td></tr>
+<tr><td><b>MENTOR_PROFILE</b></td><td>mentor_id (PK), user_id (FK, unique), qualifications, experience_years, bio, profile_status, max_students, updated_at</td><td>Linked 1-to-1 with USER. <code>profile_status</code> is pending until the admin verifies it. <code>max_students</code> (1 to 10) is the number of students the mentor can handle at once. Topics are in MENTOR_TOPIC.</td></tr>
 <tr><td><b>AVAILABILITY_SLOT</b></td><td>slot_id (PK), mentor_id (FK), day_of_week, start_time, end_time, timezone, is_active</td><td>One row per free time window. One mentor has many slots (the 1 to N line).</td></tr>
+<tr><td><b>STUDENT_AVAILABILITY_SLOT</b></td><td>slot_id (PK), student_id (FK), day_of_week, time_band</td><td>One row per free time of a student, such as "Sunday evening". Many rows per student. Used to find overlap with a mentor's slots.</td></tr>
+<tr><td><b>EXPERTISE_TOPIC</b></td><td>topic_id (PK), name (unique)</td><td>The shared list of topics. Students and mentors both pick from it, so the platform can compare them.</td></tr>
+<tr><td><b>STUDENT_TOPIC</b>, <b>MENTOR_TOPIC</b></td><td>student_id or mentor_id (FK), topic_id (FK)</td><td>"Link" tables. A student can want many topics and a topic can be wanted by many students, so a third table records each pair. The same for mentors.</td></tr>
 </table>
 
 <h3>The middle: MATCH</h3>
 <table>
 <tr><th style="width:22%">Table</th><th style="width:36%">Columns</th><th>Notes</th></tr>
-<tr><td><b>MATCH</b></td><td>match_id (PK), student_id (FK), mentor_id (FK), proposed_by (FK to an admin USER), status, mentor_response, mentor_responded_at, student_response, student_responded_at, notes, proposed_at, confirmed_at</td><td>One row per pairing. It has <b>three</b> foreign keys: which student, which mentor and which admin proposed it. <code>status</code> holds one of the four allowed words. The two responses are pending, accepted or declined, each with the time it was given. <code>confirmed_at</code> is filled when the admin confirms.</td></tr>
+<tr><td><b>MATCH</b></td><td>match_id (PK), student_id (FK), mentor_id (FK), proposed_by (FK to an admin USER), status, mentor_response, mentor_responded_at, student_response, student_responded_at, match_score, score_reasons, notes, proposed_at, confirmed_at</td><td>One row per pairing. It has <b>three</b> foreign keys: which student, which mentor and which admin proposed it. <code>status</code> holds one of the four allowed words. The two responses are pending, accepted or declined, each with the time it was given. <code>match_score</code> and <code>score_reasons</code> keep the score the platform gave the pair when it was proposed. <code>confirmed_at</code> is filled when the admin confirms.</td></tr>
 </table>
 <p>The three lines into MATCH in the picture are therefore: student to match (1 to N), mentor to match (1 to N) and admin user to match (1 to N, labelled "proposes").</p>
 
@@ -183,13 +189,36 @@ li { margin: 3px 0; }
 </table>
 </div>
 
+<h2 class="pb">Part 3A. How the platform recommends matches</h2>
+<p>Choosing a mentor for every student by eye is slow. The platform prepares a short list and the coordinator decides. This keeps the client-mediated rule: the platform only <i>suggests</i>.</p>
+<h3>Step 1: remove pairs that are not allowed</h3>
+<ul><li>The mentor is not verified yet.</li><li>The mentor is full: the number of proposed plus active matches has reached the maximum the mentor set in their profile.</li><li>The student already has an open match.</li></ul>
+<h3>Step 2: give points (total 100)</h3>
+<table>
+<tr><th style="width:22%">Part</th><th style="width:10%">Max</th><th>How</th></tr>
+<tr><td>Topics</td><td>40</td><td>Out of the topics the student wants, how many does the mentor also cover?</td></tr>
+<tr><td>Time overlap</td><td>30</td><td>Out of the student's free times (a day and morning, afternoon or evening), how many fall inside the mentor's available slots?</td></tr>
+<tr><td>Free places</td><td>15</td><td>Free places divided by the mentor's maximum. A mentor with more room scores higher, so the load is shared.</td></tr>
+<tr><td>Experience</td><td>15</td><td>Years of experience, counted up to 10 years.</td></tr>
+</table>
+<h3>Step 3: show the best pairs with reasons</h3>
+<p>The dashboard lists, for each waiting student, the top mentors with a score bar and the reasons (for example "Shared topics: Interview Preparation; Overlapping time: Sunday evening"). A score under 40 is marked as a weak fit. The coordinator clicks <b>Propose</b>, and the normal flow follows: both sides are notified, both accept, the coordinator confirms.</p>
+<h3>Worked example</h3>
+<table>
+<tr><th>Pair</th><th>Topics</th><th>Time</th><th>Free places</th><th>Experience</th><th>Total</th></tr>
+<tr><td>Neha with Priya (8 yrs, 2 of 2 free)</td><td>2 of 2 wanted = 40</td><td>2 of 2 times = 30</td><td>2 of 2 = 15</td><td>8 of 10 = 12</td><td><b>97</b></td></tr>
+<tr><td>Rohan with Priya</td><td>1 of 2 = 20</td><td>1 of 2 = 15</td><td>15</td><td>12</td><td><b>62</b></td></tr>
+<tr><td>Rohan with Dr. Meera (12 yrs, 2 of 3 free)</td><td>0 of 2 = 0</td><td>0 of 2 = 0</td><td>2 of 3 = 10</td><td>15</td><td><b>25</b> (weak fit)</td></tr>
+</table>
+<div class="box"><b>Why these data changes?</b> To compare a student and a mentor fairly, both must use the same words (a shared topic list) and times must be stored as days and time bands, not as free text like "Sat-Sun evenings". That is why we added EXPERTISE_TOPIC, the two topic link tables and STUDENT_AVAILABILITY_SLOT, and <code>max_students</code> for capacity.</div>
+
 <h2 class="pb">Part 4. Worked example: one student from start to finish</h2>
 <p>Follow this story and point at the tables and classes as you go. The names are made up.</p>
 <ol>
 <li><b>Riya registers as a student.</b> A row is added to USER (role = student) and one to STUDENT_PROFILE with her goals and skills. <i>(Classes: User, Student.)</i></li>
 <li><b>Mr. Rao registers as a mentor.</b> A row goes to USER (role = mentor) and MENTOR_PROFILE with profile_status = pending. He adds two free slots, which become two rows in AVAILABILITY_SLOT. <i>(Classes: Mentor, AvailabilitySlot.)</i></li>
 <li><b>The admin verifies Mr. Rao.</b> profile_status changes from pending to verified. <i>(Action: verifyMentorProfile().)</i></li>
-<li><b>The admin proposes a match.</b> The admin reads both profiles, then creates a row in MATCH with Riya's student_id, Mr. Rao's mentor_id, proposed_by = the admin, status = <b>proposed</b>, and both responses = <b>pending</b>. A row is added to MATCH_STATUS_LOG and a NOTIFICATION row is created for <b>both</b> Mr. Rao and Riya. <i>(Action: proposeMatch(s, m).)</i></li>
+<li><b>The admin proposes a match.</b> The platform has already scored the possible mentors for Riya and shown Mr. Rao near the top. The admin picks him and creates a row in MATCH with Riya's student_id, Mr. Rao's mentor_id, proposed_by = the admin, status = <b>proposed</b>, both responses = <b>pending</b>, and the score and its reasons saved in match_score and score_reasons. A row is added to MATCH_STATUS_LOG and a NOTIFICATION row is created for <b>both</b> Mr. Rao and Riya. <i>(Action: proposeMatch(s, m).)</i></li>
 <li><b>Mr. Rao accepts.</b> mentor_response becomes <b>accepted</b> and mentor_responded_at is filled. The admin is notified. The match is still <b>proposed</b>, so Riya cannot see an active mentor yet. <i>(Action: acceptMatch(m) on Mentor.)</i></li>
 <li><b>Riya accepts.</b> student_response becomes <b>accepted</b>. Now both have accepted, so the admin is notified that the match is ready to confirm. <i>(Action: acceptMatch(m) on Student.)</i> If either of them had declined, the admin would cancel the match and propose someone else.</li>
 <li><b>The admin confirms.</b> status becomes <b>active</b>, confirmed_at is filled, another log row is added, and Riya and Mr. Rao each get a notification with the next step. <i>(Action: confirmMatch(m).)</i> The system would refuse this step if either answer were still pending or declined.</li>
@@ -206,7 +235,8 @@ li { margin: 3px 0; }
 <tr><td>2</td><td>Is the Administrator the only one who can propose a match?</td><td></td></tr>
 <tr><td>3</td><td>Does the flow cover: propose (both notified), mentor and student each accept or decline, admin confirms only when both accepted (or cancels), complete, cancel?</td><td></td></tr>
 <tr><td>4</td><td>Can every field in the class diagram be found in an ER table (or is its absence explained, like Administrator)?</td><td></td></tr>
-<tr><td>5</td><td>Does every user story in the Milestone 1 report have a class action and a place to store its data? Check these in particular: US-S04 and US-S05 (expected expertise, format, duration), US-S08 (the student's response with its date), US-C01 and US-C05 (admin views students and edits mentors), US-S10 (feedback readable by the admin).</td><td></td></tr>
+<tr><td>5</td><td>Is the scoring easy to explain to the client (topics 40, time 30, free places 15, experience 15)? Are there pairs it would rank in a way the client would disagree with?</td><td></td></tr>
+<tr><td>5b</td><td>Does every user story in the Milestone 1 report have a class action and a place to store its data? Check these in particular: US-S04 and US-S05 (expected expertise, format, duration), US-S08 (the student's response with its date), US-C01 and US-C05 (admin views students and edits mentors), US-S10 (feedback readable by the admin).</td><td></td></tr>
 <tr><td>6</td><td>Can a student have more than one match over time (for example after a cancellation)?</td><td></td></tr>
 <tr><td>7</td><td>Is it clear who changed a status and when (MATCH_STATUS_LOG)?</td><td></td></tr>
 <tr><td>8</td><td>Are the multiplicities (1, N, 0..*) believable? Example: one mentor has many slots; one match has one student and one mentor.</td><td></td></tr>

@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student dashboard · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('student'), d = load(), app = document.getElementById('app');
-const p = d.students[u.id], m = d.matches.filter(x => x.studentId === u.id).slice(-1)[0];
-const fields = ['programme', 'goals', 'skills', 'expertise', 'preferences', 'availability'];
-const pct = Math.round(fields.filter(k => p[k]).length / fields.length * 100);
+const p = d.students[u.id], slots = d.studentSlots.filter(x => x.studentId === u.id), m = d.matches.filter(x => x.studentId === u.id).slice(-1)[0];
+const checks = [p.programme, p.goals, p.skills, (p.topics || []).length, p.preferences, slots.length];
+const pct = Math.round(checks.filter(Boolean).length / checks.length * 100);
 const notes = d.notifications.filter(n => n.userId === u.id).slice(-4).reverse();
 const rsp = m && m.status === 'proposed' ? m.studentResponse : null;
 const msg = !m ? 'The coordinator has not arranged a mentor for you yet. Complete your profile so they can find a good fit.'

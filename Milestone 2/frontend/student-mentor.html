@@ -9,7 +9,7 @@ function draw() {
   if (!shown) h += `<div class="info">${m ? 'Your last match was cancelled. The coordinator will arrange a new one.' : 'No mentor proposed yet. The coordinator will arrange one after reviewing your profile.'}</div>
     <p class="muted">You cannot browse mentors. The coordinator chooses the match for you.</p>`;
   else {
-    h += `<div class="card"><h2>${esc(userName(d, m.mentorId))} ${live ? pill(m.status) : ''}</h2><p><b>Qualifications:</b> ${esc(mp.qualifications)}<br><b>Expertise:</b> ${esc(mp.expertise)}<br><b>Experience:</b> ${esc(mp.experience)} years</p><p>${esc(mp.bio)}</p></div>`;
+    h += `<div class="card"><h2>${esc(userName(d, m.mentorId))} ${live ? pill(m.status) : ''}</h2><p><b>Qualifications:</b> ${esc(mp.qualifications)}<br><b>Topics:</b> ${esc(topicsText(mp.topics))}<br><b>Experience:</b> ${esc(mp.experience)} years</p><p>${esc(mp.bio)}</p></div>`;
     if (m.status === 'proposed') h += `<div class="card" style="margin-top:16px"><h2>Do you accept this mentor?</h2>
       <p>Mentor's response: ${pill(m.mentorResponse)} &nbsp; Your response: ${pill(m.studentResponse)}${m.studentRespondedAt ? ` <span class="muted">recorded ${when(m.studentRespondedAt)}</span>` : ''}</p>
       ${m.studentResponse === 'pending' ? '<div class="actions"><button class="btn" data-r="accepted">Accept</button><button class="btn danger" data-r="declined">Decline</button></div>' : '<p class="muted">The coordinator confirms the match once both of you have accepted.</p>'}</div>`;

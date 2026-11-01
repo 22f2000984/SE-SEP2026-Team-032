@@ -47,10 +47,33 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <h3>1.8 Kanban board</h3>
 <figure><img src="screenshots/10_jira_kanban_board.png"><figcaption>Figure B. Jira Kanban board with the Milestone 2 tasks across To Do, In Progress, In Review and Done.</figcaption></figure>
 
-<h2 style="break-before:page">2. Scrum Meetings</h2>
-<p>The Scrum Master leads two scrum meetings each week. Each meeting covers what was done, what is planned next and any blockers. Minutes are kept for every meeting.</p>
-<table><tr><th>Date</th><th>Attendees</th><th>Discussed / decisions</th><th>Actions (owner, due date)</th></tr>
-<tr><td>&nbsp;</td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td></tr><tr><td>&nbsp;</td><td></td><td></td><td></td></tr></table>
+<h2 style="break-before:page">2. Scrum Meetings Schedule and Minutes</h2>
+<p><b>Scrum meetings:</b> held about twice a week on Google Meet and led by the Scrum Master. Each meeting covers what was done, what is planned next and any blockers. Two meetings were held during Milestone 2.</p>
+
+<h3>Minutes from Scrum Meeting 1</h3>
+<table>
+<tr><th style="width:18%">Date and time</th><td>27 October 2026, 6:00 – 6:57</td></tr>
+<tr><th>Mode</th><td>Google Meet</td></tr>
+<tr><th>Attendees</th><td>Ankur, Adnan, Hemendra, Himanshu, Pavan</td></tr>
+<tr><th>Agenda</th><td>Frontend design; database schema; workflow for matching students to mentors.</td></tr>
+</table>
+<p><b>Discussion.</b> The team discussed the overall design of the frontend and the database schema of the platform. The team also discussed how a student is matched to a mentor. Each match will show a status of Proposed, Active, Completed or Cancelled.</p>
+<p><b>Decision.</b> The match status values are fixed as Proposed, Active, Completed and Cancelled.</p>
+<p><b>Next meeting agenda.</b> Continue discussing the frontend design in more detail, and decide how the dashboards will look for the Admin, the Student and the Mentor.</p>
+
+<h3>Minutes from Scrum Meeting 2</h3>
+<table>
+<tr><th style="width:18%">Date and time</th><td>31 October 2026, 7:00 – 7:45 PM</td></tr>
+<tr><th>Mode</th><td>Google Meet</td></tr>
+<tr><th>Attendees</th><td>Ankur, Adnan, Hemendra</td></tr>
+<tr><th>Agenda</th><td>Scrum call 2 minutes of meeting.</td></tr>
+</table>
+<table><tr><th style="width:4%">#</th><th>Discussed</th><th style="width:34%">Action (owner)</th></tr>
+<tr><td>1</td><td>Jira tasks and dashboard.</td><td>The team reviews their tasks and makes changes.</td></tr>
+<tr><td>2</td><td>Changes in the ER diagram.</td><td>Ankur (completed)</td></tr>
+<tr><td>3</td><td>Milestone 2 report review.</td><td>Adnan</td></tr>
+<tr><td>4</td><td>User story US-C03 clarification: the design was modified as per this story.</td><td>Ankur (completed)</td></tr>
+<tr><td>5</td><td>GitHub Milestone 2 review.</td><td>The team, as per the tasks assigned in Jira</td></tr></table>
 
 <h2>3. Design of Components</h2>
 <p>The platform follows a client-mediated model. Students and mentors each maintain their own profile, but they cannot browse each other. The client (coordinator) reviews both sides, proposes a match, and tracks it until it ends.</p>

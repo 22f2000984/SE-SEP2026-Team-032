@@ -1,11 +1,27 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Log in · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body>
-<header><span class="brand">IITM · MENTOR CONNECT</span><nav class="nav"><a href="register.html">Register</a></nav></header>
-<main><div class="login-box card">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Log in · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body class="auth-page index-fit">
+<div class="auth-shell">
+
+<section class="auth-hero">
+ <a class="auth-brand" href="index.html">
+  <svg viewBox="0 0 80 70" aria-hidden="true"><path d="M8 33C10 12 28 2 43 5c16 2 27 14 29 29" fill="none" stroke="#ffc56f" stroke-width="4" stroke-linecap="round"/><path d="M13 51c8-12 18-17 27-17s20 5 28 17c-11-5-20-5-28 1-9-6-18-6-27-1Z" fill="#f7c46f"/><path d="M17 50c7-9 15-13 23-13v18c-8-7-15-8-23-5Zm23-13c9 0 17 4 24 13-8-3-16-2-24 5Z" fill="#fff"/><circle cx="28" cy="27" r="7" fill="#fff"/><circle cx="51" cy="25" r="6" fill="#fff"/></svg>
+  <span class="auth-divider"></span><b>Mentor<br>Connect</b>
+ </a>
+ <div class="auth-message">
+  <div class="auth-kicker">★ &nbsp; STUDENT MENTORING PLATFORM</div>
+  <h2>Learn.<br>Grow.<br><em>Together.</em></h2>
+  <p>Connect with experienced mentors, gain guidance, and achieve your academic and career goals.</p>
+  <div class="auth-benefits"><span>◎<small>Get Guidance</small></span><span>♧<small>Build Connections</small></span><span>↗<small>Achieve Your Goals</small></span></div>
+ </div>
+ <small class="auth-foot">Student Mentoring &amp; Career Support</small>
+</section>
+<section class="auth-panel">
+<nav class="auth-top"><span>New to Mentor Connect?</span><a href="register.html">Create an Account</a></nav>
+<main class="auth-form"><div class="eyebrow">WELCOME BACK</div><div class="login-box card">
 <div class="eyebrow">Student Mentoring and Career Support</div><h1>Log in</h1>
 <form id="f" novalidate><label for="email">Email</label><input id="email" type="email" autocomplete="username"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"><div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Log in</button></div></form>
 <div class="info"><b>Demo accounts</b> (password <code>demo123</code>)<br>asha@student.test · meera@mentor.test · admin@client.test</div>
 <p class="muted">Students and mentors cannot browse each other. The admin arranges every match.</p>
-<p><a href="#" id="reset" class="muted">Reset demo data</a></p></div></main>
+<p><a href="#" id="reset" class="muted">Reset demo data</a></p></div></main></section></div>
 <script src="app.js"></script><script>
 document.getElementById('reset').onclick = e => { e.preventDefault(); resetDemo(); };
 document.getElementById('f').onsubmit = e => {

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin overview · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin overview · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body class="admin-overview"><main id="app"></main><script src="app.js"></script><script>const u = guard('admin'), app = document.getElementById('app');
 function draw() {
   const d = load(), count = s => d.matches.filter(m => m.status === s).length;
   const ready = d.matches.filter(m => m.status === 'proposed' && bothAccepted(m)), declined = d.matches.filter(m => m.status === 'proposed' && (m.mentorResponse === 'declined' || m.studentResponse === 'declined'));

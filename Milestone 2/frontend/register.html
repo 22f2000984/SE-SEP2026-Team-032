@@ -1,11 +1,27 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Register · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body>
-<header><span class="brand">IITM · MENTOR CONNECT</span><nav class="nav"><a href="index.html">Log in</a></nav></header>
-<main><div class="login-box card"><div class="eyebrow">New account</div><h1>Register</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Register · Mentor Connect</title><link rel="stylesheet" href="styles.css"></head><body class="auth-page">
+<div class="auth-shell">
+
+<section class="auth-hero">
+ <a class="auth-brand" href="index.html">
+  <svg viewBox="0 0 80 70" aria-hidden="true"><path d="M8 33C10 12 28 2 43 5c16 2 27 14 29 29" fill="none" stroke="#ffc56f" stroke-width="4" stroke-linecap="round"/><path d="M13 51c8-12 18-17 27-17s20 5 28 17c-11-5-20-5-28 1-9-6-18-6-27-1Z" fill="#f7c46f"/><path d="M17 50c7-9 15-13 23-13v18c-8-7-15-8-23-5Zm23-13c9 0 17 4 24 13-8-3-16-2-24 5Z" fill="#fff"/><circle cx="28" cy="27" r="7" fill="#fff"/><circle cx="51" cy="25" r="6" fill="#fff"/></svg>
+  <span class="auth-divider"></span><b>Mentor<br>Connect</b>
+ </a>
+ <div class="auth-message">
+  <div class="auth-kicker">★ &nbsp; STUDENT MENTORING PLATFORM</div>
+  <h2>Learn.<br>Grow.<br><em>Together.</em></h2>
+  <p>Connect with experienced mentors, gain guidance, and achieve your academic and career goals.</p>
+  <div class="auth-benefits"><span>◎<small>Get Guidance</small></span><span>♧<small>Build Connections</small></span><span>↗<small>Achieve Your Goals</small></span></div>
+ </div>
+ <small class="auth-foot">Student Mentoring &amp; Career Support</small>
+</section>
+<section class="auth-panel">
+<nav class="auth-top"><span>Already have an account?</span><a href="index.html">Sign In</a></nav>
+<main class="auth-form"><div class="eyebrow">NEW ACCOUNT</div><div class="login-box card"><div class="eyebrow">New account</div><h1>Register</h1>
 <form id="f" novalidate>
 <label for="role">I am a</label><select id="role"><option value="student">Student</option><option value="mentor">Mentor</option></select>
 <label for="name">Full name</label><input id="name"><label for="email">Email</label><input id="email" type="email"><label for="pw">Password (min 6 characters)</label><input id="pw" type="password" autocomplete="new-password">
 <div class="err" id="err"></div><div class="actions"><button class="btn" type="submit">Create account</button></div></form>
-<p class="muted">Mentor profiles stay pending until the admin verifies them.</p></div></main>
+<p class="muted">Mentor profiles stay pending until the admin verifies them.</p></div></main></section></div>
 <script src="app.js"></script><script>
 document.getElementById('f').onsubmit = e => {
   e.preventDefault();

@@ -1,0 +1,24 @@
+/* Design tokens: plum, violet, lilac and warm-gold theme. */
+:root {
+  --plum: #3c216f;
+  --plum-dark: #54216f;
+  --violet: #67318e;
+  --purple: #782c91;
+  --accent: #6924a2;
+  --gold: #ffc56f;
+  --ink: #27213d;
+  --muted: #77738a;
+  --line: #e8e0ef;
+  --line-soft: #eee7f3;
+  --lilac: #f2eafa;
+  --lilac-soft: #f7f1fb;
+  --card: rgba(255, 253, 255, 0.96);
+  --shadow: 0 9px 26px rgba(54, 30, 88, 0.065);
+  --shadow-hover: 0 12px 30px rgba(54, 30, 88, 0.09);
+  --danger: #a33c52;
+  --ok: #28734b;
+  --warn: #925500;
+  --radius: 18px;
+  --radius-sm: 10px;
+  --page-width: 1160px;
+}

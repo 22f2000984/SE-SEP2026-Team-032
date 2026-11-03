@@ -117,9 +117,9 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <tr><td>NOTIFICATION</td><td>Messages for users, sometimes linked to a match.</td></tr></table>
 
 <h2>6. Frontend Pages and Screenshots</h2>
-<p>The frontend has 11 linked pages made with HTML, CSS and JavaScript. You open <code>index.html</code> and nothing needs to be installed. Sample data is kept in the browser, so the whole flow can be tried: the admin proposes a match, both sides accept, and the admin confirms. There is no backend yet. The APIs are built in Milestones 3 and 4.</p>
+<p>The frontend is a <b>Vue 3</b> app (built with Vite) with 11 linked pages. Pages are connected with Vue Router, and each role is redirected to its own pages. Sample data is kept in the browser, so the whole flow can be tried: the admin proposes a match, both sides accept, and the admin confirms. There is no backend yet. The data calls are in one folder (<code>src/services</code>), so in Milestones 3 and 4 the real APIs replace them and the pages stay as they are.</p>
 <table><tr><th>Page</th><th>Used by</th><th>Purpose</th></tr>
-<tr><td>index, register</td><td>everyone</td><td>Log in and create an account</td></tr>
+<tr><td>login, register</td><td>everyone</td><td>Log in and create an account</td></tr>
 <tr><td>student</td><td>student</td><td>Dashboard with match status and notifications</td></tr>
 <tr><td>student-profile</td><td>student</td><td>Goals, skills, wanted topics, format, duration, availability</td></tr>
 <tr><td>student-mentor</td><td>student</td><td>Status, next step, proposed mentor to accept or decline, feedback, concerns</td></tr>
@@ -143,7 +143,13 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <figure><img src="screenshots/13_student_mentor_active.png"><figcaption>Figure 14. Student's mentor page after the admin confirms: status, next step, mentor details, feedback and concern forms.</figcaption></figure>
 
 <h2>7. Frontend Code and README</h2>
-<p>The frontend ZIP has the 11 pages, <code>styles.css</code>, <code>app.js</code> and a README. To run it: unzip, open the <code>frontend</code> folder and open <code>index.html</code> in a browser. The password for the demo accounts (student, mentor and admin) is <code>demo123</code>. The accounts are listed on the login page.</p>
+<p>The frontend ZIP has the Vue project: the pages (<code>src/views</code>), shared components, the data layer (<code>src/services</code>), the styles, unit tests and a README. To run it you need Node.js 18 or newer. Unzip, open the <code>frontend</code> folder, then run <code>npm install</code> and <code>npm run dev</code>, and open the address shown. The password for the demo accounts (student, mentor and admin) is <code>demo123</code>. The accounts are listed on the login page. <code>npm run build</code> makes the files that a host such as Vercel serves, and <code>npm test</code> runs the unit tests.</p>
+<table><tr><th style="width:30%">Folder</th><th>What is in it</th></tr>
+<tr><td>views</td><td>One file for each page, grouped as auth, student, mentor and admin.</td></tr>
+<tr><td>components</td><td>Small shared parts: header, status badges, score and capacity bars, topic picker, recommendation table, comparison cards.</td></tr>
+<tr><td>services</td><td>The data layer: login, matching and scores, match flow, profiles, feedback, notifications. Replaced by API calls in Sprint 1.</td></tr>
+<tr><td>router, layouts</td><td>Page addresses with the role guard, and the two page layouts.</td></tr>
+<tr><td>config, data</td><td>Topics, statuses and score weights in one place, and the sample data.</td></tr></table>
 
 <h2>8. Open Questions and Risks</h2>
 <ul><li>What should happen after a mentor or a student declines? In the prototype the admin decides, cancels the match and can propose a new one.</li>

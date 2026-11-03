@@ -39,7 +39,7 @@ Use "Reset demo data" on the log in page to start over.
 | `/#/student/mentor` | student | Status and next step, proposed mentor to accept or decline, feedback, concerns |
 | `/#/mentor` | mentor | Accept or decline match requests, active mentees |
 | `/#/mentor/profile` | mentor | Background, topics, maximum students, availability slots |
-| `/#/admin` | admin | Action cards, recommended matches, mentor capacity, matches by status, concerns, feedback |
+| `/#/admin` | admin | What needs attention, recommended matches, and tabs for concerns, feedback, mentor capacity and recent activity |
 | `/#/admin/students` | admin | View, search and filter student profiles and responses |
 | `/#/admin/mentors` | admin | Review, edit and verify mentor profiles and availability |
 | `/#/admin/matches` | admin | Recommended matches with scores, compare student and mentor, propose, confirm or cancel, change status |

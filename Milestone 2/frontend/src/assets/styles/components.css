@@ -1,5 +1,5 @@
 /* Cards, buttons, badges, tables, bars and banners */
-.card, .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); }
 .card { transition: box-shadow 0.18s, border-color 0.18s; }
 .card:hover { border-color: #ddc9eb; box-shadow: var(--shadow-hover); }
 .card.inner { background: #fcf9fe; padding: 16px; box-shadow: none; margin: 10px 0; }
@@ -38,13 +38,12 @@
 .notice { background: #fff6e8; border-left: 4px solid var(--gold); padding: 14px; border-radius: var(--radius-sm); color: #654b25; margin: 16px 0; }
 .info { background: #f5effa; border-left: 4px solid #8c50ae; padding: 14px; border-radius: var(--radius-sm); color: #49345e; margin: 16px 0; }
 
-/* Admin action cards */
-.stat { border-left: 4px solid #d8c1e8; padding: 14px 16px; }
-.stat.alert { border-left-color: var(--gold); }
-.stat.alert.zero { border-left-color: var(--line); }
-.stat .metric { font-size: 30px; line-height: 1.1; margin: 2px 0; }
-.stat .lbl { font-size: 13px; color: #655b75; }
-.stat a { font-size: 13px; }
+/* Tabs: one panel at a time */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--line-soft); }
+.tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; margin-bottom: -1px; font: inherit; font-weight: 750; color: #70677f; cursor: pointer; }
+.tab:hover { color: var(--plum); }
+.tab.active { color: var(--plum); border-bottom-color: var(--violet); }
+.tab-count { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 20px; background: var(--lilac); color: var(--plum-dark); font-size: 11px; }
 
 /* Tables */
 .table-wrap { overflow-x: auto; border-radius: 14px; }

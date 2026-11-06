@@ -17,7 +17,7 @@ Other commands:
 |---|---|
 | `npm run build` | Builds the app into `dist/` (what a host such as Vercel serves) |
 | `npm run preview` | Serves the built app locally |
-| `npm test` | Runs the unit tests (matching, Smart Match, match flow, weekly check-ins, login and profiles) |
+| `npm test` | Runs the unit tests (matching, Smart Match, match flow, weekly check-ins, admin overview numbers, login and profiles) |
 
 Page addresses use `#`, for example `/#/admin/matches`, so the app works on any static host without extra settings.
 
@@ -41,7 +41,7 @@ Use "Reset demo data" on the log in page to start over.
 | `/#/mentor` | mentor | Accept or decline match requests, active mentees |
 | `/#/mentor/profile` | mentor | Background, topics, maximum students, free text about what they offer, availability slots |
 | `/#/mentor/checkins` | mentor | Weekly check-ins for each active mentee |
-| `/#/admin` | admin | What needs attention, recommended matches, and tabs for concerns, feedback, mentor capacity and recent activity |
+| `/#/admin` | admin | Analytics cards: key numbers, what needs attention, matches by status, mentorship health, mentor capacity, student feedback, recommended matches, concerns and recent activity |
 | `/#/admin/students` | admin | View, search and filter student profiles and responses |
 | `/#/admin/mentors` | admin | Review, edit and verify mentor profiles and availability |
 | `/#/admin/matches` | admin | Recommended matches with Smart Match scores and reasons, compare student and mentor, propose, confirm or cancel, change status |
@@ -68,7 +68,7 @@ src/
   components/common/        header, badges, bars, topic picker, toast, notification list
   components/match/         recommendation table, student and mentor comparison
   components/checkin/       the weekly check-in panel
-  services/                 data layer: db, auth, matching, smartMatch, matches, profiles, checkins, pulseReview, feedback, notifications
+  services/                 data layer: db, auth, matching, smartMatch, matches, profiles, checkins, pulseReview, analytics, feedback, notifications
   config/constants.js       topics, formats, statuses, score weights, check-in rules, navigation
   data/seed.js              sample data
   composables/              useDb, useToast

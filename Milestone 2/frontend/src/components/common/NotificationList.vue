@@ -5,7 +5,7 @@ defineProps({ items: { type: Array, required: true }, empty: { type: String, def
 
 <template>
   <ul class="list">
-    <li v-for="n in items" :key="n.id">{{ n.text }} <span class="muted">· {{ when(n.at) }}</span></li>
+    <li v-for="n in items" :key="n.id"><span v-if="n.email" class="pill email">email</span> {{ n.text }} <span class="muted">· {{ when(n.at) }}</span></li>
     <li v-if="!items.length" class="muted">{{ empty }}</li>
   </ul>
 </template>

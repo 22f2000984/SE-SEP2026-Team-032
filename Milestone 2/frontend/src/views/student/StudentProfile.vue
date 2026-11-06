@@ -14,7 +14,7 @@ const me = session.value;
 const p = db.students[me.id];
 const form = reactive({
   programme: p.programme, goals: p.goals, skills: p.skills, topics: [...p.topics], format: p.format,
-  duration: p.duration, availability: p.availability, preferences: p.preferences
+  duration: p.duration, availability: p.availability, preferences: p.preferences, needsText: p.needsText || ''
 });
 const error = ref('');
 
@@ -34,6 +34,9 @@ function save() {
       <input id="programme" v-model="form.programme" />
       <label for="goals">Career goals and the guidance you need (max 500 characters)</label>
       <textarea id="goals" v-model="form.goals" rows="3"></textarea>
+      <label for="needs">What you need from a mentor, in your own words (max 800 characters)</label>
+      <textarea id="needs" v-model="form.needsText" rows="4" placeholder="For example: I want to move into data analytics and need help with a portfolio and interviews."></textarea>
+      <p class="muted">Smart Match reads this to find a mentor who fits. Please do not write phone numbers or addresses.</p>
       <label for="skills">Skills</label>
       <input id="skills" v-model="form.skills" />
       <label>Topics you would like a mentor for</label>

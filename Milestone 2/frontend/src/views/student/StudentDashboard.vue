@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { NEXT_STEP } from '../../config/constants';
 import { session } from '../../services/auth';
 import { notificationsFor } from '../../services/notifications';
+import { toAnswer } from '../../services/checkins';
 import { useDb } from '../../composables/useDb';
 import { latestMatchOf, userName } from '../../utils/format';
 import PageHeading from '../../components/common/PageHeading.vue';
@@ -34,10 +35,12 @@ const message = computed(() => {
 });
 const nextStep = computed(() => (match.value ? NEXT_STEP[match.value.status] : 'Complete your profile so the admin can find a good fit.'));
 const notes = computed(() => notificationsFor(db, me.id, 4));
+const waiting = computed(() => toAnswer(db, me.id, 'student').length);
 </script>
 
 <template>
   <PageHeading eyebrow="Student" :title="`Welcome, ${me.name}`" intro="Your mentoring journey, in one place." />
+  <div v-if="waiting" class="notice">You have {{ waiting }} weekly check-in{{ waiting > 1 ? 's' : '' }} to answer. <router-link to="/student/checkins">Answer now</router-link></div>
   <section class="grid">
     <div class="card">
       <h2>Match status</h2>

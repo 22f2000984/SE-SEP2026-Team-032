@@ -4,6 +4,7 @@ import { STATUSES } from '../../config/constants';
 import { bothAccepted } from '../../services/matches';
 import { waitingStudents } from '../../services/matching';
 import { resolveConcern } from '../../services/feedback';
+import { flagged } from '../../services/checkins';
 import { notificationsFor } from '../../services/notifications';
 import { session } from '../../services/auth';
 import { useDb } from '../../composables/useDb';
@@ -25,6 +26,7 @@ const declined = computed(() => proposed.value.filter(m => m.mentorResponse === 
 const delayed = computed(() => proposed.value.filter(m => Date.now() - new Date(m.proposedAt) > 3 * 864e5));
 const pending = computed(() => Object.values(db.mentors).filter(m => m.status === 'pending'));
 const waiting = computed(() => waitingStudents(db));
+const flaggedCheckIns = computed(() => flagged(db));
 const openConcerns = computed(() => db.concerns.filter(c => c.status === 'open'));
 const recentFeedback = computed(() => db.feedback.slice(-5).reverse());
 const notes = computed(() => notificationsFor(db, me.id, 6));
@@ -38,6 +40,7 @@ const todo = computed(() => [
   { label: 'mentors waiting to be verified', count: pending.value.length, to: '/admin/mentors', cta: 'Review' },
   { label: 'students waiting for a match', count: waiting.value.length, to: '/admin/matches', cta: 'Match' },
   { label: 'proposals waiting more than 3 days', count: delayed.value.length, to: '/admin/matches', cta: 'Open' },
+  { label: 'weekly check-ins flagged for review', count: flaggedCheckIns.value.length, to: '/admin/pulse', cta: 'Review' },
   { label: 'open concerns', count: openConcerns.value.length, tab: 'concerns', cta: 'View' }
 ]);
 
@@ -82,7 +85,7 @@ function mentorOf(feedback) {
 
   <div class="card" style="margin-top: 16px">
     <h2>Recommended matches</h2>
-    <p class="muted">The best mentor for each waiting student, scored out of 100. <router-link to="/admin/matches">See the top 3</router-link></p>
+    <p class="muted">The best mentor for each waiting student, with a Smart Match score out of 100. <router-link to="/admin/matches">See the top 3</router-link></p>
     <RecommendationTable :per-student="1" compact />
   </div>
 

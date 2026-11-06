@@ -65,3 +65,11 @@ dd { margin: 0; }
   padding: 11px 18px; border-radius: 12px; box-shadow: 0 10px 30px rgba(54, 30, 88, 0.22); opacity: 0; transition: opacity 0.25s; pointer-events: none;
 }
 .toast.show { opacity: 1; }
+
+/* Mentorship Pulse: check-in states, review verdicts and email tags */
+.pill.upcoming { background: #eef2f6; color: #4a5a6e; }
+.pill.due, .pill.watch { background: #fff1d9; color: var(--warn); }
+.pill.submitted, .pill.ontrack { background: #e9f5ed; color: var(--ok); }
+.pill.overdue, .pill.needsattention { background: #fbe9ec; color: var(--danger); }
+.pill.email { background: #eee5f8; color: #633e91; }
+.stack-gap + .stack-gap { margin-top: 16px; }

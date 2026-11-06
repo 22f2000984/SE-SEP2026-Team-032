@@ -1,5 +1,6 @@
 /* Sample data for the prototype. In Sprint 1 this is replaced by the database behind the APIs. */
 import { scoreMatch } from '../services/matching';
+import { smartScore } from '../services/smartMatch';
 
 export function createSeed(now = Date.now()) {
   const daysAgo = n => new Date(now - n * 864e5).toISOString();
@@ -15,14 +16,14 @@ export function createSeed(now = Date.now()) {
       { id: 7, email: 'priya@mentor.test', password: 'demo123', name: 'Priya Nair', role: 'mentor' }
     ],
     students: {
-      1: { programme: 'Diploma', goals: 'Move into data analytics', skills: 'Python, SQL', topics: ['Data Science', 'Career Switching'], format: 'Video call', duration: '3 months', preferences: 'Weekend calls', availability: 'Weekend evenings' },
-      2: { programme: 'Foundation', goals: 'Prepare for software interviews', skills: 'HTML, JavaScript', topics: ['Interview Preparation', 'Web Development'], format: 'Messaging', duration: '1 month', preferences: '', availability: 'Sunday afternoons' },
-      6: { programme: 'Degree', goals: 'Plan a product management career', skills: 'Excel, communication', topics: ['Product Management', 'Career Switching'], format: 'Phone call', duration: '6 months', preferences: 'Short weekly calls', availability: 'Sunday and Wednesday evenings' }
+      1: { programme: 'Diploma', goals: 'Move into data analytics', skills: 'Python, SQL', needsText: 'I want to move from my current job into data analytics. I need help building a portfolio with SQL and Python projects and preparing for analyst interviews.', topics: ['Data Science', 'Career Switching'], format: 'Video call', duration: '3 months', preferences: 'Weekend calls', availability: 'Weekend evenings' },
+      2: { programme: 'Foundation', goals: 'Prepare for software interviews', skills: 'HTML, JavaScript', needsText: 'I am preparing for software developer interviews. I need practice with JavaScript questions, mock interviews and a plan for building web projects.', topics: ['Interview Preparation', 'Web Development'], format: 'Messaging', duration: '1 month', preferences: '', availability: 'Sunday afternoons' },
+      6: { programme: 'Degree', goals: 'Plan a product management career', skills: 'Excel, communication', needsText: 'I want to become a product manager. I need guidance on writing product requirements, preparing for product interviews and changing careers from operations.', topics: ['Product Management', 'Career Switching'], format: 'Phone call', duration: '6 months', preferences: 'Short weekly calls', availability: 'Sunday and Wednesday evenings' }
     },
     mentors: {
-      3: { qualifications: 'PhD, Data Science', experience: 12, topics: ['Data Science', 'Career Switching'], bio: 'Leads an analytics team and mentors early-career students.', status: 'verified', maxStudents: 3 },
-      4: { qualifications: 'B.Tech', experience: 5, topics: ['Web Development'], bio: '', status: 'pending', maxStudents: 2 },
-      7: { qualifications: 'MBA, Product Manager', experience: 8, topics: ['Product Management', 'Interview Preparation', 'Career Switching'], bio: 'Product manager who coaches students on product careers and interviews.', status: 'verified', maxStudents: 2 }
+      3: { qualifications: 'PhD, Data Science', experience: 12, topics: ['Data Science', 'Career Switching'], bio: 'Leads an analytics team and mentors early-career students.', skillsText: 'I coach students on data analytics careers, SQL and Python portfolio projects, and help people switch into data roles.', status: 'verified', maxStudents: 3 },
+      4: { qualifications: 'B.Tech', experience: 5, topics: ['Web Development'], bio: '', skillsText: 'Web development with JavaScript and React, and guidance on small projects.', status: 'pending', maxStudents: 2 },
+      7: { qualifications: 'MBA, Product Manager', experience: 8, topics: ['Product Management', 'Interview Preparation', 'Career Switching'], bio: 'Product manager who coaches students on product careers and interviews.', skillsText: 'I mentor on product management: writing product requirements, roadmaps, mock interviews for product roles and changing careers.', status: 'verified', maxStudents: 2 }
     },
     slots: [
       { id: 1, mentorId: 3, day: 'Saturday', start: '18:00', end: '20:00' },
@@ -34,6 +35,7 @@ export function createSeed(now = Date.now()) {
       mentorResponse: 'pending', studentResponse: 'pending', mentorRespondedAt: null, studentRespondedAt: null, confirmedAt: null,
       log: [{ from: '-', to: 'proposed', at: daysAgo(5), by: 'Admin' }]
     }],
+    checkins: [],
     concerns: [],
     feedback: [],
     notifications: [
@@ -44,5 +46,8 @@ export function createSeed(now = Date.now()) {
   const sc = scoreMatch(d, 1, 3);
   d.matches[0].matchScore = sc.total;
   d.matches[0].scoreReasons = sc.reasons.join('; ');
+  const smart = smartScore(d, 1, 3);
+  d.matches[0].smartScore = smart.total;
+  d.matches[0].smartReason = smart.reason;
   return d;
 }

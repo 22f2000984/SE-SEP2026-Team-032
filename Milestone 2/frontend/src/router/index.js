@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import { HOME } from '../config/constants';
 import { session, startSession } from '../services/auth';
 import { db, commit } from '../services/db';
+import { sendReminders } from '../services/checkins';
 
 const routes = [
   { path: '/', redirect: () => (session.value ? HOME[session.value.role] : '/login') },
@@ -12,13 +13,19 @@ const routes = [
   { path: '/student/profile', component: () => import('../views/student/StudentProfile.vue'), meta: { role: 'student' } },
   { path: '/student/mentor', component: () => import('../views/student/StudentMentor.vue'), meta: { role: 'student' } },
 
+  { path: '/student/checkins', component: () => import('../views/student/StudentCheckIns.vue'), meta: { role: 'student' } },
+
   { path: '/mentor', component: () => import('../views/mentor/MentorDashboard.vue'), meta: { role: 'mentor' } },
   { path: '/mentor/profile', component: () => import('../views/mentor/MentorProfile.vue'), meta: { role: 'mentor' } },
+
+  { path: '/mentor/checkins', component: () => import('../views/mentor/MentorCheckIns.vue'), meta: { role: 'mentor' } },
 
   { path: '/admin', component: () => import('../views/admin/AdminOverview.vue'), meta: { role: 'admin' } },
   { path: '/admin/students', component: () => import('../views/admin/AdminStudents.vue'), meta: { role: 'admin' } },
   { path: '/admin/mentors', component: () => import('../views/admin/AdminMentors.vue'), meta: { role: 'admin' } },
   { path: '/admin/matches', component: () => import('../views/admin/AdminMatches.vue'), meta: { role: 'admin' } },
+
+  { path: '/admin/pulse', component: () => import('../views/admin/AdminPulse.vue'), meta: { role: 'admin' } },
 
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ];
@@ -43,6 +50,7 @@ router.beforeEach(async to => {
     const user = db.users.find(u => u.id === DEMO_USER[to.query.as]);
     if (user) startSession(user);
   }
+  if (sendReminders(db)) commit();
   const role = session.value && session.value.role;
   if (to.meta.guest && role) return HOME[role];
   if (to.meta.role) {

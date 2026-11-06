@@ -17,7 +17,7 @@ Other commands:
 |---|---|
 | `npm run build` | Builds the app into `dist/` (what a host such as Vercel serves) |
 | `npm run preview` | Serves the built app locally |
-| `npm test` | Runs the unit tests (matching, match flow, login and profiles) |
+| `npm test` | Runs the unit tests (matching, Smart Match, match flow, weekly check-ins, login and profiles) |
 
 Page addresses use `#`, for example `/#/admin/matches`, so the app works on any static host without extra settings.
 
@@ -35,22 +35,28 @@ Use "Reset demo data" on the log in page to start over.
 |---|---|---|
 | `/#/login`, `/#/register` | everyone | Log in, create an account |
 | `/#/student` | student | Dashboard, match status, notifications |
-| `/#/student/profile` | student | Goals, skills, wanted topics, format, duration, availability |
+| `/#/student/profile` | student | Goals, skills, wanted topics, format, duration, availability, free text about needs |
 | `/#/student/mentor` | student | Status and next step, proposed mentor to accept or decline, feedback, concerns |
+| `/#/student/checkins` | student | Weekly check-ins: mentor's email, state of each week, the form for the week that is due |
 | `/#/mentor` | mentor | Accept or decline match requests, active mentees |
-| `/#/mentor/profile` | mentor | Background, topics, maximum students, availability slots |
+| `/#/mentor/profile` | mentor | Background, topics, maximum students, free text about what they offer, availability slots |
+| `/#/mentor/checkins` | mentor | Weekly check-ins for each active mentee |
 | `/#/admin` | admin | What needs attention, recommended matches, and tabs for concerns, feedback, mentor capacity and recent activity |
 | `/#/admin/students` | admin | View, search and filter student profiles and responses |
 | `/#/admin/mentors` | admin | Review, edit and verify mentor profiles and availability |
-| `/#/admin/matches` | admin | Recommended matches with scores, compare student and mentor, propose, confirm or cancel, change status |
+| `/#/admin/matches` | admin | Recommended matches with Smart Match scores and reasons, compare student and mentor, propose, confirm or cancel, change status |
+| `/#/admin/pulse` | admin | Mentorship Pulse: check-ins that need review, active mentorships, emails sent |
 
 A signed-in user who opens another role's address is sent back to their own dashboard.
 
 ## Workflow
 The admin proposes a match and both the mentor and the student are notified. Each accepts or declines. Only when both have accepted can the admin confirm the match, which makes it active; the admin can cancel it instead. Statuses: proposed, active (confirmed by the admin), completed, cancelled. Students and mentors never browse each other.
 
-## Matching
-Every student without a match is scored against every verified mentor who still has free places, out of 100: topic overlap 70 and mentor experience 30. The best mentors are listed with the reasons. The platform only recommends: the admin proposes. Each mentor sets a maximum number of students; a proposal over that limit is refused.
+## Smart Match and Mentorship Pulse (design preview)
+Milestone 2 is a design, so the two AI features are shown with an **offline stand-in**. It has the same inputs and outputs as the AI agent that the backend calls in a later sprint, so the pages do not change when the agent is connected.
+
+- **Smart Match.** The student and the mentor each write a free text (what I need, what I offer). Every student without a match is scored against every verified mentor who still has free places, out of 100, with a reason. The stand-in compares the wording of the two texts (60 points) and adds the rule score, topic overlap 70 and experience 30, scaled to 40 points. The rule score is shown next to it. The platform only recommends: the admin proposes. Each mentor sets a maximum number of students; a proposal over that limit is refused.
+- **Mentorship Pulse.** When the admin confirms a match, each person gets an email with the other's address (recorded in the Emails list, not sent), and a check-in is created for each week of the mentorship (1 month = 4 weeks, 3 months = 12, 6 months = 24). Each person answers a rating and a comment. The stand-in review gives a verdict (on track, watch, needs attention) and a reason; a rating of 2 or less, or an unanswered check-in, is flagged. A week without a session is not flagged. The admin sees the flagged ones on the Pulse page and marks them reviewed.
 
 ## Code structure
 ```
@@ -59,10 +65,11 @@ src/
   router/                   routes and role guard
   layouts/                  AppLayout (header, page, footer), AuthLayout (log in and register)
   views/                    one file per page: auth/, student/, mentor/, admin/
-  components/common/        header, badges, bars, topic picker, stat card, toast, notification list
+  components/common/        header, badges, bars, topic picker, toast, notification list
   components/match/         recommendation table, student and mentor comparison
-  services/                 data layer: db, auth, matching, matches, profiles, feedback, notifications
-  config/constants.js       topics, formats, statuses, score weights, navigation
+  components/checkin/       the weekly check-in panel
+  services/                 data layer: db, auth, matching, smartMatch, matches, profiles, checkins, pulseReview, feedback, notifications
+  config/constants.js       topics, formats, statuses, score weights, check-in rules, navigation
   data/seed.js              sample data
   composables/              useDb, useToast
   assets/styles/            tokens, base, layout, components, auth

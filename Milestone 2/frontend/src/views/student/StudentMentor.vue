@@ -58,6 +58,7 @@ function sendConcern() {
   <div v-else class="stack">
     <div class="card">
       <h2>{{ userName(db, match.mentorId) }} <StatusPill v-if="live" :value="match.status" /></h2>
+      <p v-if="live"><b>Email:</b> {{ db.users.find(u => u.id === match.mentorId).email }} (also sent to you by email). Write to your mentor to agree session times and how you will talk.</p>
       <p><b>Qualifications:</b> {{ mentor.qualifications }}<br /><b>Topics:</b> {{ topicsText(mentor.topics) }}<br /><b>Experience:</b> {{ mentor.experience }} years</p>
       <p>{{ mentor.bio }}</p>
     </div>

@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><title>Milestone 2 Report – Team 032</title>
 <style>
-@page{size:A4;margin:18mm 16mm}@page land{size:A4 landscape;margin:12mm}.land{page:land;break-before:page;break-after:page}.land h2{margin-top:0}.land img{max-height:150mm;width:auto}
+@page{size:A4;margin:18mm 16mm}@page land{size:A4 landscape;margin:12mm}.land{page:land;break-before:page;break-after:page}.land h2{margin-top:0}.land img{max-height:136mm;width:auto}
 body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.5;color:#1f2d3d}
 h1{color:#12345a;font-size:22pt;margin:0 0 4px}h2{color:#12345a;font-size:15pt;border-bottom:2px solid #1769aa;padding-bottom:3px;margin-top:26px;break-after:avoid}h3{color:#1769aa;font-size:12pt;margin:16px 0 4px;break-after:avoid}
 table{border-collapse:collapse;width:100%;margin:8px 0;font-size:10pt;break-inside:auto}tr{break-inside:avoid}th,td{border:1px solid #c5d2e0;padding:5px 7px;text-align:left;vertical-align:top}th{background:#e9f2fa;color:#12345a}
@@ -40,6 +40,7 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <tr><td>Match status management and overview APIs</td><td>US-C04, US-C07</td><td>26 Nov – 2 Dec</td></tr><tr><td>Student connection view, readiness, concern, feedback and status APIs</td><td>US-S07 to US-S11</td><td>28 Nov – 3 Dec</td></tr>
 <tr><td>Test cases, pytest and Swagger YAML</td><td>all of the above</td><td>30 Nov – 5 Dec</td></tr><tr><td>User feedback session and final-phase plan</td><td>–</td><td>4 – 6 Dec</td></tr></table>
 <p>All 21 user stories from Milestone 1 are covered across the two sprints.</p>
+<p><b>Planned extension.</b> Two AI features are designed in Milestone 2: <b>Smart Match</b> (an AI agent scores student and mentor pairs from what they wrote) and <b>Mentorship Pulse</b> (weekly check-ins with reminder emails and an AI review that sends only the cases that need attention to the admin). They build on US-C02, US-C03, US-C04, US-S09 and US-S10. The team builds them after the core flow; the Jira tasks and dates are added at the next scrum meeting.</p>
 <h3>1.6 Iterations</h3>
 <p>Each sprint is split into weekly iterations. Every sprint ends with a user feedback session, and its findings shape the next sprint. Code Reviewers review each task and Testers test it before it moves to Done.</p>
 <div class="land"><h3>1.7 Gantt chart</h3>
@@ -79,82 +80,134 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <p>Our platform is <b>client-mediated</b>. Students and mentors each keep their own profile, but they cannot see each other. The admin (our client) looks at both sides, proposes a match and follows it until it ends.</p>
 <table><tr><th style="width:24%">Component</th><th>What it does</th></tr>
 <tr><td>Login and roles</td><td>Registration and login for three roles: student, mentor and admin. Each role sees only its own pages.</td></tr>
-<tr><td>Student module</td><td>The student keeps their goals, skills, wanted topics, preferred format, duration and availability. The student sees the status of their match, accepts or declines the mentor proposed by the admin, gives feedback and can raise a concern.</td></tr>
-<tr><td>Mentor module</td><td>The mentor keeps their qualifications, topics, bio, availability slots and the maximum number of students they can mentor at the same time. The mentor accepts or declines match requests and sees their active mentees.</td></tr>
-<tr><td>Admin module</td><td>The admin views student profiles, reviews and verifies mentor profiles, sees recommended matches, proposes a match, confirms or cancels it, changes its status, and follows concerns and feedback.</td></tr>
-<tr><td>Matching and recommendation</td><td>Gives each student and mentor pair a score out of 100 and shows the best mentors to the admin, with reasons. It only suggests. The admin decides. See section 3.1.</td></tr>
-<tr><td>Match workflow</td><td>Controls the status of a match: proposed, active, completed or cancelled. A match becomes active only when the admin confirms it after both sides have accepted. Every change is saved in a history.</td></tr>
-<tr><td>Notifications</td><td>Tells the mentor and the student when a match is proposed. Tells the admin when someone accepts or declines. Tells both people when the admin confirms or cancels, and what the next step is.</td></tr>
-<tr><td>Database</td><td>Stores users, profiles, topics, mentor availability, matches with their scores, status history, feedback, concerns and notifications.</td></tr></table>
-<p><b>How a match moves:</b> the admin proposes a match, and the mentor and the student are both notified. Each of them accepts or declines. When <b>both have accepted</b>, the admin can confirm the match and it becomes active. The admin can also cancel it at any time. Later an active match is completed or cancelled. If someone declines, the admin cancels the match and can propose a new one.</p>
+<tr><td>Student module</td><td>The student keeps their goals, skills, wanted topics, preferred format, duration and availability, and writes in a free-text box what they need from a mentor. The student sees the status of their match, accepts or declines the mentor proposed by the admin, answers a short check-in every week, gives feedback and can raise a concern.</td></tr>
+<tr><td>Mentor module</td><td>The mentor keeps their qualifications, topics, bio, availability slots and the maximum number of students they can mentor at the same time. The mentor writes in a free-text box what they can offer. The mentor accepts or declines match requests, sees their active mentees and answers a weekly check-in for each of them.</td></tr>
+<tr><td>Admin module</td><td>The admin views student profiles, reviews and verifies mentor profiles, sees recommended matches, proposes a match, confirms or cancels it, changes its status, reviews the weekly check-ins that the AI flagged, and follows concerns and feedback.</td></tr>
+<tr><td>Matching and recommendation (Smart Match)</td><td>An AI agent gives each student and mentor pair a score out of 100 with a reason, and the admin sees the best mentors first. It only suggests. The admin decides. See section 3.1.</td></tr>
+<tr><td>Mentorship Pulse</td><td>Weekly check-ins for both people in an active match, reminder emails, and an AI review that flags the answers that need a person. See section 3.2.</td></tr>
+<tr><td>Match workflow</td><td>Controls the status of a match: proposed, active, completed or cancelled. A match becomes active only when the admin confirms it after both sides have accepted. Then each person receives the other's email address, and the weekly check-ins start. Every change is saved in a history.</td></tr>
+<tr><td>Notifications and email</td><td>Tells the mentor and the student when a match is proposed. Tells the admin when someone accepts or declines, and when a check-in is flagged. Tells both people when the admin confirms or cancels. Emails go out when a match becomes active (contact details) and when a weekly check-in is due (reminder).</td></tr>
+<tr><td>Database</td><td>Stores users, profiles, topics, mentor availability, matches with their scores, status history, weekly check-ins, AI reviews, feedback, concerns and notifications.</td></tr></table>
+<p><b>How a match moves:</b> the admin proposes a match, and the mentor and the student are both notified. Each of them accepts or declines. When <b>both have accepted</b>, the admin can confirm the match and it becomes active. The admin can also cancel it at any time. The two people then write to each other and agree privately on session times and how they will talk. Later an active match is completed or cancelled. If someone declines, the admin cancels the match and can propose a new one.</p>
 
-<h3>3.1 How matches are recommended</h3>
-<p>The admin should not have to compare every student with every mentor. The platform makes a short list. The method is simple. It adds points for two facts the admin can check:</p>
-<table><tr><th style="width:22%">Part</th><th style="width:12%">Points</th><th>How it is worked out</th></tr>
-<tr><td>Topic overlap</td><td>70</td><td>Students and mentors choose topics from the same list. The score is the share of the student's wanted topics that the mentor also covers.</td></tr>
-<tr><td>Mentor experience</td><td>30</td><td>Years of experience, counted up to 10 years.</td></tr></table>
-<p><b>Pairs that are not shown:</b> the mentor is not verified, the mentor already has as many students as the maximum they set, or the student already has an open match. Free places give no points; they only decide whether a pair is allowed.</p>
-<p><b>Example.</b> Neha wants Product Management and Career Switching. Priya covers both and has 8 years of experience, so the score is 70 + 24 = <b>94</b>. Rohan wants Interview Preparation and Web Development. Priya covers one of the two (35) and Dr. Meera covers none (0). With their experience, Priya scores <b>59</b> and Dr. Meera <b>30</b>, which is shown as a weak fit (below 40). Each row also shows reasons, such as "Shared topics: Interview Preparation".</p>
-<p><b>Mentor capacity.</b> Each mentor sets "maximum students at the same time" (1 to 10, default 3). Proposed and active matches use a place. A proposal that would go over the maximum is refused. A cancelled or completed match frees a place.</p>
-<p><b>Admin dashboard.</b> The overview is kept simple. A thin line at the top shows the number of matches in each status and the number of students and mentors. The first card, "Needs your attention", lists six things on one line each, with a count and a button that goes to the right page: matches ready to confirm, proposals declined by one side, mentors waiting to be verified, students waiting for a match, proposals waiting more than 3 days, and open concerns. The second card shows the best mentor for each waiting student with a Propose button. The last card has four tabs, shown one at a time: open concerns, student feedback, mentor capacity and recent activity. Everything the admin needs is on this one page, and nothing is hidden. When a pair is proposed, its score and reasons are saved with the match. The server version of this logic is built in Sprint 1 (match creation APIs).</p>
+<h3>3.1 How matches are recommended (Smart Match)</h3>
+<p>The admin should not have to compare every student with every mentor. The platform makes a short list in three steps.</p>
+<table><tr><th style="width:22%">Step</th><th>What happens</th></tr>
+<tr><td>1. Free text</td><td>The student writes what they need from a mentor, and the mentor writes what they can offer, in their own words (up to 800 characters). Both still choose topics from the same list.</td></tr>
+<tr><td>2. Fixed rules</td><td>Only allowed pairs are scored: the mentor is verified, the mentor has a free place (the maximum set by the mentor, 1 to 10, default 3, counts proposed and active matches), and the student has no open match.</td></tr>
+<tr><td>3. AI score</td><td>An AI agent on the server reads the two texts, the topics and the mentor's years of experience, and returns a <b>score from 0 to 100 and a short reason</b> for each allowed pair. A score under 40 is shown as a weak fit.</td></tr></table>
+<p><b>The admin still decides.</b> The agent only recommends. It never proposes, confirms or cancels. If the agent is unavailable, the platform uses the earlier <b>rule score</b> (topic overlap 70 + mentor experience 30, years counted up to 10), so the admin always has a list. The rule score is also shown next to the AI score for comparison.</p>
+<p><b>Privacy.</b> Only the two texts, the topics and the years of experience are sent to the agent. Names and email addresses are not. The profile form tells people that Smart Match reads what they write and asks them not to add phone numbers or addresses.</p>
+<p><b>Example.</b> Neha wrote that she wants to become a product manager and needs help with product requirements and interviews. Priya wrote that she mentors on product requirements, roadmaps and mock interviews. The reason shown to the admin is: "Both describe: product, manager, writing, requirements, interviews, changing; covers 2 of 2 wanted topics; 8 years of experience", with a score of <b>98</b> (rule score 94). Neha with Dr. Meera, who coaches data careers, scores <b>38</b> and is shown as a weak fit.</p>
+<p><i>In the prototype</i> the pages show this result from a simple offline stand-in that compares the wording of the two texts. It has the same inputs and outputs as the agent, so the pages do not change when the agent is connected in Sprint 2. The screens carry a note saying so.</p>
+
+<h3 style="break-before:page">3.2 Mentorship Pulse: weekly check-ins with human review</h3>
+<p>After a match becomes active, the platform keeps track of how it is going without the admin having to ask.</p>
+<table><tr><th style="width:22%">Step</th><th>What happens</th></tr>
+<tr><td>1. Contact</td><td>Both people receive an email with the other person's address. They agree session times and how they will talk (call, video, messages) between themselves. The platform does not run the sessions.</td></tr>
+<tr><td>2. Schedule</td><td>One check-in is created for each week of the mentorship, for the student and for the mentor. The number of weeks follows the chosen duration: 1 month = 4 weeks, 3 months = 12, 6 months = 24 (4 if not sure).</td></tr>
+<tr><td>3. Reminder</td><td>When a week ends, each person gets an email with a link to their Check-ins page.</td></tr>
+<tr><td>4. Answer</td><td>A short form: a rating from 1 to 5 and an optional comment. The answers go to the admin only, not to the other person.</td></tr>
+<tr><td>5. AI review</td><td>An AI agent reads each answer and gives a verdict (<b>on track, watch or needs attention</b>) with a short reason. It looks at the rating and the words in the comment. A rating of 2 or less is always flagged. A week without a session is not a problem by itself, because both people may agree to skip it; if something is wrong, they say so in the rating or the comment.</td></tr>
+<tr><td>6. Human in the loop</td><td>An answer that is "on track" is only saved. "Watch" and "needs attention" are sent to the admin, who reads the reason, writes a note and marks it reviewed. A check-in that is still unanswered 2 days after it was due is also sent to the admin.</td></tr></table>
+<p>The agent never changes a match, cancels it or contacts anyone. It only decides what a person should look at, which keeps the admin's work small. The admin sees all of this on one page, <b>Mentorship Pulse</b>: what needs review, the active mentorships with their latest verdict, and the emails sent. This is how the admin follows the condition of every mentorship (US-C04), together with student feedback (US-S10) and concerns (US-S09).</p>
+<p><i>In the prototype</i> the emails are recorded in a list instead of being sent. The verdicts come from a rule-based stand-in with the same output as the agent.</p>
+
+<p><b>Admin dashboard.</b> The overview is kept simple. A thin line at the top shows the number of matches in each status and the number of students and mentors. The first card, "Needs your attention", lists seven things on one line each, with a count and a button that goes to the right page: matches ready to confirm, proposals declined by one side, mentors waiting to be verified, students waiting for a match, proposals waiting more than 3 days, weekly check-ins flagged for review, and open concerns. The second card shows the best mentor for each waiting student, with the Smart Match score and reason and a Propose button. The last card has four tabs, shown one at a time: open concerns, student feedback, mentor capacity and recent activity. Everything the admin needs is on this one page, and nothing is hidden. When a pair is proposed, its score and reasons are saved with the match. The server version of this logic is built in Sprint 1 (match creation APIs).</p>
 
 <div class="land"><h2>4. Class Diagram</h2>
-<figure><img src="diagrams/class_diagram.png"><figcaption>Figure 1. Class diagram. Student, Mentor and Administrator are kinds of User. Every Match is proposed by an Administrator and links one Student and one Mentor. The MatchingService scores pairs.</figcaption></figure></div>
+<figure><img src="diagrams/class_diagram.png"><figcaption>Figure 1. Class diagram. Student, Mentor and Administrator are kinds of User. Every Match is proposed by an Administrator and links one Student and one Mentor. The AiMatchingService scores pairs (with the MatchingService rule score as fallback). The CheckInScheduler creates the weekly CheckIns and the AiReviewService reviews them.</figcaption></figure></div>
 
 <div class="land"><h2>5. Database Design</h2>
 <figure><img src="diagrams/er_diagram.png"><figcaption>Figure 2. Entity relationship diagram.</figcaption></figure></div>
 <table><tr><th style="width:26%">Table</th><th>What it stores</th></tr>
 <tr><td>USER</td><td>One row for each account. The email is unique. The role is student, mentor or admin.</td></tr>
-<tr><td>STUDENT_PROFILE</td><td>Goals, skills, preferred format and duration, preferences and availability. One per student.</td></tr>
-<tr><td>MENTOR_PROFILE</td><td>Qualifications, experience, bio, verification status and the maximum number of students (<code>max_students</code>). One per mentor.</td></tr>
+<tr><td>STUDENT_PROFILE</td><td>Goals, skills, preferred format and duration, preferences, availability and the free text about what the student needs (<code>needs_text</code>). One per student.</td></tr>
+<tr><td>MENTOR_PROFILE</td><td>Qualifications, experience, bio, the free text about what the mentor offers (<code>skills_text</code>), verification status and the maximum number of students (<code>max_students</code>). One per mentor.</td></tr>
 <tr><td>AVAILABILITY_SLOT</td><td>The weekly time slots of a mentor. A mentor can have many.</td></tr>
 <tr><td>EXPERTISE_TOPIC</td><td>The shared list of topics, for example Data Science or Web Development.</td></tr>
 <tr><td>STUDENT_TOPIC, MENTOR_TOPIC</td><td>Which topics a student wants and which topics a mentor covers.</td></tr>
-<tr><td>MATCH</td><td>One student and one mentor. It stores the admin who proposed it, the status, the mentor's and the student's answers with dates, the match score with its reasons, and the confirmation date.</td></tr>
+<tr><td>MATCH</td><td>One student and one mentor. It stores the admin who proposed it, the status, the mentor's and the student's answers with dates, the rule score and the AI score (<code>smart_score</code>) with its reason, and the confirmation date.</td></tr>
 <tr><td>MATCH_STATUS_LOG</td><td>The history of every status change: who changed it and when.</td></tr>
+<tr><td>CHECKIN</td><td>One row for each week and each side of an active match: due date, reminder date, and, once answered, the rating and the comment.</td></tr>
+<tr><td>AI_REVIEW</td><td>The verdict of the AI agent for one answered check-in (on track, watch, needs attention), its reason, whether it is still open, and the admin's note and name when reviewed.</td></tr>
 <tr><td>FEEDBACK</td><td>The rating and comments of a student about a match.</td></tr>
 <tr><td>CONCERN</td><td>A problem raised about a match. It stays open until the admin resolves it.</td></tr>
-<tr><td>NOTIFICATION</td><td>Messages for users, sometimes linked to a match.</td></tr></table>
+<tr><td>NOTIFICATION</td><td>Messages for users, sometimes linked to a match. The channel is in-app or email.</td></tr></table>
 
-<h2>6. Frontend Pages and Screenshots</h2>
-<p>The frontend is a <b>Vue 3</b> app (built with Vite) with 11 linked pages. Pages are connected with Vue Router, and each role is redirected to its own pages. Sample data is kept in the browser, so the whole flow can be tried: the admin proposes a match, both sides accept, and the admin confirms. There is no backend yet. The data calls are in one folder (<code>src/services</code>), so in Milestones 3 and 4 the real APIs replace them and the pages stay as they are.</p>
+<div class="land"><h2>6. Flows and Backend Design</h2>
+<h3>6.1 Smart Match flow</h3>
+<figure><img src="diagrams/seq_matching.png"><figcaption>Figure 3. Sequence diagram of Smart Match. The AI agent returns a score and a reason; the admin proposes, and the mentor and student each accept before the admin confirms.</figcaption></figure></div>
+<div class="land"><h3>6.2 Weekly check-in flow</h3>
+<figure><img src="diagrams/seq_checkin.png"><figcaption>Figure 4. Sequence diagram of Mentorship Pulse. Contact emails, weekly reminders, the AI review and the human review of flagged check-ins.</figcaption></figure></div>
+<h3>6.3 How the AI agents are called</h3>
+<ul><li>The agents run <b>on the server</b>. The browser never holds the AI key; the key is stored as a secret setting of the backend.</li>
+<li>Each agent gets a short instruction and a small JSON input, and must return a small JSON answer. Smart Match returns <code>{score: 0-100, reason}</code>; the review returns <code>{verdict, reason}</code>. The server checks the answer (score is a whole number from 0 to 100, verdict is one of the three values) and discards anything else.</li>
+<li>If the agent is slow, unavailable or returns an invalid answer, the platform falls back to the rule score for matching, and to the plain rules (rating of 2 or less, or an unanswered check-in) for the review. The admin is never blocked.</li>
+<li>Names and email addresses are never sent. The agent has no way to change data; the server applies the result.</li>
+<li>A scheduled job runs once a day. It creates nothing new; it finds check-ins that have become due, sends the reminder emails once, and flags check-ins that are more than 2 days overdue.</li></ul>
+<h3>6.4 Planned API endpoints</h3>
+<table><tr><th style="width:36%">Endpoint</th><th style="width:14%">Used by</th><th>Purpose</th></tr>
+<tr><td>PUT /students/me/profile</td><td>student</td><td>Save profile, topics and the free text about needs</td></tr>
+<tr><td>PUT /mentors/me/profile</td><td>mentor</td><td>Save profile, topics, free text about the offer and the maximum students</td></tr>
+<tr><td>GET /admin/recommendations?studentId=</td><td>admin</td><td>Allowed mentors with an AI score and reason (rule score as fallback)</td></tr>
+<tr><td>POST /admin/matches</td><td>admin</td><td>Propose a match; saves the scores and notifies both people</td></tr>
+<tr><td>POST /matches/{id}/response</td><td>student, mentor</td><td>Accept or decline a proposal</td></tr>
+<tr><td>POST /admin/matches/{id}/confirm</td><td>admin</td><td>Only when both accepted: match becomes active, contact emails are sent, check-ins are created</td></tr>
+<tr><td>PATCH /admin/matches/{id}/status</td><td>admin</td><td>Cancel or complete a match</td></tr>
+<tr><td>GET /me/checkins</td><td>student, mentor</td><td>Own weekly check-ins and their state</td></tr>
+<tr><td>POST /checkins/{id}/answer</td><td>student, mentor</td><td>Submit a check-in (rating and comment); the AI review runs and the admin is notified if flagged</td></tr>
+<tr><td>GET /admin/pulse</td><td>admin</td><td>Check-ins to review, active mentorships and their latest verdict</td></tr>
+<tr><td>POST /admin/reviews/{id}/reviewed</td><td>admin</td><td>Mark a flagged check-in as reviewed, with a note</td></tr></table>
+<p>The existing endpoints (registration, login, profiles, feedback, concerns, notifications) follow the same style. Every endpoint is checked against the role of the caller (US-C06). The full list is written as a Swagger YAML file in Sprint 1.</p>
+
+<h2>7. Frontend Pages and Screenshots</h2>
+<p>The frontend is a <b>Vue 3</b> app (built with Vite) with 14 linked pages. Pages are connected with Vue Router, and each role is redirected to its own pages. Sample data is kept in the browser, so the whole flow can be tried: the admin proposes a match, both sides accept, the admin confirms, and the weekly check-ins start. This milestone is a design, so there is no backend yet and the AI parts show an offline stand-in (see sections 3.1 and 3.2). The data calls are in one folder (<code>src/services</code>), so in Milestones 3 and 4 the real APIs replace them and the pages stay as they are.</p>
 <table><tr><th>Page</th><th>Used by</th><th>Purpose</th></tr>
 <tr><td>login, register</td><td>everyone</td><td>Log in and create an account</td></tr>
 <tr><td>student</td><td>student</td><td>Dashboard with match status and notifications</td></tr>
 <tr><td>student-profile</td><td>student</td><td>Goals, skills, wanted topics, format, duration, availability</td></tr>
 <tr><td>student-mentor</td><td>student</td><td>Status, next step, proposed mentor to accept or decline, feedback, concerns</td></tr>
+<tr><td>student-checkins</td><td>student</td><td>Weekly check-ins: state of each week, the form for the week that is due, the mentor's email</td></tr>
 <tr><td>mentor</td><td>mentor</td><td>Accept or decline requests, see active mentees</td></tr>
+<tr><td>mentor-checkins</td><td>mentor</td><td>Weekly check-ins for each active mentee</td></tr>
 <tr><td>mentor-profile</td><td>mentor</td><td>Background, topics, maximum students, availability</td></tr>
 <tr><td>admin</td><td>admin</td><td>Things that need attention, recommended matches, and tabs for concerns, feedback, capacity and activity</td></tr>
 <tr><td>admin-students</td><td>admin</td><td>View, search and filter student profiles</td></tr>
 <tr><td>admin-mentors</td><td>admin</td><td>Review, edit and verify mentors, availability and capacity</td></tr>
-<tr><td>admin-matches</td><td>admin</td><td>Recommended matches, propose, confirm or cancel, change status</td></tr></table>
-<figure><img src="screenshots/01_login.png"><figcaption>Figure 3. Login page with demo accounts.</figcaption></figure>
-<figure><img src="screenshots/02_student_dashboard.png"><figcaption>Figure 4. Student dashboard.</figcaption></figure>
-<figure><img src="screenshots/03_student_profile.png"><figcaption>Figure 5. Student profile with wanted topics, format, duration and availability.</figcaption></figure>
-<figure><img src="screenshots/04_student_my_mentor.png"><figcaption>Figure 6. Student's mentor page while a match is proposed, with the Accept and Decline buttons.</figcaption></figure>
-<figure><img src="screenshots/05_mentor_dashboard.png"><figcaption>Figure 7. Mentor dashboard with a match request. It shows the mentor's and the student's answers.</figcaption></figure>
-<figure><img src="screenshots/06_mentor_profile.png"><figcaption>Figure 8. Mentor profile with topics, maximum students and availability slots.</figcaption></figure>
-<figure><img src="screenshots/07_admin_overview.png"><figcaption>Figure 9. Admin overview: what needs attention, the recommended matches, and tabs for concerns, feedback, capacity and activity.</figcaption></figure>
-<figure><img src="screenshots/08_admin_mentors.png"><figcaption>Figure 10. Mentor review with topics, availability and capacity.</figcaption></figure>
-<figure><img src="screenshots/09_admin_matches.png"><figcaption>Figure 11. Matches page with the top three mentors for each waiting student, the score of a chosen pair, and the list of matches.</figcaption></figure>
-<figure><img src="screenshots/12_admin_students.png"><figcaption>Figure 12. Student profiles with search and filters.</figcaption></figure>
-<figure><img src="screenshots/14_admin_ready_to_confirm.png"><figcaption>Figure 13. After both sides accept, the Confirm match button is enabled. Before that it is disabled.</figcaption></figure>
-<figure><img src="screenshots/13_student_mentor_active.png"><figcaption>Figure 14. Student's mentor page after the admin confirms: status, next step, mentor details, feedback and concern forms.</figcaption></figure>
+<tr><td>admin-matches</td><td>admin</td><td>Recommended matches with Smart Match scores and reasons, propose, confirm or cancel, change status</td></tr>
+<tr><td>admin-pulse</td><td>admin</td><td>Mentorship Pulse: check-ins to review, active mentorships, emails sent</td></tr></table>
+<figure><img src="screenshots/01_login.png"><figcaption>Figure 5. Login page with demo accounts.</figcaption></figure>
+<figure><img src="screenshots/02_student_dashboard.png"><figcaption>Figure 6. Student dashboard.</figcaption></figure>
+<figure><img src="screenshots/03_student_profile.png"><figcaption>Figure 7. Student profile with wanted topics, format, duration, availability and the free-text box for Smart Match.</figcaption></figure>
+<figure><img src="screenshots/04_student_my_mentor.png"><figcaption>Figure 8. Student's mentor page while a match is proposed, with the Accept and Decline buttons.</figcaption></figure>
+<figure><img src="screenshots/05_mentor_dashboard.png"><figcaption>Figure 9. Mentor dashboard with a match request. It shows the mentor's and the student's answers.</figcaption></figure>
+<figure><img src="screenshots/06_mentor_profile.png"><figcaption>Figure 10. Mentor profile with topics, maximum students, the free-text box for Smart Match and availability slots.</figcaption></figure>
+<figure><img src="screenshots/07_admin_overview.png"><figcaption>Figure 11. Admin overview: what needs attention (including flagged check-ins), the recommended matches with Smart Match scores, and tabs for concerns, feedback, capacity and activity.</figcaption></figure>
+<figure><img src="screenshots/08_admin_mentors.png"><figcaption>Figure 12. Mentor review with topics, availability and capacity.</figcaption></figure>
+<figure><img src="screenshots/09_admin_matches.png"><figcaption>Figure 13. Matches page with the top three mentors for each waiting student, each with a Smart Match score and reason, the free text of a chosen pair, and the list of matches.</figcaption></figure>
+<figure><img src="screenshots/12_admin_students.png"><figcaption>Figure 14. Student profiles with search and filters.</figcaption></figure>
+<figure><img src="screenshots/14_admin_ready_to_confirm.png"><figcaption>Figure 15. After both sides accept, the Confirm match button is enabled. Before that it is disabled.</figcaption></figure>
+<figure><img src="screenshots/13_student_mentor_active.png"><figcaption>Figure 16. Student's mentor page after the admin confirms: status, next step, the mentor's email, feedback and concern forms.</figcaption></figure>
+<figure><img src="screenshots/15_student_checkins.png"><figcaption>Figure 17. Student's weekly check-ins: the mentor's email, the state of each week, and the form for the week that is due.</figcaption></figure>
+<figure><img src="screenshots/16_admin_pulse.png"><figcaption>Figure 18. Mentorship Pulse for the admin: check-ins that need review with the AI's reason, active mentorships, and the emails sent. The AI verdicts in this prototype come from an offline stand-in.</figcaption></figure>
 
-<h2>7. Frontend Code and README</h2>
+<h2>8. Frontend Code and README</h2>
 <p>The frontend ZIP has the Vue project: the pages (<code>src/views</code>), shared components, the data layer (<code>src/services</code>), the styles, unit tests and a README. To run it you need Node.js 18 or newer. Unzip, open the <code>frontend</code> folder, then run <code>npm install</code> and <code>npm run dev</code>, and open the address shown. The password for the demo accounts (student, mentor and admin) is <code>demo123</code>. The accounts are listed on the login page. <code>npm run build</code> makes the files that a host such as Vercel serves, and <code>npm test</code> runs the unit tests.</p>
 <table><tr><th style="width:30%">Folder</th><th>What is in it</th></tr>
 <tr><td>views</td><td>One file for each page, grouped as auth, student, mentor and admin.</td></tr>
 <tr><td>components</td><td>Small shared parts: header, status badges, score and capacity bars, topic picker, recommendation table, comparison cards.</td></tr>
-<tr><td>services</td><td>The data layer: login, matching and scores, match flow, profiles, feedback, notifications. Replaced by API calls in Sprint 1.</td></tr>
+<tr><td>services</td><td>The data layer: login, matching and scores, Smart Match, match flow, profiles, weekly check-ins and their review, feedback, notifications. Replaced by API calls in Sprint 1.</td></tr>
 <tr><td>router, layouts</td><td>Page addresses with the role guard, and the two page layouts.</td></tr>
 <tr><td>config, data</td><td>Topics, statuses and score weights in one place, and the sample data.</td></tr></table>
 
-<h2>8. Open Questions and Risks</h2>
+<h2>9. Open Questions and Risks</h2>
 <ul><li>What should happen after a mentor or a student declines? In the prototype the admin decides, cancels the match and can propose a new one.</li>
-<li>How are notifications sent, and is email needed?</li>
-<li>How long is data kept, and who may see feedback?</li>
-<li>Should the system set a maximum number of students per mentor, and who keeps the list of topics?</li>
-<li>Does the client agree with the score weights (topics 70, experience 30)?</li></ul>
+<li>Which AI provider and model do we use, who holds the key, and what is the monthly cost limit? The platform works without the agent through the fallback rules.</li>
+<li>Do students and mentors agree that the text they write is read by an AI service? The profile form says so; the client should confirm the wording.</li>
+<li>Which email service sends the contact and reminder emails, and which sender address is used?</li>
+<li>Is one check-in per week right for every duration, and is a grace period of 2 days acceptable?</li>
+<li>What should the admin do after a flag (call both people, change the match, cancel)? The prototype only records a note.</li>
+<li>How long is data kept, and who may see feedback and check-in answers? Today only the admin sees check-in answers.</li>
+<li>Should the system set a maximum number of students per mentor, and who keeps the list of topics?</li></ul>
 </body></html>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { NEXT, WEIGHTS, MIN_SCORE } from '../../config/constants';
+import { NEXT, MIN_SCORE } from '../../config/constants';
 import { waitingStudents, used, maxOf } from '../../services/matching';
 import { proposeMatch, setStatus, bothAccepted } from '../../services/matches';
 import { session } from '../../services/auth';
@@ -61,9 +61,10 @@ function change(m, event) {
   <div class="card">
     <h2>Recommended matches</h2>
     <p class="muted">
-      Each waiting student is scored against every verified mentor with free places, out of 100: topics {{ WEIGHTS.topics }} and mentor experience {{ WEIGHTS.experience }}.
-      Mentors who are full are not shown. A score under {{ MIN_SCORE }} is a weak fit. The platform only suggests; you decide.
+      Smart Match reads what each student and mentor wrote about their needs and skills, and scores every waiting student against each verified mentor with free places, out of 100.
+      Unverified mentors and mentors who are full are not shown. A score under {{ MIN_SCORE }} is a weak fit. It only suggests; you decide.
     </p>
+    <p class="muted">Design preview: the AI agent is built in Sprint 1. This page uses an offline stand-in that compares the wording of the two texts and the topics and experience, and gives the same kind of score and reason.</p>
     <RecommendationTable :per-student="3" />
   </div>
 
@@ -92,13 +93,13 @@ function change(m, event) {
   <h2 style="margin-top: 24px">All matches</h2>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Student</th><th>Mentor</th><th>Status</th><th>Score</th><th>Mentor response</th><th>Student response</th><th>Proposed</th><th>Action</th></tr></thead>
+      <thead><tr><th>Student</th><th>Mentor</th><th>Status</th><th>Smart Match</th><th>Mentor response</th><th>Student response</th><th>Proposed</th><th>Action</th></tr></thead>
       <tbody>
         <tr v-for="m in db.matches" :key="m.id">
           <td>{{ userName(db, m.studentId) }}</td>
           <td>{{ userName(db, m.mentorId) }}</td>
           <td><StatusPill :value="m.status" /><br /><span class="muted">{{ m.log.length }} update(s)</span></td>
-          <td><ScoreBar v-if="m.matchScore != null" :total="m.matchScore" /><span v-else>-</span></td>
+          <td><ScoreBar v-if="m.smartScore != null" :total="m.smartScore" /><span v-else>-</span></td>
           <td>
             <template v-if="m.status === 'proposed'"><StatusPill :value="m.mentorResponse" /><template v-if="m.mentorRespondedAt"><br /><span class="muted">{{ when(m.mentorRespondedAt) }}</span></template></template>
             <span v-else class="muted">-</span>

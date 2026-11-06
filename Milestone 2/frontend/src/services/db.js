@@ -3,7 +3,7 @@
 import { reactive } from 'vue';
 import { createSeed } from '../data/seed';
 
-const KEY = 't32_vue_db_v1';
+const KEY = 't32_vue_db_v2';
 
 function read() {
   try {

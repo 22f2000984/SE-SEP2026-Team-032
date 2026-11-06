@@ -15,7 +15,7 @@ const { toast } = useToast();
 const me = session.value;
 const p = db.mentors[me.id];
 
-const form = reactive({ qualifications: p.qualifications, experience: p.experience, topics: [...p.topics], maxStudents: p.maxStudents, bio: p.bio });
+const form = reactive({ qualifications: p.qualifications, experience: p.experience, topics: [...p.topics], maxStudents: p.maxStudents, bio: p.bio, skillsText: p.skillsText || '' });
 const error = ref('');
 const slot = reactive({ day: 'Monday', start: '18:00', end: '19:00' });
 const slotError = ref('');
@@ -56,6 +56,9 @@ function remove(id) {
         <label for="max">Maximum students you can mentor at the same time (1 to {{ MAX_CAPACITY }})</label>
         <input id="max" v-model="form.maxStudents" type="number" min="1" :max="MAX_CAPACITY" />
         <p class="muted"><CapacityBar :mentor-id="me.id" /></p>
+        <label for="offer">What you can offer as a mentor, in your own words (max 800 characters)</label>
+        <textarea id="offer" v-model="form.skillsText" rows="4" placeholder="For example: I coach students on product careers, requirements writing and mock interviews."></textarea>
+        <p class="muted">Smart Match reads this to find students who fit. Please do not write phone numbers or addresses.</p>
         <label for="bio">Short bio</label>
         <textarea id="bio" v-model="form.bio" rows="4"></textarea>
         <div class="err" role="alert">{{ error }}</div>

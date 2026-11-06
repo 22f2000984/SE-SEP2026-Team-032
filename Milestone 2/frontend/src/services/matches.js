@@ -2,8 +2,10 @@
 import { NEXT_STEP } from '../config/constants';
 import { userName } from '../utils/format';
 import { eligible, scoreMatch } from './matching';
+import { smartScore } from './smartMatch';
+import { scheduleCheckIns } from './checkins';
 import { nextId } from './ids';
-import { notify, notifyAdmins } from './notifications';
+import { notify, notifyAdmins, sendEmail } from './notifications';
 
 export function bothAccepted(m) {
   return m.mentorResponse === 'accepted' && m.studentResponse === 'accepted';
@@ -13,10 +15,10 @@ export function bothAccepted(m) {
 export function proposeMatch(d, studentId, mentorId, notes, by) {
   const why = eligible(d, studentId, mentorId);
   if (why) return why;
-  const sc = scoreMatch(d, studentId, mentorId), now = new Date().toISOString();
+  const sc = scoreMatch(d, studentId, mentorId), smart = smartScore(d, studentId, mentorId), now = new Date().toISOString();
   d.matches.push({
     id: nextId(d), studentId, mentorId, status: 'proposed', notes: notes || '', proposedAt: now,
-    matchScore: sc.total, scoreReasons: sc.reasons.join('; '),
+    matchScore: sc.total, scoreReasons: sc.reasons.join('; '), smartScore: smart.total, smartReason: smart.reason,
     mentorResponse: 'pending', studentResponse: 'pending', mentorRespondedAt: null, studentRespondedAt: null, confirmedAt: null,
     log: [{ from: '-', to: 'proposed', at: now, by }]
   });
@@ -45,5 +47,12 @@ export function setStatus(d, m, to, by) {
   notify(d, m.studentId, `Your mentoring match with ${mName} is now ${to}. Next step: ${NEXT_STEP[to]}`);
   notify(d, m.mentorId, `Your match with ${sName} is now ${to}.${to === 'active' ? ' Next step: contact the student to agree the first session.' : ''}`);
   notifyAdmins(d, `Match ${sName} / ${mName} is now ${to}.`);
+  if (to === 'active') {
+    /* Both sides have accepted, so each receives the other's email address and the weekly check-ins start. */
+    const sEmail = d.users.find(u => u.id === m.studentId).email, mEmail = d.users.find(u => u.id === m.mentorId).email;
+    sendEmail(d, m.studentId, `Your mentor is ${mName} (${mEmail}). Write to each other to agree session times and how you will talk.`);
+    sendEmail(d, m.mentorId, `Your student is ${sName} (${sEmail}). Write to each other to agree session times and how you will talk.`);
+    scheduleCheckIns(d, m);
+  }
   return true;
 }

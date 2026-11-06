@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { session } from '../../services/auth';
 import { respond, bothAccepted } from '../../services/matches';
 import { notificationsFor } from '../../services/notifications';
+import { toAnswer } from '../../services/checkins';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { userName, topicsText, when } from '../../utils/format';
@@ -20,6 +21,7 @@ const mine = computed(() => db.matches.filter(m => m.mentorId === me.id));
 const requests = computed(() => mine.value.filter(m => m.status === 'proposed'));
 const mentees = computed(() => mine.value.filter(m => m.status === 'active'));
 const notes = computed(() => notificationsFor(db, me.id, 4));
+const waiting = computed(() => toAnswer(db, me.id, 'mentor').length);
 
 function answer(match, value) {
   respond(db, match, 'mentor', value);
@@ -30,6 +32,7 @@ function answer(match, value) {
 
 <template>
   <PageHeading eyebrow="Mentor" :title="`Welcome, ${me.name}`" />
+  <div v-if="waiting" class="notice">You have {{ waiting }} weekly check-in{{ waiting > 1 ? 's' : '' }} to answer. <router-link to="/mentor/checkins">Answer now</router-link></div>
   <div v-if="profile.status !== 'verified'" class="notice">Your profile is pending verification by the admin. You will receive matches after it is verified.</div>
 
   <div class="card">
@@ -54,7 +57,7 @@ function answer(match, value) {
     <h2>My mentees</h2>
     <p class="muted"><CapacityBar :mentor-id="me.id" /></p>
     <ul class="list">
-      <li v-for="m in mentees" :key="m.id"><b>{{ userName(db, m.studentId) }}</b> <StatusPill :value="m.status" /><br /><span class="muted">{{ db.students[m.studentId].goals }}</span></li>
+      <li v-for="m in mentees" :key="m.id"><b>{{ userName(db, m.studentId) }}</b> <StatusPill :value="m.status" /><br /><span class="muted">{{ db.students[m.studentId].goals }} · {{ db.users.find(u => u.id === m.studentId).email }}</span></li>
       <li v-if="!mentees.length" class="muted">No mentees yet.</li>
     </ul>
   </div>

@@ -25,22 +25,35 @@ export const EXPERIENCE_CAP_YEARS = 10;
 export const DEFAULT_CAPACITY = 3;
 export const MAX_CAPACITY = 10;
 
+/* Smart Match (design preview): the score blends what the two people wrote with the rule score above. */
+export const SMART = { textWeight: 60, ruleWeight: 40, maxKeywords: 5 };
+
+/* Mentorship Pulse (design preview): one check-in per week for each side of an active match. */
+export const CHECKIN_WEEKS = { 'Not sure yet': 4, '1 month': 4, '3 months': 12, '6 months': 24 };
+export const CHECKIN_GRACE_DAYS = 2;
+export const LOW_RATING = 2;
+export const VERDICTS = ['on track', 'watch', 'needs attention'];
+export const TEXT_LIMIT = 800;
+
 /* Navigation per role. */
 export const HOME = { student: '/student', mentor: '/mentor', admin: '/admin' };
 export const NAV = {
   student: [
     { to: '/student', label: 'Dashboard', exact: true },
     { to: '/student/profile', label: 'My Profile' },
-    { to: '/student/mentor', label: 'My Mentor' }
+    { to: '/student/mentor', label: 'My Mentor' },
+    { to: '/student/checkins', label: 'Check-ins' }
   ],
   mentor: [
     { to: '/mentor', label: 'Dashboard', exact: true },
-    { to: '/mentor/profile', label: 'My Profile' }
+    { to: '/mentor/profile', label: 'My Profile' },
+    { to: '/mentor/checkins', label: 'Check-ins' }
   ],
   admin: [
     { to: '/admin', label: 'Overview', exact: true },
     { to: '/admin/students', label: 'Students' },
     { to: '/admin/mentors', label: 'Mentors' },
-    { to: '/admin/matches', label: 'Matches' }
+    { to: '/admin/matches', label: 'Matches' },
+    { to: '/admin/pulse', label: 'Pulse' }
   ]
 };

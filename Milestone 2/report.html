@@ -2,16 +2,16 @@
 <style>
 @page{size:A4;margin:18mm 16mm}@page land{size:A4 landscape;margin:12mm}.land{page:land;break-before:page;break-after:page}.land h2{margin-top:0}.land img{max-height:136mm;width:auto}
 body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.5;color:#1f2d3d}
-h1{color:#12345a;font-size:22pt;margin:0 0 4px}h2{color:#12345a;font-size:15pt;border-bottom:2px solid #1769aa;padding-bottom:3px;margin-top:26px;break-after:avoid}h3{color:#1769aa;font-size:12pt;margin:16px 0 4px;break-after:avoid}
+h1{color:#12345a;font-size:22pt;margin:0 0 4px}h2{break-before:page;color:#12345a;font-size:15pt;border-bottom:2px solid #1769aa;padding-bottom:3px;margin-top:26px;break-after:avoid}h3{color:#1769aa;font-size:12pt;margin:16px 0 4px;break-after:avoid}
 table{border-collapse:collapse;width:100%;margin:8px 0;font-size:10pt;break-inside:auto}tr{break-inside:avoid}th,td{border:1px solid #c5d2e0;padding:5px 7px;text-align:left;vertical-align:top}th{background:#e9f2fa;color:#12345a}
-figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:100%;border:1px solid #d9e2ec}figcaption{font-size:9.5pt;color:#65758b;margin-top:4px}
+figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:100%;max-height:225mm;width:auto;border:1px solid #d9e2ec}figcaption{font-size:9.5pt;color:#65758b;margin-top:4px}
 .cover{text-align:center;padding-top:60mm;break-after:page}.cover .sub{font-size:14pt;color:#1769aa;margin:6px 0 30px}
 .slot{border:2px dashed #c77818;background:#fff8ea;padding:40px 10px;text-align:center;color:#8a5200;margin:10px 0;break-inside:avoid}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.two figure{margin:6px 0}
 </style></head><body>
 <div class="cover"><div style="color:#0d8b8b;font-weight:bold;letter-spacing:2px">IIT MADRAS · SOFTWARE ENGINEERING · SEPT 2026</div>
 <h1 style="font-size:30pt;margin-top:14px">Milestone 2 Report</h1><div class="sub">Scheduling, Design and Frontend</div>
-<h2 style="border:0;font-size:18pt">Student Mentoring and Career Support Platform</h2><p>Problem Statement 2</p>
+<h2 style="border:0;font-size:18pt;break-before:auto">Student Mentoring and Career Support Platform</h2><p>Problem Statement 2</p>
 <p style="margin-top:40px"><b>Team 032 – Himalayan Coders</b></p>
 <p>Himanshu Rathor · Ankur Maurya · Hemendra Kumar Sharma<br>Adnan Mustafa · Bojannagari Pavan Kumar Reddy</p></div>
 
@@ -49,7 +49,7 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <h3>1.8 Kanban board</h3>
 <figure><img src="screenshots/10_jira_kanban_board.png"><figcaption>Figure B. Jira Kanban board (filtered to the team members): all Milestone 2 tasks are in Done; the Sprint 1 and Sprint 2 tasks are still to do.</figcaption></figure>
 
-<h2 style="break-before:page">2. Scrum Meetings Schedule and Minutes</h2>
+<h2>2. Scrum Meetings Schedule and Minutes</h2>
 <p><b>Scrum meetings:</b> held about twice a week on Google Meet and led by the Scrum Master. Each meeting covers what was done, what comes next and any blockers. Three meetings were held in Milestone 2.</p>
 
 <h3>Minutes from Scrum Meeting 1</h3>
@@ -100,6 +100,7 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <tr><td>Match workflow</td><td>Controls the status of a match: proposed, active, completed or cancelled. A match becomes active only when the admin confirms it after both sides have accepted. Then each person receives the other's email address, and the weekly check-ins start. Every change is saved in a history.</td></tr>
 <tr><td>Notifications and email</td><td>Tells the mentor and the student when a match is proposed. Tells the admin when someone accepts or declines, and when a check-in is flagged. Tells both people when the admin confirms or cancels. Emails go out when a match becomes active (contact details) and when a weekly check-in is due (reminder).</td></tr>
 <tr><td>Database</td><td>Stores users, profiles, topics, mentor availability, matches with their scores, status history, weekly check-ins, AI reviews, feedback, concerns and notifications.</td></tr></table>
+<figure><img src="diagrams/component_diagram.png" style="max-height:170mm"><figcaption>Figure C. Component diagram. Each role has its own app and module behind one login. The modules call four services that share one database; the AI agent and the email service (green) are planned for Sprint 2.</figcaption></figure>
 <p><b>How a match moves:</b> the admin proposes a match, and the mentor and the student are both notified. Each of them accepts or declines. When <b>both have accepted</b>, the admin can confirm the match and it becomes active. The admin can also cancel it at any time. The two people then write to each other and agree privately on session times and how they will talk. Later an active match is completed or cancelled. If someone declines, the admin cancels the match and can propose a new one.</p>
 
 <h3>3.1 How matches are recommended (Smart Match)</h3>
@@ -169,9 +170,9 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <tr><td>PATCH /admin/matches/{id}/status</td><td>admin</td><td>Cancel or complete a match</td></tr>
 <tr><td>GET /me/checkins</td><td>student, mentor</td><td>Own weekly check-ins and their state</td></tr>
 <tr><td>POST /checkins/{id}/answer</td><td>student, mentor</td><td>Submit a check-in (rating and comment); the AI review runs and the admin is notified if flagged</td></tr>
-<tr><td>GET /admin/pulse</td><td>admin</td><td>Check-ins to review, active mentorships and their latest verdict</td></tr>
+<tr><td>GET /admin/pulse</td><td>admin</td><td>Check-ins to review and active mentorships</td></tr>
 <tr><td>POST /admin/reviews/{id}/reviewed</td><td>admin</td><td>Mark a flagged check-in as reviewed, with a note</td></tr></table>
-<p>The existing endpoints (registration, login, profiles, feedback, concerns, notifications) follow the same style. Every endpoint is checked against the role of the caller (US-C06). The full list is written as a Swagger YAML file in Sprint 1.</p>
+<p>The other endpoints (login, profiles, feedback, concerns, notifications) follow the same style and are checked against the caller's role (US-C06). The full list goes in a Swagger YAML file.</p>
 
 <h2>7. Frontend Pages and Screenshots</h2>
 <p>The frontend is a <b>Vue 3</b> app (built with Vite) with 14 linked pages. Pages are connected with Vue Router, and each role is redirected to its own pages. Sample data is kept in the browser, so the whole flow can be tried: the admin proposes a match, both sides accept, the admin confirms, and the weekly check-ins start. This milestone is a design, so there is no backend yet and the AI parts show an offline stand-in (see sections 3.1 and 3.2). The data calls are in one folder (<code>src/services</code>), so in Milestones 3 and 4 the real APIs replace them and the pages stay as they are.</p>

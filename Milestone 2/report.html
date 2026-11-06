@@ -38,18 +38,19 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <table><tr><th>Jira task</th><th>User stories</th><th>Dates</th></tr>
 <tr><td>Match confirmation and notification APIs</td><td>US-C03</td><td>23 – 29 Nov</td></tr><tr><td>Student goals, preferences and availability APIs</td><td>US-S03 to US-S06</td><td>23 – 29 Nov</td></tr>
 <tr><td>Match status management and overview APIs</td><td>US-C04, US-C07</td><td>26 Nov – 2 Dec</td></tr><tr><td>Student connection view, readiness, concern, feedback and status APIs</td><td>US-S07 to US-S11</td><td>28 Nov – 3 Dec</td></tr>
+<tr><td>Smart Match AI agent API (score and reason, rule-score fallback)</td><td>US-C02 (extension)</td><td>by 2 Dec</td></tr><tr><td>Mentorship Pulse check-in APIs and weekly reminder emails</td><td>US-S09, US-S10 (extension)</td><td>by 3 Dec</td></tr><tr><td>Mentorship Pulse AI review and admin review queue</td><td>US-C04 (extension)</td><td>by 4 Dec</td></tr>
 <tr><td>Test cases, pytest and Swagger YAML</td><td>all of the above</td><td>30 Nov – 5 Dec</td></tr><tr><td>User feedback session and final-phase plan</td><td>–</td><td>4 – 6 Dec</td></tr></table>
 <p>All 21 user stories from Milestone 1 are covered across the two sprints.</p>
-<p><b>Planned extension.</b> Two AI features are designed in Milestone 2: <b>Smart Match</b> (an AI agent scores student and mentor pairs from what they wrote) and <b>Mentorship Pulse</b> (weekly check-ins with reminder emails and an AI review that sends only the cases that need attention to the admin). They build on US-C02, US-C03, US-C04, US-S09 and US-S10. The team builds them after the core flow; the Jira tasks and dates are added at the next scrum meeting.</p>
+<p><b>Planned extension.</b> Two AI features are designed in Milestone 2: <b>Smart Match</b> (an AI agent scores student and mentor pairs from what they wrote) and <b>Mentorship Pulse</b> (weekly check-ins with reminder emails and an AI review that sends only the cases that need attention to the admin). They build on US-C02, US-C03, US-C04, US-S09 and US-S10. They are built in Sprint 2, after the core flow, as the three AI tasks in the table above (Jira KAN-40 to KAN-42).</p>
 <h3>1.6 Iterations</h3>
 <p>Each sprint is split into weekly iterations. Every sprint ends with a user feedback session, and its findings shape the next sprint. Code Reviewers review each task and Testers test it before it moves to Done.</p>
 <div class="land"><h3>1.7 Gantt chart</h3>
 <figure><img src="screenshots/11_jira_gantt_timeline.png" style="max-height:165mm"><figcaption>Figure A. Jira Timeline (Gantt) with the epics expanded, from 26 Oct to December.</figcaption></figure></div>
 <h3>1.8 Kanban board</h3>
-<figure><img src="screenshots/10_jira_kanban_board.png"><figcaption>Figure B. Jira Kanban board with the Milestone 2 tasks across To Do, In Progress, In Review and Done.</figcaption></figure>
+<figure><img src="screenshots/10_jira_kanban_board.png"><figcaption>Figure B. Jira Kanban board (filtered to the team members): all Milestone 2 tasks are in Done; the Sprint 1 and Sprint 2 tasks are still to do.</figcaption></figure>
 
 <h2 style="break-before:page">2. Scrum Meetings Schedule and Minutes</h2>
-<p><b>Scrum meetings:</b> held about twice a week on Google Meet and led by the Scrum Master. Each meeting covers what was done, what comes next and any blockers. Two meetings were held in Milestone 2.</p>
+<p><b>Scrum meetings:</b> held about twice a week on Google Meet and led by the Scrum Master. Each meeting covers what was done, what comes next and any blockers. Three meetings were held in Milestone 2.</p>
 
 <h3>Minutes from Scrum Meeting 1</h3>
 <table>
@@ -75,6 +76,17 @@ figure{margin:12px 0;text-align:center;break-inside:avoid}figure img{max-width:1
 <tr><td>3</td><td>Milestone 2 report review.</td><td>Adnan</td></tr>
 <tr><td>4</td><td>User story US-C03 clarification: the design was modified as per this story.</td><td>Ankur (completed)</td></tr>
 <tr><td>5</td><td>GitHub Milestone 2 review.</td><td>The team, as per the tasks assigned in Jira</td></tr></table>
+
+<h3>Minutes from Scrum Meeting 3</h3>
+<table>
+<tr><th style="width:18%">Date and time</th><td>3 November 2026, 9:00 – 9:50</td></tr>
+<tr><th>Mode</th><td>Google Meet</td></tr>
+<tr><th>Attendees</th><td>Ankur, Adnan, Hemendra, Himanshu, Pavan</td></tr>
+<tr><th>Agenda</th><td>Mentor-student relationship tracking; AI features for matching and feedback analysis; admin dashboard UI changes.</td></tr>
+</table>
+<p><b>Discussion.</b> The team discussed how to track the mentor-student relationship over time. The team also discussed adding AI capabilities: recommending student-mentor matches to the admin, and automatically analysing the sentiment of feedback, with the results shown to the admin. The changes to the admin overview dashboard were discussed too, including a feedback form and the relationship status in the UI.</p>
+<p><b>Decisions.</b> (1) A feedback form will be emailed periodically to both the mentor and the student to track the relationship, either every week or every 3 days. (2) The admin dashboard UI will be updated to include a feedback form and the relationship status.</p>
+<p><b>Next meeting agenda.</b> Review all the changes discussed in this meeting and go over them in detail.</p>
 
 <h2>3. Design of Components</h2>
 <p>Our platform is <b>client-mediated</b>. Students and mentors each keep their own profile, but they cannot see each other. The admin (our client) looks at both sides, proposes a match and follows it until it ends.</p>

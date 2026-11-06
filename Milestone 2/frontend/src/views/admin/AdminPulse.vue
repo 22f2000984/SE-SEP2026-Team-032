@@ -34,7 +34,7 @@ function review(c) {
 
 <template>
   <PageHeading eyebrow="Admin" title="Mentorship Pulse" intro="Every active match has a check-in each week. Reminders are emailed, an AI agent reads the answers, and only the ones that need a person come here." />
-  <div class="notice">Design preview: the AI agent is built in Sprint 1. Here a simple offline stand-in gives the verdicts, so the flow can be shown. It only flags. You decide what to do.</div>
+  <div class="notice">Design preview: the AI agent is built in Sprint 2. Here a simple offline stand-in gives the verdicts, so the flow can be shown. It only flags. You decide what to do.</div>
 
   <div class="card">
     <h2>Needs your review</h2>

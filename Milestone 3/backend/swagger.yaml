@@ -1,0 +1,782 @@
+openapi: 3.0.3
+info:
+  title: Mentor Connect API (Sprint 1 / Milestone 3)
+  version: 1.0.0
+  description: |
+    Backend of the Student Mentoring and Career Support Platform, Team 032 (Himalayan Coders).
+
+    The platform is client-mediated. Students and mentors keep their own profiles and cannot see each other.
+    The admin (our client, the IIC team) sees both sides, recommends and proposes matches.
+
+    **Sprint 1 covers:** registration and login, student and mentor profiles, the admin dashboard,
+    role-based access and match creation. Confirming matches, notifications by email, status changes, feedback,
+    Smart Match and Mentorship Pulse are Sprint 2.
+
+    **Login.** Call `POST /api/auth/login`, then send the token in every other request as
+    `Authorization: Bearer <token>`.
+
+    **Errors.** Every error has the same body: `{"error": "message"}`.
+
+    | Status | Meaning |
+    |---|---|
+    | 400 | The input is missing or not valid (the message says which field) |
+    | 401 | Not logged in, or the token is missing, wrong or expired |
+    | 403 | Logged in, but this role may not do this (US-C06) |
+    | 404 | The student, mentor, slot or match does not exist |
+    | 409 | The request is valid but conflicts with the current state (duplicate email, mentor not verified, no free places, student already has a match) |
+
+    **User stories.** Each operation lists the Milestone 1 user stories it implements under `x-user-stories`.
+    Integrated APIs: none in Sprint 1 (the GenAI agents for Smart Match and Mentorship Pulse are integrated in Sprint 2).
+servers:
+  - url: http://localhost:5001
+    description: Local development server
+tags:
+  - name: Auth
+    description: Registration and login (US-S01, US-M01)
+  - name: Student
+    description: A student's own profile (US-S01, US-S02)
+  - name: Mentor
+    description: A mentor's own profile and availability (US-M01, US-M02)
+  - name: Admin
+    description: Dashboard, search of profiles and editing mentors (US-C01, US-C05, US-C06)
+  - name: Matches
+    description: Recommendations and creating matches (US-C02)
+  - name: General
+    description: Fixed lists, notifications and health check
+
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register as a student or a mentor
+      description: |
+        Creates the account and an empty profile. The email must be new (not case sensitive).
+        Admin accounts cannot be registered here. Log in next, then fill the profile with `PUT /api/students/me`
+        or `PUT /api/mentors/me`.
+      x-user-stories: [US-S01, US-M01]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterInput' }
+            example: { full_name: Asha Verma, email: asha@student.test, password: secret1, role: student }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and get a token
+      description: Returns a token valid for 8 hours. A wrong email and a wrong password give the same 401 message.
+      x-user-stories: [US-S01, US-M01, US-C06]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginInput' }
+            example: { email: asha@student.test, password: secret1 }
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Who is logged in
+      x-user-stories: [US-C06]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The logged-in user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/options:
+    get:
+      tags: [General]
+      summary: The fixed lists used by the profile forms
+      description: Topics, mentoring formats, durations and weekdays. No login needed.
+      x-user-stories: [US-S01, US-M01]
+      responses:
+        '200':
+          description: The lists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  topics: { type: array, items: { type: string } }
+                  formats: { type: array, items: { type: string } }
+                  durations: { type: array, items: { type: string } }
+                  weekdays: { type: array, items: { type: string } }
+
+  /api/students/me:
+    get:
+      tags: [Student]
+      summary: A student reads their own profile
+      description: Students can only reach their own profile. There is no route for a student to read anyone else's.
+      x-user-stories: [US-S01, US-S02, US-C06]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/StudentProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [Student]
+      summary: A student saves their profile
+      description: |
+        Fields that are not sent keep their current value, so a partial update works. After the update the
+        whole profile must be valid: programme level and career goals are required (goals up to 500 characters),
+        needs text up to 800 characters, at least one topic, format and duration from the fixed lists.
+      x-user-stories: [US-S01, US-S02]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StudentProfileInput' }
+      responses:
+        '200':
+          description: The saved profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/StudentProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/mentors/me:
+    get:
+      tags: [Mentor]
+      summary: A mentor reads their own profile
+      x-user-stories: [US-M01, US-M02, US-C06]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/MentorProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    put:
+      tags: [Mentor]
+      summary: A mentor saves their profile
+      description: |
+        Partial updates work as for students. Qualifications and at least one topic are required, experience is a
+        whole number of years (0 to 60), maximum students is 1 to 10 and cannot be lower than the number of open
+        matches. A mentor cannot change their own verification status; that field is ignored.
+      x-user-stories: [US-M01, US-M02]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MentorProfileInput' }
+      responses:
+        '200':
+          description: The saved profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/MentorProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/mentors/me/availability:
+    post:
+      tags: [Mentor]
+      summary: A mentor adds an availability slot
+      x-user-stories: [US-M01]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SlotInput' }
+      responses:
+        '201':
+          description: The slot was added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slot: { $ref: '#/components/schemas/Slot' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/mentors/me/availability/{slot_id}:
+    delete:
+      tags: [Mentor]
+      summary: A mentor removes one of their own slots
+      x-user-stories: [US-M01]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/SlotId' }
+      responses:
+        '204': { description: The slot was removed }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/overview:
+    get:
+      tags: [Admin]
+      summary: Dashboard numbers
+      description: Number of students and mentors, matches by status, and how many students wait for a match.
+      x-user-stories: [US-C01]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The numbers
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Overview' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/admin/students:
+    get:
+      tags: [Admin]
+      summary: List and search student profiles
+      x-user-stories: [US-C01, US-C06]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: search, in: query, schema: { type: string }, description: Part of the name or skills }
+        - { name: topic, in: query, schema: { type: string }, description: Wanted topic }
+        - { name: programme_level, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: The students
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  students:
+                    type: array
+                    items: { $ref: '#/components/schemas/StudentProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/admin/students/{student_id}:
+    get:
+      tags: [Admin]
+      summary: Open one student profile
+      x-user-stories: [US-C01, US-C06]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/StudentId' }
+      responses:
+        '200':
+          description: The profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/StudentProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/mentors:
+    get:
+      tags: [Admin]
+      summary: List and search mentor profiles
+      x-user-stories: [US-C01, US-C06]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [pending, verified] } }
+        - { name: topic, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string }, description: Part of the name or skills text }
+      responses:
+        '200':
+          description: The mentors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mentors:
+                    type: array
+                    items: { $ref: '#/components/schemas/MentorProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/admin/mentors/{mentor_id}:
+    get:
+      tags: [Admin]
+      summary: Open one mentor profile
+      x-user-stories: [US-C01, US-C06]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/MentorId' }
+      responses:
+        '200':
+          description: The profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/MentorProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Admin]
+      summary: The admin updates a mentor's expertise, skills, experience and capacity
+      description: Same fields and rules as `PUT /api/mentors/me`. Fields that are not sent keep their value.
+      x-user-stories: [US-C05]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/MentorId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MentorProfileInput' }
+      responses:
+        '200':
+          description: The saved profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/MentorProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/mentors/{mentor_id}/status:
+    patch:
+      tags: [Admin]
+      summary: Verify a mentor (or set them back to pending)
+      description: Only verified mentors can be proposed in a match.
+      x-user-stories: [US-C01, US-C05]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/MentorId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [pending, verified] }
+      responses:
+        '200':
+          description: The updated profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/MentorProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/mentors/{mentor_id}/availability:
+    post:
+      tags: [Admin]
+      summary: The admin adds an availability slot for a mentor
+      x-user-stories: [US-C05]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/MentorId' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SlotInput' }
+      responses:
+        '201':
+          description: The slot was added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slot: { $ref: '#/components/schemas/Slot' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/mentors/{mentor_id}/availability/{slot_id}:
+    delete:
+      tags: [Admin]
+      summary: The admin removes a mentor's slot
+      x-user-stories: [US-C05]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/MentorId' }
+        - { $ref: '#/components/parameters/SlotId' }
+      responses:
+        '204': { description: The slot was removed }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/students/{student_id}/recommendations:
+    get:
+      tags: [Matches]
+      summary: The best mentors for one student
+      description: |
+        Only eligible mentors are listed: verified, with a free place. Students who already have a proposed or
+        active match get an empty list. Score out of 100 = topics (70, share of the student's wanted topics the
+        mentor covers) + experience (30, years up to 10). Highest score first.
+      x-user-stories: [US-C02]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/StudentId' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, default: 3 } }
+      responses:
+        '200':
+          description: The recommended mentors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id: { type: integer }
+                  recommendations:
+                    type: array
+                    items: { $ref: '#/components/schemas/Recommendation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/admin/matches:
+    post:
+      tags: [Matches]
+      summary: The admin proposes a match
+      description: |
+        Creates a match with status `proposed`, saves the score and the reasons, writes the first status log
+        and notifies the mentor and the student. Refused with 409 when the mentor is not verified, has no free
+        place, or the student already has a proposed or active match.
+      x-user-stories: [US-C02]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [student_id, mentor_id]
+              properties:
+                student_id: { type: integer, example: 1 }
+                mentor_id: { type: integer, example: 1 }
+                notes: { type: string, example: 'Goal fit: analytics' }
+      responses:
+        '201':
+          description: The match was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match: { $ref: '#/components/schemas/Match' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    get:
+      tags: [Matches]
+      summary: List matches, newest first
+      x-user-stories: [US-C01, US-C02]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [proposed, active, completed, cancelled] } }
+      responses:
+        '200':
+          description: The matches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items: { $ref: '#/components/schemas/Match' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/admin/matches/{match_id}:
+    get:
+      tags: [Matches]
+      summary: Open one match
+      x-user-stories: [US-C02]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: match_id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The match
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match: { $ref: '#/components/schemas/Match' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/notifications:
+    get:
+      tags: [General]
+      summary: The logged-in user's own notifications
+      description: Created when a match is proposed. Email delivery comes in Sprint 2 (US-C03).
+      x-user-stories: [US-C02]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The notifications, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        notification_id: { type: integer }
+                        message: { type: string }
+                        is_read: { type: boolean }
+                        sent_at: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/health:
+    get:
+      tags: [General]
+      summary: Is the server running
+      responses:
+        '200':
+          description: The server is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    StudentId: { name: student_id, in: path, required: true, schema: { type: integer }, description: The student profile id }
+    MentorId: { name: mentor_id, in: path, required: true, schema: { type: integer }, description: The mentor profile id }
+    SlotId: { name: slot_id, in: path, required: true, schema: { type: integer } }
+  responses:
+    BadRequest:
+      description: The input is missing or not valid
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Career goals must be 500 characters or fewer. }
+    Unauthorized:
+      description: Not logged in, or the token is missing, wrong or expired
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Please log in first. }
+    Forbidden:
+      description: This role is not allowed to do this
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: You are not allowed to do this. }
+    NotFound:
+      description: The record does not exist
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Mentor not found. }
+    Conflict:
+      description: Valid request, but it conflicts with the current state
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: This mentor has no free places. }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        full_name: { type: string }
+        role: { type: string, enum: [student, mentor, admin] }
+    RegisterInput:
+      type: object
+      required: [full_name, email, password, role]
+      properties:
+        full_name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+        role: { type: string, enum: [student, mentor] }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+    StudentProfileInput:
+      type: object
+      properties:
+        programme_level: { type: string, example: Diploma }
+        career_goals: { type: string, maxLength: 500 }
+        skills: { type: string }
+        needs_text: { type: string, maxLength: 800 }
+        mentoring_format: { type: string, enum: [No preference, Video call, Phone call, Messaging] }
+        expected_duration: { type: string, enum: [Not sure yet, 1 month, 3 months, 6 months] }
+        preferences: { type: string }
+        availability_note: { type: string }
+        topics: { type: array, minItems: 1, items: { type: string }, example: [Data Science] }
+    StudentProfile:
+      allOf:
+        - $ref: '#/components/schemas/StudentProfileInput'
+        - type: object
+          properties:
+            student_id: { type: integer }
+            user_id: { type: integer }
+            full_name: { type: string }
+            email: { type: string }
+            updated_at: { type: string, format: date-time }
+    MentorProfileInput:
+      type: object
+      properties:
+        qualifications: { type: string, example: 'PhD, Data Science' }
+        experience_years: { type: integer, minimum: 0, maximum: 60 }
+        bio: { type: string }
+        skills_text: { type: string, maxLength: 800 }
+        max_students: { type: integer, minimum: 1, maximum: 10, default: 3 }
+        topics: { type: array, minItems: 1, items: { type: string } }
+    MentorProfile:
+      allOf:
+        - $ref: '#/components/schemas/MentorProfileInput'
+        - type: object
+          properties:
+            mentor_id: { type: integer }
+            user_id: { type: integer }
+            full_name: { type: string }
+            email: { type: string }
+            profile_status: { type: string, enum: [pending, verified] }
+            availability:
+              type: array
+              items: { $ref: '#/components/schemas/Slot' }
+            updated_at: { type: string, format: date-time }
+    SlotInput:
+      type: object
+      required: [day_of_week, start_time, end_time]
+      properties:
+        day_of_week: { type: string, enum: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday] }
+        start_time: { type: string, example: '18:00' }
+        end_time: { type: string, example: '20:00' }
+    Slot:
+      allOf:
+        - $ref: '#/components/schemas/SlotInput'
+        - type: object
+          properties:
+            slot_id: { type: integer }
+    Overview:
+      type: object
+      properties:
+        students: { type: integer }
+        mentors:
+          type: object
+          properties:
+            total: { type: integer }
+            verified: { type: integer }
+            pending: { type: integer }
+        matches:
+          type: object
+          properties:
+            proposed: { type: integer }
+            active: { type: integer }
+            completed: { type: integer }
+            cancelled: { type: integer }
+        students_waiting_for_match: { type: integer }
+    Recommendation:
+      type: object
+      properties:
+        mentor_id: { type: integer }
+        mentor_name: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        reasons: { type: array, items: { type: string } }
+    Match:
+      type: object
+      properties:
+        match_id: { type: integer }
+        student_id: { type: integer }
+        student_name: { type: string }
+        mentor_id: { type: integer }
+        mentor_name: { type: string }
+        status: { type: string, enum: [proposed, active, completed, cancelled] }
+        mentor_response: { type: string, enum: [pending, accepted, declined] }
+        student_response: { type: string, enum: [pending, accepted, declined] }
+        match_score: { type: integer }
+        score_reasons: { type: string }
+        notes: { type: string }
+        proposed_at: { type: string, format: date-time }
+        confirmed_at: { type: string, format: date-time, nullable: true }

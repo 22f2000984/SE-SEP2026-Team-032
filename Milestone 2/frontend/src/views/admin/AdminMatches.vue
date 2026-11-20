@@ -2,7 +2,8 @@
 import { computed, ref, watch } from 'vue';
 import { NEXT, MIN_SCORE } from '../../config/constants';
 import { waitingStudents, used, maxOf } from '../../services/matching';
-import { proposeMatch, setStatus, bothAccepted } from '../../services/matches';
+import { bothAccepted } from '../../services/matches';
+import { proposeMatch, setStatus } from '../../services/actions';
 import { session } from '../../services/auth';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
@@ -30,26 +31,31 @@ watch([students, mentors], () => {
   if (!mentors.value.some(m => m.id === mentorId.value)) mentorId.value = mentors.value.length ? mentors.value[0].id : null;
 }, { immediate: true });
 
-function propose() {
+async function propose() {
   if (!studentId.value || !mentorId.value) { error.value = 'Choose a student and a verified mentor.'; return; }
-  error.value = proposeMatch(db, studentId.value, mentorId.value, notes.value.trim(), me.name) || '';
+  error.value = (await proposeMatch(studentId.value, mentorId.value, notes.value.trim(), me.name)) || '';
   if (error.value) return;
   commit();
   notes.value = '';
   toast('Match proposed');
 }
-function confirm(m) {
-  if (setStatus(db, m, 'active', me.name)) { commit(); toast('Match confirmed'); }
+async function confirm(m) {
+  const problem = await setStatus(m, 'active', me.name);
+  if (problem) { toast(problem); return; }
+  commit();
+  toast('Match confirmed');
 }
-function cancel(m) {
-  setStatus(db, m, 'cancelled', me.name);
+async function cancel(m) {
+  const problem = await setStatus(m, 'cancelled', me.name);
+  if (problem) { toast(problem); return; }
   commit();
   toast('Match cancelled');
 }
-function change(m, event) {
+async function change(m, event) {
   const to = event.target.value;
   if (!to) return;
-  setStatus(db, m, to, me.name);
+  const problem = await setStatus(m, to, me.name);
+  if (problem) { toast(problem); return; }
   commit();
   toast('Status updated');
 }

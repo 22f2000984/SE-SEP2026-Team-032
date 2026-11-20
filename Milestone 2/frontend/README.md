@@ -79,3 +79,11 @@ Views only talk to `src/services`. In Sprint 1 those functions call the backend 
 
 ## Limitations
 Sample data is stored in the browser (localStorage), so each visitor sees their own copy. There is no backend, real authentication or email. Passwords are stored in plain text for the demo only. Role checks hide pages in the browser; the backend must enforce them.
+
+## Connect to the backend (optional)
+
+Without any setting this app runs on sample data in the browser. To use the Flask backend from Milestone 3, start the
+backend and run `VITE_API_URL=http://localhost:5001 npm run dev` (see `Milestone 3/DEPLOY.md`). The code for this is
+`src/services/api.js` (one `request` function), `src/services/remote.js` (copies the backend's data into the data the
+pages read, and maps the field names) and `src/services/actions.js` (the pages call this; it picks the backend or the
+sample data).

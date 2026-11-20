@@ -1,12 +1,14 @@
-"""Creating matches (US-C02): the admin sees recommended mentors for a student and proposes a match.
-Confirming and status changes are Sprint 2 (US-C03, US-C04)."""
+"""Matches. US-C02: the admin sees recommended mentors for a student and proposes a match.
+US-C03, US-C04: both sides answer, then the admin confirms, cancels or completes it."""
 from flask import Blueprint, g, jsonify, request
 
+import validators
 from auth_utils import login_required, role_required
 from constants import MATCH_STATUSES
 from database import db
 from models import Match, MatchStatusLog, MentorProfile, Notification, StudentProfile
 from responses import error, json_body
+from services.match_flow import change_status, record_answer
 from services.matching import eligibility_error, recommend, score_pair
 from services.notifications import notify
 
@@ -82,3 +84,64 @@ def my_notifications():
     """The logged-in user's own notifications, newest first."""
     rows = Notification.query.filter_by(user_id=g.user.id).order_by(Notification.id.desc()).all()
     return jsonify({"notifications": [n.to_dict() for n in rows]})
+
+
+def my_matches(user):
+    """The matches of the logged-in student or mentor, newest first."""
+    if user.role == "student":
+        profile = StudentProfile.query.filter_by(user_id=user.id).first()
+        return Match.query.filter_by(student_id=profile.id).order_by(Match.id.desc()).all()
+    profile = MentorProfile.query.filter_by(user_id=user.id).first()
+    return Match.query.filter_by(mentor_id=profile.id).order_by(Match.id.desc()).all()
+
+
+def with_other_person(match, user):
+    """The match, plus the profile of the other person. Their email is shown only once the match is active."""
+    other = match.mentor if user.role == "student" else match.student
+    person = other.to_dict()
+    if match.status not in ("active", "completed"):
+        person.pop("email", None)
+    return {**match.to_dict(), "other": person}
+
+
+@bp.get("/matches/me")
+@role_required("student", "mentor")
+def my_match_list():
+    """Matches the logged-in student or mentor is part of, with the other person's profile."""
+    return jsonify({"matches": [with_other_person(m, g.user) for m in my_matches(g.user)]})
+
+
+@bp.post("/matches/<int:match_id>/respond")
+@role_required("student", "mentor")
+def respond(match_id):
+    """The student or the mentor accepts or declines a proposed match. Body: {"answer": "accepted"}"""
+    match = db.session.get(Match, match_id)
+    if match is None or match not in my_matches(g.user):
+        return error("Match not found.", 404)
+    answer = json_body().get("answer")
+    problem = validators.check_answer(answer)
+    if problem:
+        return error(problem, 400)
+    problem = record_answer(match, g.user.role, answer)
+    if problem:
+        return error(problem, 409)
+    db.session.commit()
+    return jsonify({"match": with_other_person(match, g.user)})
+
+
+@bp.patch("/admin/matches/<int:match_id>/status")
+@role_required("admin")
+def set_match_status(match_id):
+    """The admin confirms (active), completes or cancels a match. Body: {"status": "active"}"""
+    match = db.session.get(Match, match_id)
+    if match is None:
+        return error("Match not found.", 404)
+    status = json_body().get("status")
+    problem = validators.check_match_status(status)
+    if problem:
+        return error(problem, 400)
+    problem = change_status(match, status, g.user)
+    if problem:
+        return error(problem, 409)
+    db.session.commit()
+    return jsonify({"match": match.to_dict()})

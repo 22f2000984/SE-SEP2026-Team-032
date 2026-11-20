@@ -5,13 +5,13 @@ from flask_cors import CORS
 from config import Config
 from database import db
 from routes import admin, auth, matches, profiles
-from seed import seed_basics
+from seed import seed_basics, seed_demo
 
 
 def create_app(config=Config):
     app = Flask(__name__)
     app.config.from_object(config)
-    CORS(app)
+    CORS(app, origins=[o.strip() for o in app.config["CORS_ORIGINS"].split(",")])
     db.init_app(app)
 
     for module in (auth, profiles, admin, matches):
@@ -37,6 +37,8 @@ def create_app(config=Config):
     with app.app_context():
         db.create_all()
         seed_basics()
+        if app.config["LOAD_DEMO_DATA"]:
+            seed_demo()
     return app
 
 

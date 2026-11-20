@@ -1,0 +1,19 @@
+# Render blueprint: creates the backend web service from this repo.
+# Free plan: the service sleeps when idle and the SQLite file is wiped on a restart, so the sample data is loaded again each time.
+services:
+  - type: web
+    name: mentor-connect-api
+    runtime: python
+    rootDir: Milestone 3/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --workers 1 --bind 0.0.0.0:$PORT "app:create_app()"
+    healthCheckPath: /api/health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: LOAD_DEMO_DATA
+        value: "1"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PYTHON_VERSION
+        value: 3.11.9

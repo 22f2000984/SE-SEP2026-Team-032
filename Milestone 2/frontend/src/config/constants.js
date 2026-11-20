@@ -37,6 +37,8 @@ export const TEXT_LIMIT = 800;
 
 /* Navigation per role. */
 export const HOME = { student: '/student', mentor: '/mentor', admin: '/admin' };
+/* Pages that are browser-only previews until their APIs exist (Sprint 2). They are hidden when the backend is on. */
+export const PREVIEW_PAGES = ['/student/checkins', '/mentor/checkins', '/admin/pulse'];
 export const NAV = {
   student: [
     { to: '/student', label: 'Dashboard', exact: true },

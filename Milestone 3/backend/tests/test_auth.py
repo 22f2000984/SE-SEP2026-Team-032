@@ -1,11 +1,31 @@
 """Registration and login (US-S01, US-M01)."""
 from tests.helpers import check, register
 
-NEW_STUDENT = {"full_name": "Asha Verma", "email": "asha@student.test", "password": "secret1", "role": "student"}
+NEW_STUDENT = {"full_name": "Asha Verma", "email": "asha@ds.study.iitm.ac.in", "password": "secret1", "role": "student"}
 
 
 def test_register_student(client):
     check(client, "POST", "/api/auth/register", 201, "A student registers with valid details", NEW_STUDENT, contains='"role": "student"')
+
+
+def test_register_student_needs_iitm_email(client):
+    body = {**NEW_STUDENT, "email": "asha@gmail.com"}
+    check(client, "POST", "/api/auth/register", 400, "A student with a non-IITM email is rejected", body, contains="IITM email")
+
+
+def test_register_student_lookalike_domain(client):
+    body = {**NEW_STUDENT, "email": "asha@notiitm.ac.in"}
+    check(client, "POST", "/api/auth/register", 400, "A look-alike domain is not accepted as IITM", body, contains="IITM email")
+
+
+def test_register_student_main_iitm_domain(client):
+    body = {**NEW_STUDENT, "email": "asha@iitm.ac.in"}
+    check(client, "POST", "/api/auth/register", 201, "A student with an @iitm.ac.in email registers", body)
+
+
+def test_register_mentor_any_email(client):
+    body = {**NEW_STUDENT, "email": "meera@gmail.com", "role": "mentor"}
+    check(client, "POST", "/api/auth/register", 201, "A mentor can register with any email", body, contains='"role": "mentor"')
 
 
 def test_register_mentor(client):
@@ -20,7 +40,7 @@ def test_register_duplicate_email(client):
 
 def test_register_email_is_not_case_sensitive(client):
     client.post("/api/auth/register", json=NEW_STUDENT)
-    body = {**NEW_STUDENT, "email": "ASHA@student.test"}
+    body = {**NEW_STUDENT, "email": "ASHA@ds.study.iitm.ac.in"}
     check(client, "POST", "/api/auth/register", 409, "The same email in capital letters is still a duplicate", body)
 
 
@@ -47,24 +67,24 @@ def test_register_without_json_body(client):
 def test_login_success(client):
     client.post("/api/auth/register", json=NEW_STUDENT)
     body = check(client, "POST", "/api/auth/login", 200, "Login with the right email and password",
-                 {"email": "asha@student.test", "password": "secret1"}, contains="token")
+                 {"email": "asha@ds.study.iitm.ac.in", "password": "secret1"}, contains="token")
     assert body["user"]["role"] == "student"
 
 
 def test_login_wrong_password(client):
     client.post("/api/auth/register", json=NEW_STUDENT)
     check(client, "POST", "/api/auth/login", 401, "Login with a wrong password",
-          {"email": "asha@student.test", "password": "wrong-pass"}, contains="Invalid email or password")
+          {"email": "asha@ds.study.iitm.ac.in", "password": "wrong-pass"}, contains="Invalid email or password")
 
 
 def test_login_unknown_email(client):
     check(client, "POST", "/api/auth/login", 401, "Login with an email that is not registered",
-          {"email": "nobody@student.test", "password": "secret1"}, contains="Invalid email or password")
+          {"email": "nobody@ds.study.iitm.ac.in", "password": "secret1"}, contains="Invalid email or password")
 
 
 def test_me_with_token(client):
-    token = register(client, "asha@student.test", "student")
-    check(client, "GET", "/api/auth/me", 200, "A logged-in user asks who they are", token=token, role="student", contains="asha@student.test")
+    token = register(client, "asha@ds.study.iitm.ac.in", "student")
+    check(client, "GET", "/api/auth/me", 200, "A logged-in user asks who they are", token=token, role="student", contains="asha@ds.study.iitm.ac.in")
 
 
 def test_me_without_token(client):

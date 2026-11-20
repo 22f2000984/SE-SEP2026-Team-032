@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { DEFAULT_CAPACITY } from '../config/constants';
 import { nextId } from './ids';
 import { notifyAdmins } from './notifications';
+import { clearToken } from './api';
 
 const SESSION_KEY = 't32_vue_session';
 
@@ -17,6 +18,7 @@ export function startSession(user) {
 }
 export function logout() {
   session.value = null;
+  clearToken();
   try { sessionStorage.removeItem(SESSION_KEY); } catch { /* storage blocked */ }
 }
 

@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { MIN_SCORE } from '../../config/constants';
 import { waitingStudents } from '../../services/matching';
 import { recommendSmart } from '../../services/smartMatch';
-import { proposeMatch } from '../../services/matches';
+import { proposeMatch } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { session } from '../../services/auth';
@@ -18,8 +18,8 @@ const { toast } = useToast();
 
 const rows = computed(() => waitingStudents(db).map(student => ({ student, recs: recommendSmart(db, student.id, props.perStudent) })));
 
-function propose(studentId, mentorId) {
-  const error = proposeMatch(db, studentId, mentorId, 'Recommended by Smart Match', session.value.name);
+async function propose(studentId, mentorId) {
+  const error = await proposeMatch(studentId, mentorId, 'Recommended by Smart Match', session.value.name);
   if (error) { toast(error); return; }
   commit();
   toast('Match proposed. Both people were notified.');

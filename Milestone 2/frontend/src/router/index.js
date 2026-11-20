@@ -1,6 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { HOME } from '../config/constants';
-import { session, startSession } from '../services/auth';
+import { session, startSession, logout } from '../services/auth';
+import { API_ON } from '../services/api';
+import { syncDb } from '../services/remote';
 import { db, commit } from '../services/db';
 import { sendReminders } from '../services/checkins';
 
@@ -41,16 +43,21 @@ const router = createRouter({
 const DEMO_USER = { student: 1, mentor: 3, admin: 5 };
 
 router.beforeEach(async to => {
-  if (import.meta.env.DEV && to.query.demo) {
+  if (API_ON) {
+    /* With the backend on, the data comes from the API: refresh it on every page change. A wrong or expired token means log in again. */
+    if (session.value) {
+      try { await syncDb(); } catch (e) { if (e.status === 401) { logout(); return '/login'; } }
+    }
+  } else if (import.meta.env.DEV && to.query.demo) {
     const { applyDemoState } = await import('../dev/demoStates');
     applyDemoState(db, to.query.demo);
     commit();
   }
-  if (import.meta.env.DEV && to.query.as && !session.value) {
+  if (!API_ON && import.meta.env.DEV && to.query.as && !session.value) {
     const user = db.users.find(u => u.id === DEMO_USER[to.query.as]);
     if (user) startSession(user);
   }
-  if (sendReminders(db)) commit();
+  if (!API_ON && sendReminders(db)) commit();
   const role = session.value && session.value.role;
   if (to.meta.guest && role) return HOME[role];
   if (to.meta.role) {

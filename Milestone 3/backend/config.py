@@ -8,6 +8,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TOKEN_HOURS = 8
     PASSWORD_HASH_METHOD = "pbkdf2:sha256"
+    # Which websites may call the API from a browser. "*" means any; on the live site set it to the frontend address.
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
+    # Fill an empty database with sample students, mentors and one match (set LOAD_DEMO_DATA=1)
+    LOAD_DEMO_DATA = os.environ.get("LOAD_DEMO_DATA", "0") == "1"
 
 
 class TestConfig(Config):

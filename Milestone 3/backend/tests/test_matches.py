@@ -56,8 +56,8 @@ def test_cannot_propose_second_open_match_for_a_student(client, admin_token):
 
 def test_cannot_propose_mentor_with_no_free_places(client, admin_token):
     _, mentor_id = make_mentor(client, admin_token, profile={**MENTOR_PROFILE, "max_students": 1})
-    _, first = make_student(client, "a@student.test", "A")
-    _, second = make_student(client, "b@student.test", "B")
+    _, first = make_student(client, "a@ds.study.iitm.ac.in", "A")
+    _, second = make_student(client, "b@ds.study.iitm.ac.in", "B")
     client.post("/api/admin/matches", json={"student_id": first, "mentor_id": mentor_id}, headers=auth(admin_token))
     check(client, "POST", "/api/admin/matches", 409, "Proposing a mentor whose places are all taken",
           {"student_id": second, "mentor_id": mentor_id}, admin_token, "admin", "no free places")
@@ -86,7 +86,7 @@ def test_list_and_get_matches(client, admin_token):
 
 def test_overview_counts_matches_and_waiting_students(client, admin_token):
     _, student_id = make_student(client)
-    make_student(client, "rohan@student.test", "Rohan Das")
+    make_student(client, "rohan@ds.study.iitm.ac.in", "Rohan Das")
     _, mentor_id = make_mentor(client, admin_token)
     client.post("/api/admin/matches", json={"student_id": student_id, "mentor_id": mentor_id}, headers=auth(admin_token))
     body = check(client, "GET", "/api/admin/overview", 200, "The overview after one match is proposed", token=admin_token, role="admin")

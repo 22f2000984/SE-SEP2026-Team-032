@@ -1,7 +1,8 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { MAX_CAPACITY } from '../../config/constants';
-import { adminEditMentor, verifyMentor, slotText } from '../../services/profiles';
+import { slotText } from '../../services/profiles';
+import { adminEditMentor, verifyMentor } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { userName } from '../../utils/format';
@@ -29,15 +30,16 @@ function edit(id) {
   error.value = '';
   editing.value = id;
 }
-function save() {
-  error.value = adminEditMentor(db, editing.value, form) || '';
+async function save() {
+  error.value = (await adminEditMentor(editing.value, form)) || '';
   if (error.value) return;
   commit();
   editing.value = null;
   toast('Mentor profile updated');
 }
-function verify(id) {
-  verifyMentor(db, id);
+async function verify(id) {
+  const problem = await verifyMentor(id);
+  if (problem) { toast(problem); return; }
   commit();
   toast('Mentor verified');
 }

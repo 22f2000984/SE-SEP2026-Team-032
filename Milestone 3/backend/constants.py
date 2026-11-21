@@ -8,6 +8,9 @@ FORMATS = ["No preference", "Video call", "Phone call", "Messaging"]
 DURATIONS = ["Not sure yet", "1 month", "3 months", "6 months"]
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
+# Students must register with an IITM email (for example name@ds.study.iitm.ac.in). Mentors can use any email.
+STUDENT_EMAIL_DOMAIN = "iitm.ac.in"
+
 ROLES = ["student", "mentor", "admin"]
 MATCH_STATUSES = ["proposed", "active", "completed", "cancelled"]
 MENTOR_STATUSES = ["pending", "verified"]
@@ -24,3 +27,7 @@ MAX_CAPACITY = 10
 TOPIC_WEIGHT = 70
 EXPERIENCE_WEIGHT = 30
 EXPERIENCE_CAP_YEARS = 10
+
+# What a match may become next (US-C04). The admin moves it; both sides must accept before it becomes active.
+MATCH_NEXT = {"proposed": ["active", "cancelled"], "active": ["completed", "cancelled"], "completed": [], "cancelled": []}
+ANSWERS = ["accepted", "declined"]

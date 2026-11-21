@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue';
 import { FORMATS, DURATIONS } from '../../config/constants';
 import { session } from '../../services/auth';
-import { saveStudentProfile } from '../../services/profiles';
+import { saveStudentProfile } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import PageHeading from '../../components/common/PageHeading.vue';
@@ -18,8 +18,8 @@ const form = reactive({
 });
 const error = ref('');
 
-function save() {
-  error.value = saveStudentProfile(db, me.id, form) || '';
+async function save() {
+  error.value = (await saveStudentProfile(me.id, form)) || '';
   if (error.value) return;
   commit();
   toast('Profile saved');

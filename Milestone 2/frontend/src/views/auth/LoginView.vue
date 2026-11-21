@@ -2,23 +2,28 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { HOME } from '../../config/constants';
-import { login, logout } from '../../services/auth';
+import { logout } from '../../services/auth';
+import { login } from '../../services/actions';
+import { API_ON } from '../../services/api';
 import { resetDb } from '../../services/db';
-import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 
 const router = useRouter();
-const { db } = useDb();
 const { toast } = useToast();
+const api = API_ON;
 const email = ref('');
 const password = ref('');
 const error = ref('');
+const busy = ref(false);
 
-function submit() {
+async function submit() {
   if (!email.value.trim() || !password.value) { error.value = 'Enter your email and password.'; return; }
-  const user = login(db, email.value, password.value);
-  if (!user) { error.value = 'Wrong email or password.'; return; }
-  router.push(HOME[user.role]);
+  busy.value = true;
+  error.value = '';
+  const result = await login(email.value, password.value);
+  busy.value = false;
+  if (result.error) { error.value = result.error; return; }
+  router.push(HOME[result.user.role]);
 }
 function reset() {
   resetDb();
@@ -39,10 +44,11 @@ function reset() {
       <label for="pw">Password</label>
       <input id="pw" v-model="password" type="password" autocomplete="current-password" />
       <div class="err" role="alert">{{ error }}</div>
-      <button class="btn" type="submit">Log in</button>
+      <button class="btn" type="submit" :disabled="busy">{{ busy ? 'Logging in…' : 'Log in' }}</button>
+      <p v-if="busy && api" class="muted">The server may need up to a minute to wake up the first time.</p>
     </form>
-    <div class="info"><b>Demo accounts</b> (password <code>demo123</code>)<br />asha@student.test · meera@mentor.test · admin@client.test</div>
+    <div class="info"><b>Demo accounts</b> (password <code>demo123</code>)<br />{{ api ? 'asha@ds.study.iitm.ac.in · meera@mentor.test · admin@client.test' : 'asha@student.test · meera@mentor.test · admin@client.test' }}</div>
     <p class="muted">Students and mentors cannot browse each other. The admin arranges every match.</p>
-    <p><a href="#" class="muted" @click.prevent="reset">Reset demo data</a></p>
+    <p v-if="!api"><a href="#" class="muted" @click.prevent="reset">Reset demo data</a></p>
   </main>
 </template>

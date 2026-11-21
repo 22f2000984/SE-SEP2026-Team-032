@@ -126,10 +126,13 @@ class Match(db.Model):
     score_reasons = db.Column(db.Text, default="")
     notes = db.Column(db.Text, default="")
     proposed_at = db.Column(db.DateTime, default=now)
+    mentor_responded_at = db.Column(db.DateTime)
+    student_responded_at = db.Column(db.DateTime)
     confirmed_at = db.Column(db.DateTime)
 
     student = db.relationship("StudentProfile")
     mentor = db.relationship("MentorProfile")
+    log = db.relationship("MatchStatusLog", order_by="MatchStatusLog.id")
 
     def to_dict(self):
         return {
@@ -137,7 +140,9 @@ class Match(db.Model):
             "mentor_id": self.mentor_id, "mentor_name": self.mentor.user.full_name, "status": self.status,
             "mentor_response": self.mentor_response, "student_response": self.student_response,
             "match_score": self.match_score, "score_reasons": self.score_reasons, "notes": self.notes,
-            "proposed_at": to_text(self.proposed_at), "confirmed_at": to_text(self.confirmed_at),
+            "proposed_at": to_text(self.proposed_at), "mentor_responded_at": to_text(self.mentor_responded_at),
+            "student_responded_at": to_text(self.student_responded_at), "confirmed_at": to_text(self.confirmed_at),
+            "log": [entry.to_dict() for entry in self.log],
         }
 
 
@@ -149,6 +154,12 @@ class MatchStatusLog(db.Model):
     new_status = db.Column(db.String(20))
     changed_by = db.Column(db.Integer, db.ForeignKey("user.id"))
     changed_at = db.Column(db.DateTime, default=now)
+
+    changer = db.relationship("User")
+
+    def to_dict(self):
+        return {"from": self.old_status or "-", "to": self.new_status, "at": to_text(self.changed_at),
+                "by": self.changer.full_name if self.changer else ""}
 
 
 class Notification(db.Model):

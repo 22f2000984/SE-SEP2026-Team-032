@@ -51,6 +51,7 @@ paths:
       summary: Register as a student or a mentor
       description: |
         Creates the account and an empty profile. The email must be new (not case sensitive).
+        A student must use an IITM email (`iitm.ac.in` or a sub-domain such as `ds.study.iitm.ac.in`); a mentor can use any email.
         Admin accounts cannot be registered here. Log in next, then fill the profile with `PUT /api/students/me`
         or `PUT /api/mentors/me`.
       x-user-stories: [US-S01, US-M01]
@@ -59,7 +60,7 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/RegisterInput' }
-            example: { full_name: Asha Verma, email: asha@student.test, password: secret1, role: student }
+            example: { full_name: Asha Verma, email: asha@ds.study.iitm.ac.in, password: secret1, role: student }
       responses:
         '201':
           description: Account created
@@ -83,7 +84,7 @@ paths:
         content:
           application/json:
             schema: { $ref: '#/components/schemas/LoginInput' }
-            example: { email: asha@student.test, password: secret1 }
+            example: { email: asha@ds.study.iitm.ac.in, password: secret1 }
       responses:
         '200':
           description: Logged in
@@ -574,6 +575,108 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /api/admin/matches/{match_id}/status:
+    patch:
+      tags: [Matches]
+      summary: Confirm, complete or cancel a match
+      description: |
+        The admin moves a match to its next status. A proposed match becomes `active` (confirmed) only when both the
+        mentor and the student have accepted; otherwise the answer is 409. Allowed changes: proposed to active or
+        cancelled, active to completed or cancelled. Completed and cancelled matches are final. The student, the mentor
+        and the admins are notified.
+      x-user-stories: [US-C03, US-C04]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: match_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [proposed, active, completed, cancelled] }
+            example: { status: active }
+      responses:
+        '200':
+          description: The match with its new status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match: { $ref: '#/components/schemas/Match' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /api/matches/me:
+    get:
+      tags: [Matches]
+      summary: My matches (student or mentor)
+      description: |
+        The matches the logged-in student or mentor is part of, newest first. Each one carries the other person's
+        profile in `other`. Their email is included only once the match is active or completed.
+      x-user-stories: [US-S07, US-C03]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The matches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/Match' }
+                        - type: object
+                          properties:
+                            other: { type: object, description: The student profile (for a mentor) or the mentor profile (for a student) }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/matches/{match_id}/respond:
+    post:
+      tags: [Matches]
+      summary: Accept or decline a proposed match
+      description: |
+        The student or the mentor of the match answers a proposal once. Only a proposed match can be answered.
+        The admins are notified, and told when both sides have accepted.
+      x-user-stories: [US-C03, US-S07]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: match_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [answer]
+              properties:
+                answer: { type: string, enum: [accepted, declined] }
+            example: { answer: accepted }
+      responses:
+        '200':
+          description: The match with the answer recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match: { $ref: '#/components/schemas/Match' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
   /api/notifications:
     get:
       tags: [General]
@@ -779,4 +882,16 @@ components:
         score_reasons: { type: string }
         notes: { type: string }
         proposed_at: { type: string, format: date-time }
+        mentor_responded_at: { type: string, format: date-time, nullable: true }
+        student_responded_at: { type: string, format: date-time, nullable: true }
         confirmed_at: { type: string, format: date-time, nullable: true }
+        log:
+          type: array
+          description: Every status change of the match
+          items:
+            type: object
+            properties:
+              from: { type: string }
+              to: { type: string }
+              at: { type: string, format: date-time }
+              by: { type: string }

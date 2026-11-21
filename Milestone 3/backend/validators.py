@@ -1,5 +1,6 @@
 """Input checks. Each function returns an error message, or None when the input is fine."""
-from constants import (DURATIONS, FORMATS, GOALS_LIMIT, MAX_CAPACITY, MENTOR_STATUSES, TEXT_LIMIT, WEEKDAYS)
+from constants import (ANSWERS, DURATIONS, FORMATS, GOALS_LIMIT, MATCH_STATUSES, MAX_CAPACITY, MENTOR_STATUSES, STUDENT_EMAIL_DOMAIN, TEXT_LIMIT,
+                       WEEKDAYS)
 from models import Topic
 
 
@@ -15,6 +16,12 @@ def not_text(data, fields):
     return None
 
 
+def is_iitm_email(email):
+    """True for name@iitm.ac.in and for any sub-domain such as name@ds.study.iitm.ac.in."""
+    domain = email.split("@")[-1].lower()
+    return domain == STUDENT_EMAIL_DOMAIN or domain.endswith("." + STUDENT_EMAIL_DOMAIN)
+
+
 def check_register(data):
     if not is_text(data.get("full_name")):
         return "Full name is required."
@@ -26,6 +33,8 @@ def check_register(data):
         return "Password must be at least 6 characters."
     if data.get("role") not in ("student", "mentor"):
         return "Role must be 'student' or 'mentor'."
+    if data["role"] == "student" and not is_iitm_email(email):
+        return "Students must register with an IITM email (for example name@ds.study.iitm.ac.in)."
     return None
 
 
@@ -91,4 +100,16 @@ def check_slot(data):
 def check_mentor_status(value):
     if value not in MENTOR_STATUSES:
         return "Status must be one of: " + ", ".join(MENTOR_STATUSES)
+    return None
+
+
+def check_answer(value):
+    if value not in ANSWERS:
+        return "Answer must be one of: " + ", ".join(ANSWERS)
+    return None
+
+
+def check_match_status(value):
+    if value not in MATCH_STATUSES:
+        return "Status must be one of: " + ", ".join(MATCH_STATUSES)
     return None

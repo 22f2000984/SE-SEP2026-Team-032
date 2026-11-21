@@ -1,13 +1,14 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { NAV, HOME } from '../../config/constants';
+import { NAV, HOME, PREVIEW_PAGES } from '../../config/constants';
+import { API_ON } from '../../services/api';
 import { session, logout } from '../../services/auth';
 import BrandLogo from './BrandLogo.vue';
 
 const router = useRouter();
 const route = useRoute();
-const links = computed(() => (session.value ? NAV[session.value.role] : []));
+const links = computed(() => (session.value ? NAV[session.value.role].filter(l => !(API_ON && PREVIEW_PAGES.includes(l.to))) : []));
 const home = computed(() => (session.value ? HOME[session.value.role] : '/login'));
 const who = computed(() => (session.value.role === 'admin' ? session.value.name : `${session.value.name} (${session.value.role})`));
 

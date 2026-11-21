@@ -1,7 +1,8 @@
 <script setup>
 import { computed } from 'vue';
 import { session } from '../../services/auth';
-import { respond, bothAccepted } from '../../services/matches';
+import { bothAccepted } from '../../services/matches';
+import { respond } from '../../services/actions';
 import { notificationsFor } from '../../services/notifications';
 import { toAnswer } from '../../services/checkins';
 import { useDb } from '../../composables/useDb';
@@ -23,8 +24,9 @@ const mentees = computed(() => mine.value.filter(m => m.status === 'active'));
 const notes = computed(() => notificationsFor(db, me.id, 4));
 const waiting = computed(() => toAnswer(db, me.id, 'mentor').length);
 
-function answer(match, value) {
-  respond(db, match, 'mentor', value);
+async function answer(match, value) {
+  const problem = await respond(match, 'mentor', value);
+  if (problem) { toast(problem); return; }
   commit();
   toast(value === 'accepted' ? 'You accepted the request' : 'You declined the request');
 }

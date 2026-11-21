@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { WEEKDAYS, MAX_CAPACITY } from '../../config/constants';
 import { session } from '../../services/auth';
-import { saveMentorProfile, addSlot, removeSlot } from '../../services/profiles';
+import { saveMentorProfile, addSlot, removeSlot } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import PageHeading from '../../components/common/PageHeading.vue';
@@ -21,20 +21,20 @@ const slot = reactive({ day: 'Monday', start: '18:00', end: '19:00' });
 const slotError = ref('');
 const slots = computed(() => db.slots.filter(s => s.mentorId === me.id));
 
-function save() {
-  error.value = saveMentorProfile(db, me.id, form) || '';
+async function save() {
+  error.value = (await saveMentorProfile(me.id, form)) || '';
   if (error.value) return;
   commit();
   toast('Profile saved');
 }
-function add() {
-  slotError.value = addSlot(db, me.id, slot.day, slot.start, slot.end) || '';
+async function add() {
+  slotError.value = (await addSlot(me.id, slot.day, slot.start, slot.end)) || '';
   if (slotError.value) return;
   commit();
   toast('Slot added');
 }
-function remove(id) {
-  removeSlot(db, id);
+async function remove(id) {
+  await removeSlot(id);
   commit();
 }
 </script>

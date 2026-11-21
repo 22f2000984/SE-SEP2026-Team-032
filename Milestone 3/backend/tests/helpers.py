@@ -62,7 +62,7 @@ MENTOR_PROFILE = {
 }
 
 
-def make_student(client, email="asha@student.test", name="Asha Verma", profile=None):
+def make_student(client, email="asha@ds.study.iitm.ac.in", name="Asha Verma", profile=None):
     """Registers a student, fills the profile and returns (token, student_id)."""
     token = register(client, email, "student", name)
     body = client.put("/api/students/me", json=profile or STUDENT_PROFILE, headers=auth(token)).get_json()

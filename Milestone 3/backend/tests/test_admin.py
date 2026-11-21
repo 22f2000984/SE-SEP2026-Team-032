@@ -12,8 +12,8 @@ def test_overview_counts(client, admin_token):
 
 
 def test_list_and_search_students(client, admin_token):
-    make_student(client, "asha@student.test", "Asha Verma")
-    make_student(client, "rohan@student.test", "Rohan Das", {"programme_level": "Foundation", "career_goals": "Interviews",
+    make_student(client, "asha@ds.study.iitm.ac.in", "Asha Verma")
+    make_student(client, "rohan@ds.study.iitm.ac.in", "Rohan Das", {"programme_level": "Foundation", "career_goals": "Interviews",
                  "mentoring_format": "No preference", "expected_duration": "1 month", "topics": ["Web Development"], "skills": "JavaScript"})
     body = check(client, "GET", "/api/admin/students", 200, "The admin lists all students", token=admin_token, role="admin")
     assert len(body["students"]) == 2

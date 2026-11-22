@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { MAX_CAPACITY } from '../../config/constants';
-import { slotText } from '../../services/profiles';
+import { slotText, onAdminList } from '../../services/profiles';
 import { adminEditMentor, verifyMentor } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
@@ -19,9 +19,10 @@ const editing = ref(null);
 const form = reactive({ qualifications: '', experience: 0, topics: [], maxStudents: 3, bio: '' });
 const error = ref('');
 
-const mentorIds = computed(() => Object.keys(db.mentors).map(Number).filter(id => {
+const emailOf = id => (db.users.find(u => u.id === id) || {}).email || '';
+const mentorIds = computed(() => Object.keys(db.mentors).map(Number).filter(id => onAdminList(db, id)).filter(id => {
   const m = db.mentors[id];
-  return !q.value || [userName(db, id), m.qualifications, m.topics.join(' '), m.bio].join(' ').toLowerCase().includes(q.value.toLowerCase());
+  return !q.value || [userName(db, id), emailOf(id), m.qualifications, m.topics.join(' '), m.bio].join(' ').toLowerCase().includes(q.value.toLowerCase());
 }));
 
 function edit(id) {
@@ -46,8 +47,8 @@ async function verify(id) {
 </script>
 
 <template>
-  <PageHeading eyebrow="Admin" title="Mentors" intro="Review mentor profiles, correct them if needed, and verify them before they can receive matches." />
-  <div class="card"><label for="q">Search name, qualification or topic</label><input id="q" v-model="q" placeholder="e.g. data" /></div>
+  <PageHeading eyebrow="Admin" title="Mentors" intro="Mentors appear here after they finish their profile. Review them, correct the profile if needed, and verify them before they can receive matches." />
+  <div class="card"><label for="q">Search name, email, qualification or topic</label><input id="q" v-model="q" placeholder="e.g. data" /></div>
 
   <div class="table-wrap" style="margin-top: 16px">
     <table>
@@ -74,7 +75,7 @@ async function verify(id) {
             </td>
           </tr>
           <tr v-else>
-            <td><b>{{ userName(db, id) }}</b></td>
+            <td><b>{{ userName(db, id) }}</b><br /><a :href="'mailto:' + emailOf(id)">{{ emailOf(id) }}</a></td>
             <td>{{ db.mentors[id].qualifications || '-' }} · {{ db.mentors[id].experience }} yrs<br /><TopicChips :topics="db.mentors[id].topics" /><br /><span class="muted">{{ db.mentors[id].bio }}</span></td>
             <td>{{ slotText(db, id) }}<br /><CapacityBar :mentor-id="id" /></td>
             <td><StatusPill :value="db.mentors[id].status" /></td>

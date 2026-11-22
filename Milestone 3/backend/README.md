@@ -20,7 +20,7 @@ Open `swagger.yaml` in https://editor.swagger.io to read the API.
 ## Run the tests
 
 ```bash
-pytest -v                         # 91 tests; each test uses its own in-memory database
+pytest -v                         # 97 tests; each test uses its own in-memory database
 ```
 
 After a run, `tests/test_cases.md` holds the test-case table (API, inputs, expected output, actual output, result).

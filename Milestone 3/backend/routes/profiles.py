@@ -51,18 +51,23 @@ def get_mentor_profile():
 @role_required("mentor")
 def update_mentor_profile():
     profile = my_mentor()
+    was_complete = profile.profile_complete
     problem = profile_service.save_mentor_profile(profile, json_body())
     if problem:
         return error(problem, 400)
+    profile_service.tell_admins_if_complete(profile, was_complete)
     return jsonify({"profile": profile.to_dict()})
 
 
 @bp.post("/mentors/me/availability")
 @role_required("mentor")
 def add_my_slot():
-    slot, problem = profile_service.add_slot(my_mentor(), json_body())
+    mentor = my_mentor()
+    was_complete = mentor.profile_complete
+    slot, problem = profile_service.add_slot(mentor, json_body())
     if problem:
         return error(problem, 400)
+    profile_service.tell_admins_if_complete(mentor, was_complete)
     return jsonify({"slot": slot.to_dict()}), 201
 
 

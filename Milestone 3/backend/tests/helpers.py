@@ -74,6 +74,7 @@ def make_mentor(client, admin_token, email="meera@mentor.test", name="Dr. Meera 
     token = register(client, email, "mentor", name)
     body = client.put("/api/mentors/me", json=profile or MENTOR_PROFILE, headers=auth(token)).get_json()
     mentor_id = body["profile"]["mentor_id"]
+    client.post("/api/mentors/me/availability", json={"day_of_week": "Saturday", "start_time": "18:00", "end_time": "20:00"}, headers=auth(token))
     if verified:
         client.patch(f"/api/admin/mentors/{mentor_id}/status", json={"status": "verified"}, headers=auth(admin_token))
     return token, mentor_id

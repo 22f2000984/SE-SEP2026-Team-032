@@ -91,9 +91,15 @@ class MentorProfile(db.Model):
     topics = db.relationship("Topic", secondary=mentor_topic)
     slots = db.relationship("AvailabilitySlot", cascade="all, delete-orphan")
 
+    @property
+    def profile_complete(self):
+        """A mentor is sent for verification only after qualifications, bio, a topic and an availability slot are filled in."""
+        return bool(self.qualifications and self.bio and self.topics and self.slots)
+
     def to_dict(self):
         return {
             "mentor_id": self.id, "user_id": self.user_id, "full_name": self.user.full_name, "email": self.user.email,
+            "profile_complete": self.profile_complete,
             "qualifications": self.qualifications, "experience_years": self.experience_years, "bio": self.bio,
             "skills_text": self.skills_text, "profile_status": self.profile_status, "max_students": self.max_students,
             "topics": [t.name for t in self.topics], "availability": [s.to_dict() for s in self.slots],

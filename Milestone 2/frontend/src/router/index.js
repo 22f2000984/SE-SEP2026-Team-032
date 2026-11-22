@@ -5,6 +5,7 @@ import { API_ON } from '../services/api';
 import { syncDb } from '../services/remote';
 import { db, commit } from '../services/db';
 import { sendReminders } from '../services/checkins';
+import { mentorComplete } from '../services/profiles';
 
 const routes = [
   { path: '/', redirect: () => (session.value ? HOME[session.value.role] : '/login') },
@@ -63,6 +64,9 @@ router.beforeEach(async to => {
   if (to.meta.role) {
     if (!role) return '/login';
     if (to.meta.role !== role) return HOME[role];
+    /* A new mentor must finish the profile first; only then does the admin see them for verification. */
+    const me = db.mentors[session.value.id];
+    if (role === 'mentor' && me && me.status === 'pending' && !mentorComplete(db, session.value.id) && to.path !== '/mentor/profile') return '/mentor/profile';
   }
   return true;
 });

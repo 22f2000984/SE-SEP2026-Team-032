@@ -1,4 +1,5 @@
 /* Numbers for the admin overview: everything is counted from the data, nothing is stored separately. */
+import { onAdminList } from './profiles';
 import { STATUSES } from '../config/constants';
 import { used, maxOf, waitingStudents } from './matching';
 import { stateOf } from './checkins';
@@ -41,7 +42,7 @@ export function capacitySummary(d) {
 }
 
 export function peopleSummary(d) {
-  const mentors = Object.values(d.mentors);
+  const mentors = Object.keys(d.mentors).map(Number).filter(id => onAdminList(d, id)).map(id => d.mentors[id]);
   return {
     students: d.users.filter(u => u.role === 'student').length,
     waiting: waitingStudents(d).length,

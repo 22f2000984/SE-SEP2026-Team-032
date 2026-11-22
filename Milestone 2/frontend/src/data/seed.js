@@ -22,13 +22,14 @@ export function createSeed(now = Date.now()) {
     },
     mentors: {
       3: { qualifications: 'PhD, Data Science', experience: 12, topics: ['Data Science', 'Career Switching'], bio: 'Leads an analytics team and mentors early-career students.', skillsText: 'I coach students on data analytics careers, SQL and Python portfolio projects, and help people switch into data roles.', status: 'verified', maxStudents: 3 },
-      4: { qualifications: 'B.Tech', experience: 5, topics: ['Web Development'], bio: '', skillsText: 'Web development with JavaScript and React, and guidance on small projects.', status: 'pending', maxStudents: 2 },
+      4: { qualifications: 'B.Tech', experience: 5, topics: ['Web Development'], bio: 'Builds web apps with React and mentors students on their first projects.', skillsText: 'Web development with JavaScript and React, and guidance on small projects.', status: 'pending', maxStudents: 2 },
       7: { qualifications: 'MBA, Product Manager', experience: 8, topics: ['Product Management', 'Interview Preparation', 'Career Switching'], bio: 'Product manager who coaches students on product careers and interviews.', skillsText: 'I mentor on product management: writing product requirements, roadmaps, mock interviews for product roles and changing careers.', status: 'verified', maxStudents: 2 }
     },
     slots: [
       { id: 1, mentorId: 3, day: 'Saturday', start: '18:00', end: '20:00' },
       { id: 2, mentorId: 7, day: 'Sunday', start: '17:00', end: '19:00' },
-      { id: 3, mentorId: 7, day: 'Wednesday', start: '18:00', end: '19:30' }
+      { id: 3, mentorId: 7, day: 'Wednesday', start: '18:00', end: '19:30' },
+      { id: 4, mentorId: 4, day: 'Tuesday', start: '19:00', end: '20:30' }
     ],
     matches: [{
       id: 1, studentId: 1, mentorId: 3, status: 'proposed', notes: 'Goal fit: analytics', proposedAt: daysAgo(5),

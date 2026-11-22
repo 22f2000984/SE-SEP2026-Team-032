@@ -7,7 +7,7 @@ def test_overview_counts(client, admin_token):
     make_mentor(client, admin_token, verified=False)
     body = check(client, "GET", "/api/admin/overview", 200, "The admin opens the overview", token=admin_token, role="admin", contains="students_waiting_for_match")
     assert body["students"] == 1
-    assert body["mentors"] == {"total": 1, "verified": 0, "pending": 1}
+    assert body["mentors"] == {"total": 1, "verified": 0, "pending": 1, "incomplete": 0}
     assert body["students_waiting_for_match"] == 1
 
 

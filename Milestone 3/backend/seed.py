@@ -47,9 +47,9 @@ DEMO_MENTORS = [
         skills_text="I coach students on data analytics careers, SQL and Python portfolio projects, and help people switch into data roles."),
      ["Data Science", "Career Switching"], [("Saturday", "18:00", "20:00")]),
     ("Karan Shah", "karan@mentor.test", dict(
-        qualifications="B.Tech", experience_years=5, max_students=2, profile_status="pending", bio="",
+        qualifications="B.Tech", experience_years=5, max_students=2, profile_status="pending", bio="Builds web apps with React and mentors students on their first projects.",
         skills_text="Web development with JavaScript and React, and guidance on small projects."),
-     ["Web Development"], []),
+     ["Web Development"], [("Tuesday", "19:00", "20:30")]),
     ("Priya Nair", "priya@mentor.test", dict(
         qualifications="MBA, Product Manager", experience_years=8, max_students=2, profile_status="verified",
         bio="Product manager who coaches students on product careers and interviews.",

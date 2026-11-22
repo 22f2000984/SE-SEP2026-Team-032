@@ -3,6 +3,7 @@ Each save function returns an error message, or None when it worked."""
 from database import db
 from models import AvailabilitySlot, Topic
 from services.matching import places_used
+from services.notifications import notify_admins
 import validators
 
 STUDENT_FIELDS = ["programme_level", "career_goals", "skills", "needs_text", "mentoring_format",
@@ -43,6 +44,13 @@ def save_mentor_profile(profile, data):
         set_topics(profile, data["topics"])
     db.session.commit()
     return None
+
+
+def tell_admins_if_complete(mentor, was_complete):
+    """When a mentor finishes the profile, the admins are told that the mentor is ready for verification."""
+    if mentor.profile_complete and not was_complete and mentor.profile_status == "pending":
+        notify_admins(f"{mentor.user.full_name} ({mentor.user.email}) finished their profile and is waiting for verification.")
+        db.session.commit()
 
 
 def add_slot(mentor, data):

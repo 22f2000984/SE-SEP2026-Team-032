@@ -326,6 +326,7 @@ paths:
     get:
       tags: [Admin]
       summary: List and search mentor profiles
+      description: Lists mentors who finished their profile (qualifications, bio, a topic and an availability slot), and mentors who are already verified. Each entry includes the mentor's email.
       x-user-stories: [US-C01, US-C06]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -397,7 +398,7 @@ paths:
     patch:
       tags: [Admin]
       summary: Verify a mentor (or set them back to pending)
-      description: Only verified mentors can be proposed in a match.
+      description: Only verified mentors can be proposed in a match. A mentor who has not finished the profile cannot be verified (409).
       x-user-stories: [US-C01, US-C05]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -423,6 +424,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /api/admin/mentors/{mentor_id}/availability:
@@ -825,6 +827,7 @@ components:
             full_name: { type: string }
             email: { type: string }
             profile_status: { type: string, enum: [pending, verified] }
+            profile_complete: { type: boolean, description: 'True when qualifications, bio, a topic and an availability slot are filled in' }
             availability:
               type: array
               items: { $ref: '#/components/schemas/Slot' }
@@ -852,6 +855,7 @@ components:
             total: { type: integer }
             verified: { type: integer }
             pending: { type: integer }
+            incomplete: { type: integer, description: 'Mentors who have not finished the profile (not on the verification list)' }
         matches:
           type: object
           properties:

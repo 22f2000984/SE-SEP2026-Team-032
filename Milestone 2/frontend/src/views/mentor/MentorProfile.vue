@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { WEEKDAYS, MAX_CAPACITY } from '../../config/constants';
+import { mentorComplete } from '../../services/profiles';
 import { session } from '../../services/auth';
 import { saveMentorProfile, addSlot, removeSlot } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
@@ -20,6 +21,7 @@ const error = ref('');
 const slot = reactive({ day: 'Monday', start: '18:00', end: '19:00' });
 const slotError = ref('');
 const slots = computed(() => db.slots.filter(s => s.mentorId === me.id));
+const complete = computed(() => mentorComplete(db, me.id));
 
 async function save() {
   error.value = (await saveMentorProfile(me.id, form)) || '';
@@ -43,6 +45,10 @@ async function remove(id) {
   <PageHeading eyebrow="Mentor" title="My profile">
     <template #badge> <StatusPill :value="p.status" /></template>
   </PageHeading>
+  <div v-if="!complete" class="card" role="status">
+    <b>Finish your profile to get started.</b> Fill in your qualifications, at least one topic, a short bio and at least one availability slot, then save. After that the admin can see you and verify your profile. You can open the other pages once this is done.
+  </div>
+  <p v-else-if="p.status === 'pending'" class="muted" role="status">Your profile is complete. It is now waiting for the admin to verify it.</p>
   <div class="row">
     <div class="card">
       <h2>Background</h2>

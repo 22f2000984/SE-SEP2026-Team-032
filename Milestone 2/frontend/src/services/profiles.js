@@ -17,6 +17,14 @@ export function saveStudentProfile(d, studentId, f) {
   return null;
 }
 
+/* A mentor is sent for verification only after the profile is complete: qualifications, bio, a topic and an availability slot.
+   (The backend uses the same rule.) Verified mentors always stay visible to the admin. */
+export function mentorComplete(d, mentorId) {
+  const m = d.mentors[mentorId];
+  return !!(m && m.qualifications && m.bio && m.topics.length && d.slots.some(s => s.mentorId === mentorId));
+}
+export const onAdminList = (d, mentorId) => d.mentors[mentorId].status === 'verified' || mentorComplete(d, mentorId);
+
 /* Shared by the mentor (own profile) and the admin (editing a mentor). */
 export function validateMentor(d, mentorId, f) {
   if (!(f.qualifications || '').trim() || !f.topics.length) return 'Qualifications and at least one topic are required.';

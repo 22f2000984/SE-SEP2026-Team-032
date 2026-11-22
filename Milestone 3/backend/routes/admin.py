@@ -14,6 +14,11 @@ from services.matching import waiting_students
 bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
 
+def on_dashboard(mentor):
+    """A mentor shows up for the admin once the profile is complete (or when already verified)."""
+    return mentor.profile_complete or mentor.profile_status == "verified"
+
+
 def contains(text, search):
     return search.lower() in (text or "").lower()
 
@@ -22,11 +27,13 @@ def contains(text, search):
 @role_required("admin")
 def overview():
     """Numbers for the dashboard: people, matches by status, and what is waiting."""
-    mentors = MentorProfile.query.all()
+    everyone = MentorProfile.query.all()
+    mentors = [m for m in everyone if on_dashboard(m)]
     return jsonify({
         "students": StudentProfile.query.count(),
         "mentors": {"total": len(mentors), "verified": sum(m.profile_status == "verified" for m in mentors),
-                    "pending": sum(m.profile_status == "pending" for m in mentors)},
+                    "pending": sum(m.profile_status == "pending" for m in mentors),
+                    "incomplete": len(everyone) - len(mentors)},
         "matches": {status: Match.query.filter_by(status=status).count() for status in MATCH_STATUSES},
         "students_waiting_for_match": len(waiting_students()),
     })
@@ -59,8 +66,8 @@ def get_student(student_id):
 @bp.get("/mentors")
 @role_required("admin")
 def list_mentors():
-    """Optional filters: ?status=pending|verified, ?topic=Data Science, ?search=name or skills"""
-    mentors = MentorProfile.query.all()
+    """Mentors with a complete profile (and verified ones). Optional filters: ?status=pending|verified, ?topic=Data Science, ?search=name or skills"""
+    mentors = [m for m in MentorProfile.query.all() if on_dashboard(m)]
     status, topic, search = request.args.get("status"), request.args.get("topic"), request.args.get("search")
     if status:
         mentors = [m for m in mentors if m.profile_status == status]
@@ -104,6 +111,8 @@ def set_mentor_status(mentor_id):
     problem = validators.check_mentor_status(status)
     if problem:
         return error(problem, 400)
+    if status == "verified" and not mentor.profile_complete:
+        return error("This mentor has not finished their profile yet.", 409)
     mentor.profile_status = status
     db.session.commit()
     return jsonify({"profile": mentor.to_dict()})

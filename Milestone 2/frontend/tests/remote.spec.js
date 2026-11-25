@@ -86,4 +86,29 @@ describe('backend mode', () => {
     const problem = await remote.verifyMentor(12); // no answer prepared, so the fake server says 404
     expect(problem).toBe('Not found.');
   });
+  it('a student sees the check-ins from the backend and answers one', async () => {
+    const original = { ...ANSWERS };
+    Object.assign(ANSWERS, {
+      'POST /api/auth/login': { token: 'S', user: { id: 11, email: 'asha@ds.study.iitm.ac.in', full_name: 'Asha Verma', role: 'student' } },
+      'GET /api/students/me': { profile: { student_id: 1, user_id: 11, full_name: 'Asha Verma', email: 'asha@ds.study.iitm.ac.in', programme_level: 'Diploma', career_goals: 'Data', topics: ['Data Science'] } },
+      'GET /api/matches/me': { matches: [] },
+      'GET /api/feedback/me': { feedback: [] },
+      'GET /api/concerns/me': { concerns: [] },
+      'GET /api/checkins/me': { checkins: [{ checkin_id: 8, match_id: 5, week: 1, by: 'student', due_at: '2026-11-21T10:00:00', submitted_at: null, rating: null, comment: '', review: null }] },
+      'POST /api/checkins/8/answer': { checkin: { checkin_id: 8 } }
+    });
+    try {
+      const { remote, db } = await loadModules();
+      await remote.login('asha@ds.study.iitm.ac.in', 'demo123');
+      expect(db.checkins).toHaveLength(1);
+      expect(db.checkins[0]).toMatchObject({ id: 8, matchId: 5, week: 1, by: 'student', submittedAt: null, dueAt: '2026-11-21T10:00:00Z' });
+      const error = await remote.submitCheckIn(8, { rating: '4', comment: 'Good' });
+      expect(error).toBeNull();
+      const sent = calls.find(c => c.key === 'POST /api/checkins/8/answer');
+      expect(JSON.parse(sent.options.body)).toEqual({ rating: 4, comment: 'Good' });
+    } finally {
+      Object.keys(ANSWERS).forEach(k => delete ANSWERS[k]);
+      Object.assign(ANSWERS, original);
+    }
+  });
 });

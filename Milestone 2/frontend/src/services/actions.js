@@ -7,6 +7,7 @@ import * as local from './auth';
 import * as profiles from './profiles';
 import * as matches from './matches';
 import * as feedback from './feedback';
+import { submitCheckIn as submitLocalCheckIn } from './checkins';
 import * as remote from './remote';
 import { hasOpenMatch } from './matching';
 
@@ -66,3 +67,6 @@ export async function resolveConcern(id) {
   feedback.resolveConcern(db, id);
   return null;
 }
+
+/* A student or mentor answers their weekly check-in. Returns an error message, or null when it was saved. */
+export async function submitCheckIn(id, form) { return API_ON ? remote.submitCheckIn(id, form) : submitLocalCheckIn(db, id, form); }

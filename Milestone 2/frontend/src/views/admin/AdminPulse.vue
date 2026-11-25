@@ -1,6 +1,8 @@
 <script setup>
 import { computed, reactive } from 'vue';
-import { checkInsOf, stateOf, flagged, markReviewed } from '../../services/checkins';
+import { checkInsOf, stateOf, flagged } from '../../services/checkins';
+import { markReviewed } from '../../services/actions';
+import { API_ON } from '../../services/api';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { userName, when } from '../../utils/format';
@@ -12,7 +14,10 @@ const { toast } = useToast();
 
 const items = computed(() => flagged(db));
 const active = computed(() => db.matches.filter(m => m.status === 'active'));
-const emails = computed(() => db.notifications.filter(n => n.email).slice(-6).reverse());
+/* Live: the backend's email log (newest first). Preview: the emails recorded in the browser. */
+const emails = computed(() => API_ON
+  ? db.emails.slice(0, 6)
+  : db.notifications.filter(n => n.email).slice(-6).reverse().map(n => ({ id: n.id, to: userName(db, n.userId), text: n.text, at: n.at })));
 const notes = reactive({});
 
 const matchOf = c => db.matches.find(m => m.id === c.matchId);
@@ -25,8 +30,9 @@ function latest(m) {
   const done = checkInsOf(db, m.id).filter(c => c.review);
   return done.length ? done[done.length - 1].review : null;
 }
-function review(c) {
-  markReviewed(db, c.id, notes[c.id]);
+async function review(c) {
+  const problem = await markReviewed(c.id, notes[c.id]);
+  if (problem) { toast(problem); return; }
   commit();
   toast('Marked as reviewed');
 }
@@ -34,7 +40,8 @@ function review(c) {
 
 <template>
   <PageHeading eyebrow="Admin" title="Mentorship Pulse" intro="Every active match has a check-in each week. Reminders are emailed, an AI agent reads the answers, and only the ones that need a person come here." />
-  <div class="notice">Design preview: the AI agent is built in Sprint 2. Here a simple offline stand-in gives the verdicts, so the flow can be shown. It only flags. You decide what to do.</div>
+  <div v-if="API_ON" class="notice">Each answer is reviewed by simple rules and, when the AI is switched on, by an AI agent that can only raise a verdict. It only flags. You decide what to do.</div>
+  <div v-else class="notice">Design preview: here a simple offline stand-in gives the verdicts, so the flow can be shown. It only flags. You decide what to do.</div>
 
   <div class="card">
     <h2>Needs your review</h2>
@@ -43,7 +50,7 @@ function review(c) {
       <b>{{ userName(db, matchOf(c).studentId) }} / {{ userName(db, matchOf(c).mentorId) }}</b> · week {{ c.week }} · from the {{ c.by }}, {{ writer(c) }}
       <p v-if="c.submittedAt">
         <StatusPill :value="c.review.verdict" /> <span class="muted">Rating {{ c.rating }}/5</span><br />
-        “{{ c.comment || 'No comment' }}”<br /><span class="reasons">AI review: {{ c.review.reason }}</span>
+        “{{ c.comment || 'No comment' }}”<br /><span class="reasons">{{ c.review.source === 'ai' ? 'AI review' : 'Review' }}: {{ c.review.reason }}</span>
       </p>
       <p v-else><StatusPill value="overdue" /> <span class="muted">Due {{ when(c.dueAt) }} and still not answered.</span></p>
       <label class="sr-only" :for="'n' + c.id">Your note</label>
@@ -73,9 +80,10 @@ function review(c) {
   <div class="card" style="margin-top: 16px">
     <h2>Emails sent</h2>
     <ul class="list">
-      <li v-for="n in emails" :key="n.id"><b>To {{ userName(db, n.userId) }}:</b> {{ n.text }} <span class="muted">· {{ when(n.at) }}</span></li>
+      <li v-for="n in emails" :key="n.id"><b>To {{ n.to }}:</b> {{ n.text }} <span class="muted">· {{ when(n.at) }}<template v-if="n.status"> · {{ n.status === 'not_configured' ? 'not sent (no email key set)' : n.status }}</template></span></li>
       <li v-if="!emails.length" class="muted">No emails yet. The first ones go out when a match becomes active.</li>
     </ul>
-    <p class="muted">In this preview an email is only recorded here. Sprint 1 sends real emails.</p>
+    <p v-if="API_ON" class="muted">Emails go out through Brevo when its key is set. Otherwise they are only recorded here.</p>
+    <p v-else class="muted">In this preview an email is only recorded here.</p>
   </div>
 </template>

@@ -1,5 +1,5 @@
 """Input checks. Each function returns an error message, or None when the input is fine."""
-from constants import (ANSWERS, DURATIONS, FORMATS, GOALS_LIMIT, MATCH_STATUSES, MAX_CAPACITY, MENTOR_STATUSES, STUDENT_EMAIL_DOMAIN, TEXT_LIMIT,
+from constants import (ANSWERS, CONCERN_STATUSES, DURATIONS, FORMATS, GOALS_LIMIT, MATCH_STATUSES, MAX_CAPACITY, MENTOR_STATUSES, STUDENT_EMAIL_DOMAIN, TEXT_LIMIT,
                        WEEKDAYS)
 from models import Topic
 
@@ -64,6 +64,8 @@ def check_student_profile(data):
         return "Mentoring format must be one of: " + ", ".join(FORMATS)
     if data.get("expected_duration") not in DURATIONS:
         return "Expected duration must be one of: " + ", ".join(DURATIONS)
+    if not isinstance(data.get("looking_for_mentor", True), bool):
+        return "looking_for_mentor must be true or false."
     return check_topics(data.get("topics"))
 
 
@@ -112,4 +114,29 @@ def check_answer(value):
 def check_match_status(value):
     if value not in MATCH_STATUSES:
         return "Status must be one of: " + ", ".join(MATCH_STATUSES)
+    return None
+
+
+def check_feedback(data):
+    rating = data.get("rating")
+    if not isinstance(rating, int) or isinstance(rating, bool) or not 1 <= rating <= 5:
+        return "Rating must be a whole number from 1 to 5."
+    if data.get("comments") is not None and not isinstance(data["comments"], str):
+        return "comments must be text."
+    if len(data.get("comments") or "") > TEXT_LIMIT:
+        return f"Comments must be {TEXT_LIMIT} characters or fewer."
+    return None
+
+
+def check_concern(data):
+    if not is_text(data.get("text")):
+        return "Describe your concern first."
+    if len(data["text"]) > TEXT_LIMIT:
+        return f"The concern must be {TEXT_LIMIT} characters or fewer."
+    return None
+
+
+def check_concern_status(value):
+    if value not in CONCERN_STATUSES:
+        return "Status must be one of: " + ", ".join(CONCERN_STATUSES)
     return None

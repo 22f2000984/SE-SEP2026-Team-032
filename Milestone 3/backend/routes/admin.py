@@ -6,9 +6,10 @@ import validators
 from auth_utils import role_required
 from constants import MATCH_STATUSES
 from database import db
-from models import Match, MentorProfile, StudentProfile
+from models import EmailLog, Match, MentorProfile, StudentProfile
 from responses import error, json_body
 from services import profiles as profile_service
+from services.analytics import capacity_summary, feedback_summary, pulse_summary
 from services.matching import waiting_students
 
 bp = Blueprint("admin", __name__, url_prefix="/api/admin")
@@ -39,11 +40,32 @@ def overview():
     })
 
 
+@bp.get("/analytics")
+@role_required("admin")
+def analytics():
+    """Numbers for the charts: check-in health, feedback ratings and mentor capacity."""
+    return jsonify({"pulse": pulse_summary(), "feedback": feedback_summary(), "capacity": capacity_summary()})
+
+
+@bp.get("/emails")
+@role_required("admin")
+def email_log():
+    """The most recent emails the platform sent (or tried to send). ?limit=50 by default."""
+    limit = request.args.get("limit", default=50, type=int)
+    if limit < 1:
+        return error("limit must be 1 or more.", 400)
+    rows = EmailLog.query.order_by(EmailLog.id.desc()).limit(limit).all()
+    return jsonify({"emails": [r.to_dict() for r in rows]})
+
+
 @bp.get("/students")
 @role_required("admin")
 def list_students():
-    """Optional filters: ?search=name or skills, ?topic=Data Science, ?programme_level=Diploma"""
+    """Optional filters: ?search=name or skills, ?topic=Data Science, ?programme_level=Diploma, ?looking=true|false"""
     students = StudentProfile.query.all()
+    looking = request.args.get("looking")
+    if looking in ("true", "false"):
+        students = [s for s in students if s.looking_for_mentor == (looking == "true")]
     search, topic, level = request.args.get("search"), request.args.get("topic"), request.args.get("programme_level")
     if search:
         students = [s for s in students if contains(s.user.full_name, search) or contains(s.skills, search)]

@@ -4,13 +4,17 @@ import { NEXT_STEP } from '../../config/constants';
 import { session } from '../../services/auth';
 import { notificationsFor } from '../../services/notifications';
 import { toAnswer } from '../../services/checkins';
+import { setLooking } from '../../services/actions';
+import { hasOpenMatch } from '../../services/matching';
+import { useToast } from '../../composables/useToast';
 import { useDb } from '../../composables/useDb';
 import { latestMatchOf, userName } from '../../utils/format';
 import PageHeading from '../../components/common/PageHeading.vue';
 import StatusPill from '../../components/common/StatusPill.vue';
 import NotificationList from '../../components/common/NotificationList.vue';
 
-const { db } = useDb();
+const { db, commit } = useDb();
+const { toast } = useToast();
 const me = session.value;
 const profile = computed(() => db.students[me.id]);
 const match = computed(() => latestMatchOf(db, me.id));
@@ -36,6 +40,14 @@ const message = computed(() => {
 const nextStep = computed(() => (match.value ? NEXT_STEP[match.value.status] : 'Complete your profile so the admin can find a good fit.'));
 const notes = computed(() => notificationsFor(db, me.id, 4));
 const waiting = computed(() => toAnswer(db, me.id, 'student').length);
+const looking = computed(() => profile.value.looking !== false);
+const canChange = computed(() => !hasOpenMatch(db, me.id));
+async function toggleLooking() {
+  const problem = await setLooking(me.id, !looking.value);
+  if (problem) { toast(problem); return; }
+  commit();
+  toast(looking.value ? 'The admin can now propose a mentor' : 'The admin will not propose a mentor for now');
+}
 </script>
 
 <template>
@@ -57,5 +69,11 @@ const waiting = computed(() => toAnswer(db, me.id, 'student').length);
       <router-link class="btn ghost" to="/student/profile">Edit profile</router-link>
     </div>
   </section>
+  <div v-if="canChange" class="card">
+    <h2>Do you want a mentor now?</h2>
+    <p v-if="looking">Yes: you are on the admin's list. The admin will propose a mentor when one fits.</p>
+    <p v-else>Not now: the admin will not propose a mentor to you until you ask for one.</p>
+    <div class="actions"><button class="btn" :class="{ ghost: looking }" type="button" @click="toggleLooking">{{ looking ? 'I do not need a mentor now' : 'I need a mentor' }}</button></div>
+  </div>
   <div class="card"><h2>Notifications</h2><NotificationList :items="notes" /></div>
 </template>

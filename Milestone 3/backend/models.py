@@ -1,8 +1,8 @@
 """Database tables. Each table is a small class with a to_dict() that gives the JSON the API returns.
 The tables follow the ER diagram in the Milestone 2 report."""
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from constants import DEFAULT_CAPACITY
+from constants import CHECKIN_GRACE_DAYS, DEFAULT_CAPACITY
 from database import db
 
 
@@ -59,6 +59,7 @@ class StudentProfile(db.Model):
     expected_duration = db.Column(db.String(40), default="Not sure yet")
     preferences = db.Column(db.Text, default="")
     availability_note = db.Column(db.Text, default="")
+    looking_for_mentor = db.Column(db.Boolean, default=True, nullable=False)  # False: the admin does not propose mentors now
     updated_at = db.Column(db.DateTime, default=now, onupdate=now)
 
     user = db.relationship("User")
@@ -71,7 +72,7 @@ class StudentProfile(db.Model):
             "needs_text": self.needs_text, "mentoring_format": self.mentoring_format,
             "expected_duration": self.expected_duration, "preferences": self.preferences,
             "availability_note": self.availability_note, "topics": [t.name for t in self.topics],
-            "updated_at": to_text(self.updated_at),
+            "looking_for_mentor": self.looking_for_mentor, "updated_at": to_text(self.updated_at),
         }
 
 
@@ -179,3 +180,110 @@ class Notification(db.Model):
 
     def to_dict(self):
         return {"notification_id": self.id, "message": self.message, "is_read": self.is_read, "sent_at": to_text(self.sent_at)}
+
+
+class Feedback(db.Model):
+    """A rating and comment about a match from the student or the mentor (one per person per match)."""
+    __tablename__ = "feedback"
+    __table_args__ = (db.UniqueConstraint("match_id", "author_id"),)
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey("match.id"), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)  # 1 to 5
+    comments = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=now)
+
+    match = db.relationship("Match")
+    author = db.relationship("User")
+
+    def to_dict(self):
+        return {
+            "feedback_id": self.id, "match_id": self.match_id, "author_id": self.author_id, "author_name": self.author.full_name,
+            "author_role": self.author.role, "student_name": self.match.student.user.full_name,
+            "mentor_name": self.match.mentor.user.full_name, "rating": self.rating, "comments": self.comments,
+            "created_at": to_text(self.created_at),
+        }
+
+
+class Concern(db.Model):
+    """A problem with a match raised by the student or the mentor. The admin reviews it and marks it resolved."""
+    __tablename__ = "concern"
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey("match.id"), nullable=False)
+    raised_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default="open")  # open | resolved
+    created_at = db.Column(db.DateTime, default=now)
+    resolved_at = db.Column(db.DateTime)
+
+    match = db.relationship("Match")
+    author = db.relationship("User")
+
+    def to_dict(self):
+        return {
+            "concern_id": self.id, "match_id": self.match_id, "raised_by": self.raised_by, "raised_by_name": self.author.full_name,
+            "raised_by_role": self.author.role, "student_name": self.match.student.user.full_name,
+            "mentor_name": self.match.mentor.user.full_name, "text": self.text, "status": self.status,
+            "created_at": to_text(self.created_at), "resolved_at": to_text(self.resolved_at),
+        }
+
+
+class CheckIn(db.Model):
+    """One weekly check-in that one person (the student or the mentor) answers for an active match."""
+    __tablename__ = "checkin"
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey("match.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)  # who has to answer
+    by_role = db.Column(db.String(20), nullable=False)  # student | mentor
+    week = db.Column(db.Integer, nullable=False)
+    due_at = db.Column(db.DateTime, nullable=False)
+    submitted_at = db.Column(db.DateTime)
+    rating = db.Column(db.Integer)
+    comment = db.Column(db.Text, default="")
+    reminder_sent_at = db.Column(db.DateTime)
+    review_verdict = db.Column(db.String(20))   # on track | watch | needs attention
+    review_reason = db.Column(db.Text, default="")
+    review_status = db.Column(db.String(20))    # ok | open | reviewed
+    review_source = db.Column(db.String(20))    # rules | ai
+    admin_note = db.Column(db.Text, default="")
+
+    match = db.relationship("Match")
+    user = db.relationship("User")
+
+    def state(self, at=None):
+        """submitted, upcoming, due or overdue."""
+        at = at or now()
+        if self.submitted_at:
+            return "submitted"
+        if at < self.due_at:
+            return "upcoming"
+        if at > self.due_at + timedelta(days=CHECKIN_GRACE_DAYS):
+            return "overdue"
+        return "due"
+
+    def to_dict(self):
+        return {
+            "checkin_id": self.id, "match_id": self.match_id, "week": self.week, "by": self.by_role,
+            "person_name": self.user.full_name, "student_name": self.match.student.user.full_name,
+            "mentor_name": self.match.mentor.user.full_name, "due_at": to_text(self.due_at), "state": self.state(),
+            "submitted_at": to_text(self.submitted_at), "rating": self.rating, "comment": self.comment,
+            "review": None if not self.review_verdict else {
+                "verdict": self.review_verdict, "reason": self.review_reason, "status": self.review_status,
+                "source": self.review_source, "admin_note": self.admin_note},
+        }
+
+
+class EmailLog(db.Model):
+    """Every email the platform tried to send. status: sent | failed | not_configured (no Brevo key, so nothing left the server)."""
+    __tablename__ = "email_log"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    to_email = db.Column(db.String(120), nullable=False)
+    subject = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, default=now)
+
+    def to_dict(self):
+        return {"email_id": self.id, "to_email": self.to_email, "subject": self.subject, "body": self.body,
+                "status": self.status, "created_at": to_text(self.created_at)}

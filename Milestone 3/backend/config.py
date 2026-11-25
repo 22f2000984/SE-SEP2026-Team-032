@@ -30,8 +30,21 @@ class Config:
     # Fill an empty database with sample students, mentors and one match (set LOAD_DEMO_DATA=1)
     LOAD_DEMO_DATA = os.environ.get("LOAD_DEMO_DATA", "0") == "1"
 
+    # OpenAI (Smart Match and Pulse review). Leave the key empty and the app uses its simple rules instead.
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+    OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    # Brevo (emails). Leave the key empty and emails are only saved in the email log and as notifications.
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+    EMAIL_FROM = os.environ.get("EMAIL_FROM", "")  # a sender address you verified in Brevo
+    EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Mentor Connect")
+    # The scheduled job (GitHub Actions) sends this secret in the X-Job-Secret header. Empty means the job is switched off.
+    JOBS_SECRET = os.environ.get("JOBS_SECRET", "")
+
 
 class TestConfig(Config):
     TESTING = True
     PASSWORD_HASH_METHOD = "pbkdf2:sha256:1000"  # fewer rounds so the tests run fast
+    OPENAI_API_KEY = ""   # the tests never call OpenAI or Brevo
+    BREVO_API_KEY = ""
+    JOBS_SECRET = "test-job-secret"
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"

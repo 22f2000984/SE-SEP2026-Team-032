@@ -27,6 +27,8 @@ def eligibility_error(student, mentor):
         return "This mentor has no free places."
     if has_open_match(student.id):
         return "This student already has an open match."
+    if not student.looking_for_mentor:
+        return "This student is not looking for a mentor right now."
     return None
 
 
@@ -59,5 +61,5 @@ def recommend(student, limit=3):
 
 
 def waiting_students():
-    """Students who have no proposed or active match."""
-    return [s for s in StudentProfile.query.all() if not has_open_match(s.id)]
+    """Students who are looking for a mentor and have no proposed or active match."""
+    return [s for s in StudentProfile.query.all() if s.looking_for_mentor and not has_open_match(s.id)]

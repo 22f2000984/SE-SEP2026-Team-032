@@ -9,8 +9,8 @@ info:
     The admin (our client, the IIC team) sees both sides, recommends and proposes matches.
 
     **Sprint 1 covers:** registration and login, student and mentor profiles, the admin dashboard,
-    role-based access and match creation. Confirming matches, notifications by email, status changes, feedback,
-    Smart Match and Mentorship Pulse are Sprint 2.
+    role-based access and match creation. Sprint 2 adds match confirmation, emails (Brevo), feedback and concerns,
+    Smart Match and Mentorship Pulse (OpenAI with a rule fallback).
 
     **Login.** Call `POST /api/auth/login`, then send the token in every other request as
     `Authorization: Bearer <token>`.
@@ -26,7 +26,7 @@ info:
     | 409 | The request is valid but conflicts with the current state (duplicate email, mentor not verified, no free places, student already has a match) |
 
     **User stories.** Each operation lists the Milestone 1 user stories it implements under `x-user-stories`.
-    Integrated APIs: none in Sprint 1 (the GenAI agents for Smart Match and Mentorship Pulse are integrated in Sprint 2).
+    Integrated APIs: OpenAI (Smart Match scoring, Pulse review) and Brevo (emails). Both are optional: without their keys the platform uses simple rules and records emails in the email log.
 servers:
   - url: http://localhost:5001
     description: Local development server
@@ -41,6 +41,10 @@ tags:
     description: Dashboard, search of profiles and editing mentors (US-C01, US-C05, US-C06)
   - name: Matches
     description: Recommendations and creating matches (US-C02)
+  - name: Feedback
+    description: Feedback and concerns about a match (US-S09, US-S10)
+  - name: Pulse
+    description: Weekly check-ins, reminders and the admin review queue (Mentorship Pulse)
   - name: General
     description: Fixed lists, notifications and health check
 
@@ -679,6 +683,215 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
 
+  /api/students/me/mentor-request:
+    post:
+      tags: [Student]
+      summary: Ask for a mentor
+      description: 'Marks the student as looking for a mentor and tells the admins. Refused with 409 if the profile has no career goals or topics, or if the student already has a proposed or active match.'
+      x-user-stories: [US-S03]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The updated profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/StudentProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Student]
+      summary: Say you do not need a mentor now
+      description: 'Marks the student as not looking. The admin cannot propose a mentor to them and they are not counted as waiting. Refused with 409 if they have an open match.'
+      x-user-stories: [US-S03]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The updated profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile: { $ref: '#/components/schemas/StudentProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/matches/{match_id}/feedback:
+    post:
+      tags: [Feedback]
+      summary: Give feedback on a match
+      description: 'The student or the mentor of the match gives a rating from 1 to 5 and an optional comment, once per person, after the match is active.'
+      x-user-stories: [US-S09]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: match_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating]
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                comments: { type: string, maxLength: 800 }
+            example: { rating: 5, comments: Very helpful sessions }
+      responses:
+        '201':
+          description: The feedback that was saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback: { $ref: '#/components/schemas/Feedback' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/feedback/me:
+    get:
+      tags: [Feedback]
+      summary: My own feedback
+      x-user-stories: [US-S09]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The logged-in person's feedback, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback: { type: array, items: { $ref: '#/components/schemas/Feedback' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/admin/feedback:
+    get:
+      tags: [Feedback]
+      summary: All feedback
+      x-user-stories: [US-C07]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: match_id, in: query, schema: { type: integer } }
+      responses:
+        '200':
+          description: All feedback, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback: { type: array, items: { $ref: '#/components/schemas/Feedback' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/matches/{match_id}/concerns:
+    post:
+      tags: [Feedback]
+      summary: Raise a concern about a match
+      description: 'The student or the mentor of the match describes a problem. The admins are notified.'
+      x-user-stories: [US-S10]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: match_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, maxLength: 800 }
+            example: { text: My mentor has not replied for two weeks }
+      responses:
+        '201':
+          description: The concern that was saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  concern: { $ref: '#/components/schemas/Concern' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/concerns/me:
+    get:
+      tags: [Feedback]
+      summary: My own concerns
+      x-user-stories: [US-S10]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The logged-in person's concerns, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  concerns: { type: array, items: { $ref: '#/components/schemas/Concern' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/admin/concerns:
+    get:
+      tags: [Feedback]
+      summary: All concerns
+      x-user-stories: [US-S10, US-C07]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, resolved] } }
+      responses:
+        '200':
+          description: All concerns, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  concerns: { type: array, items: { $ref: '#/components/schemas/Concern' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/admin/concerns/{concern_id}:
+    patch:
+      tags: [Feedback]
+      summary: Mark a concern resolved (or open again)
+      description: 'The person who raised the concern is notified when it is resolved.'
+      x-user-stories: [US-S10, US-C07]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: concern_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [open, resolved] }
+            example: { status: resolved }
+      responses:
+        '200':
+          description: The updated concern
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  concern: { $ref: '#/components/schemas/Concern' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /api/notifications:
     get:
       tags: [General]
@@ -705,6 +918,272 @@ paths:
                         sent_at: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /api/checkins/me:
+    get:
+      tags: [Pulse]
+      summary: My check-ins
+      description: 'The logged-in student or mentor own weekly check-ins for active matches. Optional filter state.'
+      x-user-stories: [US-S11, US-M05]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: state, in: query, schema: { type: string, enum: [upcoming, due, overdue, submitted] } }
+      responses:
+        '200':
+          description: The check-ins, earliest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkins: { type: array, items: { $ref: '#/components/schemas/CheckIn' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/checkins/{checkin_id}/answer:
+    post:
+      tags: [Pulse]
+      summary: Answer a check-in
+      description: 'Only the person it belongs to, once it is due, and only once. The answer is reviewed at once (rules, plus OpenAI when it is on) and flagged answers go to the admin.'
+      x-user-stories: [US-S11, US-M05]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: checkin_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating]
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                comment: { type: string }
+            example: { rating: 4, comment: Good session }
+      responses:
+        '200':
+          description: The answered check-in with its review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkin: { $ref: '#/components/schemas/CheckIn' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/admin/pulse:
+    get:
+      tags: [Pulse]
+      summary: Pulse review queue and summary
+      description: 'Flagged answers and check-ins nobody answered in time, plus the summary numbers.'
+      x-user-stories: [US-C07]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The queue and numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary: { $ref: '#/components/schemas/PulseSummary' }
+                  needs_review: { type: array, items: { $ref: '#/components/schemas/CheckIn' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/admin/matches/{match_id}/checkins:
+    get:
+      tags: [Pulse]
+      summary: All check-ins of one match
+      x-user-stories: [US-C07]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: match_id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The check-ins week by week
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkins: { type: array, items: { $ref: '#/components/schemas/CheckIn' } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/admin/checkins/{checkin_id}/review:
+    patch:
+      tags: [Pulse]
+      summary: Mark a flagged check-in as reviewed
+      description: 'Human in the loop: the AI only flags, the admin decides.'
+      x-user-stories: [US-C07]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: checkin_id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string }
+            example: { note: Called the mentor }
+      responses:
+        '200':
+          description: The reviewed check-in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkin: { $ref: '#/components/schemas/CheckIn' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/jobs/reminders:
+    post:
+      tags: [Pulse]
+      summary: Send due check-in reminders (scheduled job)
+      description: 'Called by a scheduler (GitHub Actions cron) with the secret in the X-Job-Secret header. Each person is reminded once per check-in. 503 when JOBS_SECRET is not set.'
+      x-user-stories: [US-C03, US-S11]
+      parameters:
+        - { name: X-Job-Secret, in: header, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: How many reminders were sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reminders_sent: { type: integer }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { description: The job is not switched on, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /api/admin/students/{student_id}/smart-recommendations:
+    get:
+      tags: [Matches]
+      summary: Smart Match recommendations
+      description: 'Ranks eligible mentors by reading the free-text answers (60 percent) plus the rule score (40 percent). OpenAI scores the text when it is on; otherwise shared keywords are used. The source field says which one was used.'
+      x-user-stories: [US-C02, GenAI]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/StudentId' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, default: 3 } }
+      responses:
+        '200':
+          description: Best mentors first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id: { type: integer }
+                  source: { type: string, enum: [ai, rules] }
+                  recommendations: { type: array, items: { $ref: '#/components/schemas/SmartRecommendation' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/students/me/readiness:
+    get:
+      tags: [Student]
+      summary: My profile readiness
+      description: 'A checklist of what is filled in, and whether the profile is ready for a match.'
+      x-user-stories: [US-S07]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The checklist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { type: object, properties: { field: { type: string }, label: { type: string }, done: { type: boolean } } } }
+                  percent: { type: integer }
+                  ready: { type: boolean }
+                  looking_for_mentor: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/notifications/{notification_id}/read:
+    patch:
+      tags: [General]
+      summary: Mark one notification read
+      x-user-stories: [US-C03]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: notification_id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The notification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notification: { type: object }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/notifications/read-all:
+    post:
+      tags: [General]
+      summary: Mark all my notifications read
+      x-user-stories: [US-C03]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: How many were marked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  marked: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/admin/analytics:
+    get:
+      tags: [Admin]
+      summary: Numbers for the dashboard charts
+      description: 'Check-in health, feedback ratings and mentor capacity.'
+      x-user-stories: [US-C07]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pulse: { $ref: '#/components/schemas/PulseSummary' }
+                  feedback: { type: object, properties: { total: { type: integer }, average: { type: number, nullable: true }, counts: { type: array, items: { type: object } } } }
+                  capacity: { type: object, properties: { used: { type: integer }, places: { type: integer }, percent: { type: integer }, rows: { type: array, items: { type: object } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/admin/emails:
+    get:
+      tags: [Admin]
+      summary: Email log
+      description: 'The most recent emails sent (or tried). status is sent, failed or not_configured.'
+      x-user-stories: [US-C03]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, default: 50 } }
+      responses:
+        '200':
+          description: Newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails: { type: array, items: { type: object, properties: { email_id: { type: integer }, to_email: { type: string }, subject: { type: string }, body: { type: string }, status: { type: string, enum: [sent, failed, not_configured] }, created_at: { type: string, format: date-time } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /api/health:
     get:
       tags: [General]
@@ -789,6 +1268,7 @@ components:
     StudentProfileInput:
       type: object
       properties:
+        looking_for_mentor: { type: boolean, default: true, description: 'False means the admin does not propose a mentor now' }
         programme_level: { type: string, example: Diploma }
         career_goals: { type: string, maxLength: 500 }
         skills: { type: string }
@@ -870,6 +1350,77 @@ components:
         mentor_id: { type: integer }
         mentor_name: { type: string }
         score: { type: integer, minimum: 0, maximum: 100 }
+        reasons: { type: array, items: { type: string } }
+    Feedback:
+      type: object
+      properties:
+        feedback_id: { type: integer }
+        match_id: { type: integer }
+        author_id: { type: integer }
+        author_name: { type: string }
+        author_role: { type: string, enum: [student, mentor] }
+        student_name: { type: string }
+        mentor_name: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comments: { type: string }
+        created_at: { type: string, format: date-time }
+    Concern:
+      type: object
+      properties:
+        concern_id: { type: integer }
+        match_id: { type: integer }
+        raised_by: { type: integer }
+        raised_by_name: { type: string }
+        raised_by_role: { type: string, enum: [student, mentor] }
+        student_name: { type: string }
+        mentor_name: { type: string }
+        text: { type: string }
+        status: { type: string, enum: [open, resolved] }
+        created_at: { type: string, format: date-time }
+        resolved_at: { type: string, format: date-time, nullable: true }
+    CheckIn:
+      type: object
+      properties:
+        checkin_id: { type: integer }
+        match_id: { type: integer }
+        week: { type: integer }
+        by: { type: string, enum: [student, mentor] }
+        person_name: { type: string }
+        student_name: { type: string }
+        mentor_name: { type: string }
+        due_at: { type: string, format: date-time }
+        state: { type: string, enum: [upcoming, due, overdue, submitted] }
+        submitted_at: { type: string, format: date-time, nullable: true }
+        rating: { type: integer, nullable: true }
+        comment: { type: string, nullable: true }
+        review:
+          type: object
+          nullable: true
+          properties:
+            verdict: { type: string, enum: [on track, watch, needs attention] }
+            reason: { type: string }
+            status: { type: string, enum: [ok, open, reviewed] }
+            source: { type: string, enum: [rules, ai] }
+            admin_note: { type: string }
+    PulseSummary:
+      type: object
+      properties:
+        asked: { type: integer }
+        answered: { type: integer }
+        response_rate: { type: integer }
+        on_track: { type: integer }
+        watch: { type: integer }
+        needs_attention: { type: integer }
+        unanswered: { type: integer }
+    SmartRecommendation:
+      type: object
+      properties:
+        mentor_id: { type: integer }
+        mentor_name: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        text_fit: { type: integer }
+        rule_score: { type: integer }
+        source: { type: string, enum: [ai, rules] }
         reasons: { type: array, items: { type: string } }
     Match:
       type: object

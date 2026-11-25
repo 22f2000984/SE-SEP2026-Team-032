@@ -1,0 +1,20 @@
+# Sends the weekly check-in reminders (Mentorship Pulse) by calling the backend once a day.
+# Add two secrets in GitHub: Settings > Secrets and variables > Actions
+#   BACKEND_URL  e.g. https://your-backend.onrender.com   (no slash at the end)
+#   JOBS_SECRET  the same value as the JOBS_SECRET setting on Render
+name: Check-in reminders
+
+on:
+  schedule:
+    - cron: "0 4 * * *"   # every day at 04:00 UTC
+  workflow_dispatch:       # lets you run it by hand from the Actions tab
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the reminder endpoint
+        run: |
+          curl --fail --silent --show-error --max-time 90 -X POST \
+            -H "X-Job-Secret: ${{ secrets.JOBS_SECRET }}" \
+            "${{ secrets.BACKEND_URL }}/api/jobs/reminders"

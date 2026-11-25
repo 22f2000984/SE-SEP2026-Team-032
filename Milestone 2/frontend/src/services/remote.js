@@ -17,7 +17,7 @@ const defined = obj => Object.fromEntries(Object.entries(obj).filter(([, v]) => 
 const toStudent = p => ({
   programme: p.programme_level || '', goals: p.career_goals || '', skills: p.skills || '', needsText: p.needs_text || '',
   topics: p.topics || [], format: p.mentoring_format, duration: p.expected_duration, preferences: p.preferences || '',
-  availability: p.availability_note || ''
+  availability: p.availability_note || '', looking: p.looking_for_mentor !== false
 });
 const fromStudent = f => defined({
   programme_level: f.programme, career_goals: f.goals, skills: f.skills, needs_text: f.needsText, topics: f.topics,
@@ -43,12 +43,21 @@ function toMatch(m, studentUserId, mentorUserId) {
     log: (m.log || []).map(l => ({ from: l.from, to: l.to, at: utc(l.at), by: l.by }))
   };
 }
+const toFeedback = f => ({ id: f.feedback_id, matchId: f.match_id, authorId: f.author_id, rating: f.rating, comments: f.comments || '', at: utc(f.created_at) });
+const toConcern = c => ({ id: c.concern_id, matchId: c.match_id, raisedBy: c.raised_by, text: c.text, status: c.status, at: utc(c.created_at) });
+const toCheckIn = c => ({
+  id: c.checkin_id, matchId: c.match_id, week: c.week, by: c.by, dueAt: utc(c.due_at), submittedAt: utc(c.submitted_at),
+  rating: c.rating, comment: c.comment || '', reminderSentAt: null,
+  review: c.review ? { verdict: c.review.verdict, reason: c.review.reason, status: c.review.status, source: c.review.source, adminNote: c.review.admin_note || '' } : null
+});
+const toEmail = e => ({ id: e.email_id, to: e.to_email, text: e.subject + ': ' + e.body, at: utc(e.created_at), status: e.status });
 const notificationsOf = (list, userId) => list.slice().reverse().map(n => ({ id: n.notification_id, userId, text: n.message, at: utc(n.sent_at), read: n.is_read }));
 
 /* ---------- sync: copy the backend's data into db ---------- */
 async function loadAdmin(me) {
-  const [students, mentors, matches, notes] = await Promise.all([
-    api('GET', '/api/admin/students'), api('GET', '/api/admin/mentors'), api('GET', '/api/admin/matches'), api('GET', '/api/notifications')
+  const [students, mentors, matches, notes, feedback, concerns, emails] = await Promise.all([
+    api('GET', '/api/admin/students'), api('GET', '/api/admin/mentors'), api('GET', '/api/admin/matches'), api('GET', '/api/notifications'),
+    api('GET', '/api/admin/feedback'), api('GET', '/api/admin/concerns'), api('GET', '/api/admin/emails')
   ]);
   const toUser = {};
   const next = { users: [{ id: me.id, email: '', name: me.name, role: 'admin' }], students: {}, mentors: {}, slots: [] };
@@ -63,28 +72,45 @@ async function loadAdmin(me) {
   });
   next.matches = matches.matches.slice().reverse().map(m => toMatch(m, toUser['s' + m.student_id], toUser['m' + m.mentor_id]));
   next.notifications = notificationsOf(notes.notifications, me.id);
+  next.feedback = feedback.feedback.slice().reverse().map(toFeedback);
+  next.concerns = concerns.concerns.slice().reverse().map(toConcern);
+  next.emails = emails.emails.map(toEmail);
+  next.checkins = await loadCheckInsOfActiveMatches(matches.matches);
   return next;
 }
 
+/* The admin has no 'my check-ins' list: ask for the check-ins of each active match, week by week. */
+async function loadCheckInsOfActiveMatches(matchList) {
+  const active = matchList.filter(m => m.status === 'active');
+  const answers = await Promise.all(active.map(m => api('GET', `/api/admin/matches/${m.match_id}/checkins`)));
+  return answers.flatMap(a => a.checkins.map(toCheckIn));
+}
+
 async function loadStudent(me) {
-  const [mine, matches, notes] = await Promise.all([api('GET', '/api/students/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications')]);
+  const [mine, matches, notes, feedback, concerns, checkins] = await Promise.all([api('GET', '/api/students/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications'), api('GET', '/api/feedback/me'), api('GET', '/api/concerns/me'), api('GET', '/api/checkins/me')]);
   const next = { users: [person(mine.profile, 'student')], students: { [me.id]: toStudent(mine.profile) }, mentors: {}, slots: [] };
   next.matches = matches.matches.slice().reverse().map(m => {
     next.users.push(person(m.other, 'mentor')); next.mentors[m.other.user_id] = toMentor(m.other); next.slots.push(...toSlots(m.other));
     return toMatch(m, me.id, m.other.user_id);
   });
   next.notifications = notificationsOf(notes.notifications, me.id);
+  next.feedback = feedback.feedback.slice().reverse().map(toFeedback);
+  next.concerns = concerns.concerns.slice().reverse().map(toConcern);
+  next.checkins = checkins.checkins.map(toCheckIn);
   return next;
 }
 
 async function loadMentor(me) {
-  const [mine, matches, notes] = await Promise.all([api('GET', '/api/mentors/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications')]);
+  const [mine, matches, notes, feedback, concerns, checkins] = await Promise.all([api('GET', '/api/mentors/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications'), api('GET', '/api/feedback/me'), api('GET', '/api/concerns/me'), api('GET', '/api/checkins/me')]);
   const next = { users: [person(mine.profile, 'mentor')], students: {}, mentors: { [me.id]: toMentor(mine.profile) }, slots: toSlots(mine.profile) };
   next.matches = matches.matches.slice().reverse().map(m => {
     next.users.push(person(m.other, 'student')); next.students[m.other.user_id] = toStudent(m.other);
     return toMatch(m, m.other.user_id, me.id);
   });
   next.notifications = notificationsOf(notes.notifications, me.id);
+  next.feedback = feedback.feedback.slice().reverse().map(toFeedback);
+  next.concerns = concerns.concerns.slice().reverse().map(toConcern);
+  next.checkins = checkins.checkins.map(toCheckIn);
   return next;
 }
 
@@ -100,7 +126,7 @@ export async function syncDb(force = false) {
       m.smartScore = smart.total; m.smartReason = smart.reason;
     });
   }
-  Object.assign(db, next); // checkins, concerns and feedback stay as they are: they are still browser-only previews
+  Object.assign(db, next); // the admin's check-ins and emails are loaded by loadAdmin
   lastSync = Date.now();
 }
 
@@ -142,3 +168,27 @@ export const proposeMatch = (studentId, mentorId, notes) =>
   change(() => api('POST', '/api/admin/matches', { student_id: profileId.student[studentId], mentor_id: profileId.mentor[mentorId], notes }));
 export const respond = (match, who, answer) => change(() => api('POST', `/api/matches/${match.id}/respond`, { answer }));
 export const setStatus = (match, to) => change(() => api('PATCH', `/api/admin/matches/${match.id}/status`, { status: to }));
+
+export const setLooking = (_id, looking) => change(() => (looking ? api('POST', '/api/students/me/mentor-request') : api('DELETE', '/api/students/me/mentor-request')));
+export const sendFeedback = (matchId, _authorId, rating, comments) => change(() => api('POST', `/api/matches/${matchId}/feedback`, { rating: Number(rating), comments }));
+export const sendConcern = (matchId, _userId, text) => change(() => api('POST', `/api/matches/${matchId}/concerns`, { text }));
+export const submitCheckIn = (id, f) => change(() => api('POST', `/api/checkins/${id}/answer`, { rating: Number(f.rating), comment: f.comment }));
+export const resolveConcern = id => change(() => api('PATCH', `/api/admin/concerns/${id}`, { status: 'resolved' }));
+
+export const markReviewed = (id, note) => change(() => api('PATCH', `/api/admin/checkins/${id}/review`, { note: note || '' }));
+
+/* Smart Match for one waiting student (user id). Returns { recs, source } or { error }.
+   recs use the page's names: mentorId is the mentor's user id, total is the score out of 100. */
+export async function smartRecommendations(studentUserId, limit) {
+  try {
+    const data = await api('GET', `/api/admin/students/${profileId.student[studentUserId]}/smart-recommendations?limit=${limit}`);
+    const userOfMentor = Object.fromEntries(Object.entries(profileId.mentor).map(([user, profile]) => [profile, Number(user)]));
+    const recs = data.recommendations.map(r => ({
+      mentorId: userOfMentor[r.mentor_id], total: r.score, ruleTotal: r.rule_score, reason: r.reasons.join('; '), source: r.source
+    }));
+    return { recs, source: data.source };
+  } catch (e) {
+    if (e instanceof ApiError) return { error: e.message };
+    throw e;
+  }
+}

@@ -17,6 +17,7 @@ export function eligible(d, studentId, mentorId) {
   if (!d.mentors[mentorId] || d.mentors[mentorId].status !== 'verified') return 'The mentor is not verified yet.';
   if (used(d, mentorId) >= maxOf(d, mentorId)) return 'This mentor has no free places.';
   if (hasOpenMatch(d, studentId)) return 'This student already has an open match.';
+  if (d.students[studentId] && d.students[studentId].looking === false) return 'This student is not looking for a mentor right now.';
   return null;
 }
 
@@ -45,5 +46,5 @@ export function recommend(d, studentId, n) {
 }
 
 export function waitingStudents(d) {
-  return d.users.filter(u => u.role === 'student' && !hasOpenMatch(d, u.id));
+  return d.users.filter(u => u.role === 'student' && !hasOpenMatch(d, u.id) && !(d.students[u.id] && d.students[u.id].looking === false));
 }

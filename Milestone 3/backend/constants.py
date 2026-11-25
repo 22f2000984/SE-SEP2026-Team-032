@@ -31,3 +31,19 @@ EXPERIENCE_CAP_YEARS = 10
 # What a match may become next (US-C04). The admin moves it; both sides must accept before it becomes active.
 MATCH_NEXT = {"proposed": ["active", "cancelled"], "active": ["completed", "cancelled"], "completed": [], "cancelled": []}
 ANSWERS = ["accepted", "declined"]
+CONCERN_STATUSES = ["open", "resolved"]
+
+# ---- Mentorship Pulse (weekly check-ins) ----
+# How many weekly check-ins a match gets, by the duration the student chose
+CHECKIN_WEEKS = {"Not sure yet": 4, "1 month": 4, "3 months": 12, "6 months": 24}
+CHECKIN_GRACE_DAYS = 2  # a check-in is "due" for this many days after its date, then it is "overdue"
+LOW_RATING = 2          # a rating of 2 or less is always flagged for the admin
+VERDICTS = ["on track", "watch", "needs attention"]  # from best to worst
+REVIEW_STATUSES = ["ok", "open", "reviewed"]
+WORRYING_WORDS = ["not responding", "no response", "cancelled", "canceled", "no show", "unhelpful", "rude",
+                  "confused", "ignored", "hard to reach", "clash", "stopped"]
+
+# ---- Smart Match ----
+SMART_TEXT_WEIGHT = 60   # points from how well the two free-text answers fit
+SMART_RULE_WEIGHT = 40   # points from the rule score (topics and experience)
+SMART_MAX_KEYWORDS = 5

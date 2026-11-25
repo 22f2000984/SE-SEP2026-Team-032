@@ -6,3 +6,5 @@ pytest==8.4.2
 PyYAML==6.0.3
 openapi-spec-validator
 gunicorn==23.0.0
+psycopg2-binary==2.9.11
+python-dotenv==1.0.1

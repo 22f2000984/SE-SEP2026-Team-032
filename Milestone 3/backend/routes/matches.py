@@ -11,6 +11,7 @@ from responses import error, json_body
 from services.match_flow import change_status, record_answer
 from services.matching import eligibility_error, recommend, score_pair
 from services.notifications import notify
+from services.smart_match import smart_recommend
 
 bp = Blueprint("matches", __name__, url_prefix="/api")
 
@@ -26,6 +27,21 @@ def recommendations(student_id):
     if limit < 1:
         return error("limit must be 1 or more.", 400)
     return jsonify({"student_id": student_id, "recommendations": recommend(student, limit)})
+
+
+@bp.get("/admin/students/<int:student_id>/smart-recommendations")
+@role_required("admin")
+def smart_recommendations(student_id):
+    """Smart Match: the best mentors by reading the free-text answers. Uses OpenAI when it is on, simple rules otherwise.
+    ?limit=3 by default. The answer says which one was used in "source"."""
+    student = db.session.get(StudentProfile, student_id)
+    if student is None:
+        return error("Student not found.", 404)
+    limit = request.args.get("limit", default=3, type=int)
+    if limit < 1:
+        return error("limit must be 1 or more.", 400)
+    results, source = smart_recommend(student, limit)
+    return jsonify({"student_id": student_id, "source": source, "recommendations": results})
 
 
 @bp.post("/admin/matches")

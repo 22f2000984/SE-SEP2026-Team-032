@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { bothAccepted } from '../../services/matches';
 import { waitingStudents } from '../../services/matching';
-import { resolveConcern } from '../../services/feedback';
+import { resolveConcern } from '../../services/actions';
 import { flagged } from '../../services/checkins';
 import { notificationsFor } from '../../services/notifications';
 import { matchCounts, pulseSummary, feedbackSummary, capacitySummary, peopleSummary } from '../../services/analytics';
@@ -54,8 +54,9 @@ const openConcerns = computed(() => db.concerns.filter(c => c.status === 'open')
 const recentFeedback = computed(() => db.feedback.slice(-4).reverse());
 const notes = computed(() => notificationsFor(db, me.id, 4));
 
-function resolve(id) {
-  resolveConcern(db, id);
+async function resolve(id) {
+  const problem = await resolveConcern(id);
+  if (problem) { toast(problem); return; }
   commit();
   toast('Concern resolved');
 }

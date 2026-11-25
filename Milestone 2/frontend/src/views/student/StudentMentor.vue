@@ -2,9 +2,8 @@
 import { computed, ref } from 'vue';
 import { NEXT_STEP } from '../../config/constants';
 import { session } from '../../services/auth';
-import { respond } from '../../services/actions';
 import { API_ON } from '../../services/api';
-import { addFeedback, addConcern } from '../../services/feedback';
+import { respond, sendFeedback as postFeedback, sendConcern as postConcern } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { latestMatchOf, userName, topicsText, when } from '../../utils/format';
@@ -22,7 +21,6 @@ const mentor = computed(() => (shown.value ? db.mentors[match.value.mentorId] : 
 const myFeedback = computed(() => (match.value ? db.feedback.filter(f => f.matchId === match.value.id && f.authorId === me.id) : []));
 const myConcerns = computed(() => db.concerns.filter(c => c.raisedBy === me.id));
 
-const api = API_ON; // feedback and concerns are browser-only previews until their APIs exist (Sprint 2)
 const rating = ref(5);
 const comments = ref('');
 const concern = ref('');
@@ -34,14 +32,15 @@ async function answer(value) {
   commit();
   toast(value === 'accepted' ? 'You accepted the proposal' : 'You declined the proposal');
 }
-function sendFeedback() {
-  addFeedback(db, match.value.id, me.id, rating.value, comments.value);
+async function sendFeedback() {
+  const problem = await postFeedback(match.value.id, me.id, rating.value, comments.value);
+  if (problem) { toast(problem); return; }
   commit();
   comments.value = '';
   toast('Thank you for your feedback');
 }
-function sendConcern() {
-  concernError.value = addConcern(db, match.value.id, me.id, concern.value) || '';
+async function sendConcern() {
+  concernError.value = (await postConcern(match.value.id, me.id, concern.value)) || '';
   if (concernError.value) return;
   commit();
   concern.value = '';
@@ -61,7 +60,7 @@ function sendConcern() {
   <div v-else class="stack">
     <div class="card">
       <h2>{{ userName(db, match.mentorId) }} <StatusPill v-if="live" :value="match.status" /></h2>
-      <p v-if="live"><b>Email:</b> {{ db.users.find(u => u.id === match.mentorId).email }} <template v-if="!api">(also sent to you by email). </template>Write to your mentor to agree session times and how you will talk.</p>
+      <p v-if="live"><b>Email:</b> {{ db.users.find(u => u.id === match.mentorId).email }} <template v-if="!API_ON">(also sent to you by email). </template>Write to your mentor to agree session times and how you will talk.</p>
       <p><b>Qualifications:</b> {{ mentor.qualifications }}<br /><b>Topics:</b> {{ topicsText(mentor.topics) }}<br /><b>Experience:</b> {{ mentor.experience }} years</p>
       <p>{{ mentor.bio }}</p>
     </div>
@@ -79,10 +78,10 @@ function sendConcern() {
       <p v-else class="muted">The admin confirms the match once both of you have accepted.</p>
     </div>
 
-    <div v-if="live && !api" class="card">
+    <div v-if="live" class="card">
       <h2>Give feedback</h2>
       <p v-for="f in myFeedback" :key="f.id" class="muted">You rated this match {{ f.rating }}/5 on {{ when(f.at) }}.</p>
-      <form @submit.prevent="sendFeedback">
+      <form v-if="!myFeedback.length" @submit.prevent="sendFeedback">
         <label for="rating">Rating</label>
         <select id="rating" v-model="rating"><option v-for="n in [5, 4, 3, 2, 1]" :key="n" :value="n">{{ n }}</option></select>
         <label for="comments">Comments</label>
@@ -92,7 +91,7 @@ function sendConcern() {
     </div>
   </div>
 
-  <div v-if="match && !api" class="card" style="margin-top: 16px">
+  <div v-if="match" class="card" style="margin-top: 16px">
     <h2>Raise a concern</h2>
     <p class="muted">Use this if the match is not working. The admin will review it.</p>
     <form @submit.prevent="sendConcern">

@@ -7,7 +7,7 @@ from services.notifications import notify_admins
 import validators
 
 STUDENT_FIELDS = ["programme_level", "career_goals", "skills", "needs_text", "mentoring_format",
-                  "expected_duration", "preferences", "availability_note"]
+                  "expected_duration", "preferences", "availability_note", "looking_for_mentor"]
 MENTOR_FIELDS = ["qualifications", "experience_years", "bio", "skills_text", "max_students"]
 
 

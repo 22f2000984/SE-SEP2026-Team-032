@@ -4,6 +4,8 @@ error message, or None when it worked. The route commits the change."""
 from constants import MATCH_NEXT
 from database import db
 from models import MatchStatusLog, now
+from services.checkins import schedule_check_ins
+from services.emailer import send_email
 from services.notifications import notify, notify_admins
 
 
@@ -37,8 +39,19 @@ def change_status(match, new_status, admin):
     match.status = new_status
     if new_status == "active":
         match.confirmed_at = now()
+        schedule_check_ins(match)
+        introduce(match)
     student, mentor = match.student, match.mentor
     notify(student.user_id, f"Your mentoring match with {mentor.user.full_name} is now {new_status}.", match.id)
     notify(mentor.user_id, f"Your match with {student.user.full_name} is now {new_status}.", match.id)
     notify_admins(f"Match {student.user.full_name} / {mentor.user.full_name} is now {new_status}.", match.id)
     return None
+
+
+def introduce(match):
+    """When a match becomes active, each person gets an email with the other person's email address."""
+    student, mentor = match.student.user, match.mentor.user
+    send_email(student, "Your mentor is confirmed",
+               f"{mentor.full_name} is now your mentor. You can reach them at {mentor.email}.", match.id)
+    send_email(mentor, "Your student is confirmed",
+               f"{student.full_name} is now your student. You can reach them at {student.email}.", match.id)

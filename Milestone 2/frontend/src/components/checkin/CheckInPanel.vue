@@ -1,7 +1,8 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { session } from '../../services/auth';
-import { checkInsOf, stateOf, submitCheckIn } from '../../services/checkins';
+import { checkInsOf, stateOf } from '../../services/checkins';
+import { submitCheckIn } from '../../services/actions';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { userName, when } from '../../utils/format';
@@ -25,8 +26,8 @@ const emailOf = m => db.users.find(u => u.id === m[other + 'Id']).email;
 const form = reactive({ rating: 5, comment: '' });
 const error = ref('');
 
-function send(c) {
-  error.value = submitCheckIn(db, c.id, form) || '';
+async function send(c) {
+  error.value = (await submitCheckIn(c.id, form)) || '';
   if (error.value) return;
   commit();
   Object.assign(form, { rating: 5, comment: '' });

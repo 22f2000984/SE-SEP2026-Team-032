@@ -45,6 +45,11 @@ function toMatch(m, studentUserId, mentorUserId) {
 }
 const toFeedback = f => ({ id: f.feedback_id, matchId: f.match_id, authorId: f.author_id, rating: f.rating, comments: f.comments || '', at: utc(f.created_at) });
 const toConcern = c => ({ id: c.concern_id, matchId: c.match_id, raisedBy: c.raised_by, text: c.text, status: c.status, at: utc(c.created_at) });
+const toCheckIn = c => ({
+  id: c.checkin_id, matchId: c.match_id, week: c.week, by: c.by, dueAt: utc(c.due_at), submittedAt: utc(c.submitted_at),
+  rating: c.rating, comment: c.comment || '', reminderSentAt: null,
+  review: c.review ? { verdict: c.review.verdict, reason: c.review.reason, status: c.review.status, source: c.review.source, adminNote: c.review.admin_note || '' } : null
+});
 const notificationsOf = (list, userId) => list.slice().reverse().map(n => ({ id: n.notification_id, userId, text: n.message, at: utc(n.sent_at), read: n.is_read }));
 
 /* ---------- sync: copy the backend's data into db ---------- */
@@ -72,7 +77,7 @@ async function loadAdmin(me) {
 }
 
 async function loadStudent(me) {
-  const [mine, matches, notes, feedback, concerns] = await Promise.all([api('GET', '/api/students/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications'), api('GET', '/api/feedback/me'), api('GET', '/api/concerns/me')]);
+  const [mine, matches, notes, feedback, concerns, checkins] = await Promise.all([api('GET', '/api/students/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications'), api('GET', '/api/feedback/me'), api('GET', '/api/concerns/me'), api('GET', '/api/checkins/me')]);
   const next = { users: [person(mine.profile, 'student')], students: { [me.id]: toStudent(mine.profile) }, mentors: {}, slots: [] };
   next.matches = matches.matches.slice().reverse().map(m => {
     next.users.push(person(m.other, 'mentor')); next.mentors[m.other.user_id] = toMentor(m.other); next.slots.push(...toSlots(m.other));
@@ -81,11 +86,12 @@ async function loadStudent(me) {
   next.notifications = notificationsOf(notes.notifications, me.id);
   next.feedback = feedback.feedback.slice().reverse().map(toFeedback);
   next.concerns = concerns.concerns.slice().reverse().map(toConcern);
+  next.checkins = checkins.checkins.map(toCheckIn);
   return next;
 }
 
 async function loadMentor(me) {
-  const [mine, matches, notes, feedback, concerns] = await Promise.all([api('GET', '/api/mentors/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications'), api('GET', '/api/feedback/me'), api('GET', '/api/concerns/me')]);
+  const [mine, matches, notes, feedback, concerns, checkins] = await Promise.all([api('GET', '/api/mentors/me'), api('GET', '/api/matches/me'), api('GET', '/api/notifications'), api('GET', '/api/feedback/me'), api('GET', '/api/concerns/me'), api('GET', '/api/checkins/me')]);
   const next = { users: [person(mine.profile, 'mentor')], students: {}, mentors: { [me.id]: toMentor(mine.profile) }, slots: toSlots(mine.profile) };
   next.matches = matches.matches.slice().reverse().map(m => {
     next.users.push(person(m.other, 'student')); next.students[m.other.user_id] = toStudent(m.other);
@@ -94,6 +100,7 @@ async function loadMentor(me) {
   next.notifications = notificationsOf(notes.notifications, me.id);
   next.feedback = feedback.feedback.slice().reverse().map(toFeedback);
   next.concerns = concerns.concerns.slice().reverse().map(toConcern);
+  next.checkins = checkins.checkins.map(toCheckIn);
   return next;
 }
 
@@ -109,7 +116,7 @@ export async function syncDb(force = false) {
       m.smartScore = smart.total; m.smartReason = smart.reason;
     });
   }
-  Object.assign(db, next); // checkins, concerns and feedback stay as they are: they are still browser-only previews
+  Object.assign(db, next); // the admin's check-in review queue is not loaded here yet
   lastSync = Date.now();
 }
 
@@ -155,4 +162,5 @@ export const setStatus = (match, to) => change(() => api('PATCH', `/api/admin/ma
 export const setLooking = (_id, looking) => change(() => (looking ? api('POST', '/api/students/me/mentor-request') : api('DELETE', '/api/students/me/mentor-request')));
 export const sendFeedback = (matchId, _authorId, rating, comments) => change(() => api('POST', `/api/matches/${matchId}/feedback`, { rating: Number(rating), comments }));
 export const sendConcern = (matchId, _userId, text) => change(() => api('POST', `/api/matches/${matchId}/concerns`, { text }));
+export const submitCheckIn = (id, f) => change(() => api('POST', `/api/checkins/${id}/answer`, { rating: Number(f.rating), comment: f.comment }));
 export const resolveConcern = id => change(() => api('PATCH', `/api/admin/concerns/${id}`, { status: 'resolved' }));

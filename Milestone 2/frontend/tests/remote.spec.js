@@ -6,6 +6,8 @@ const ANSWERS = {
   'GET /api/admin/students': { students: [{ student_id: 1, user_id: 11, full_name: 'Asha Verma', email: 'asha@ds.study.iitm.ac.in', programme_level: 'Diploma', career_goals: 'Data analytics', skills: 'SQL', needs_text: 'I need a portfolio', mentoring_format: 'Video call', expected_duration: '3 months', preferences: '', availability_note: 'Weekends', topics: ['Data Science'] }] },
   'GET /api/admin/mentors': { mentors: [{ mentor_id: 4, user_id: 12, full_name: 'Dr. Meera Iyer', email: 'meera@mentor.test', qualifications: 'PhD', experience_years: 12, bio: '', skills_text: 'SQL and Python portfolio projects', profile_status: 'verified', max_students: 3, topics: ['Data Science'], availability: [{ slot_id: 7, day_of_week: 'Saturday', start_time: '18:00', end_time: '20:00' }] }] },
   'GET /api/admin/matches': { matches: [{ match_id: 5, student_id: 1, mentor_id: 4, status: 'proposed', mentor_response: 'pending', student_response: 'accepted', match_score: 100, score_reasons: 'x', notes: '', proposed_at: '2026-11-20T10:00:00', student_responded_at: '2026-11-20T11:00:00', mentor_responded_at: null, confirmed_at: null, log: [{ from: '-', to: 'proposed', at: '2026-11-20T10:00:00', by: 'Admin' }] }] },
+  'GET /api/admin/feedback': { feedback: [{ feedback_id: 3, match_id: 5, author_id: 11, rating: 4, comments: 'Helpful', created_at: '2026-11-21T09:00:00' }] },
+  'GET /api/admin/concerns': { concerns: [{ concern_id: 6, match_id: 5, raised_by: 11, text: 'Mentor is late', status: 'open', created_at: '2026-11-21T10:00:00', resolved_at: null }] },
   'GET /api/notifications': { notifications: [{ notification_id: 2, message: 'newer', is_read: false, sent_at: '2026-11-20T12:00:00' }, { notification_id: 1, message: 'older', is_read: false, sent_at: '2026-11-20T10:00:00' }] }
 };
 
@@ -50,6 +52,15 @@ describe('backend mode', () => {
     expect(m.proposedAt).toBe('2026-11-20T10:00:00Z');
     expect(m.log).toHaveLength(1);
     expect(typeof m.smartScore).toBe('number');
+  });
+
+  it('copies feedback and concerns from the backend into db', async () => {
+    const { remote, db } = await loadModules();
+    await remote.login('admin@client.test', 'demo123');
+    expect(db.feedback).toHaveLength(1);
+    expect(db.feedback[0]).toMatchObject({ id: 3, matchId: 5, authorId: 11, rating: 4, comments: 'Helpful' });
+    expect(db.concerns).toHaveLength(1);
+    expect(db.concerns[0]).toMatchObject({ id: 6, matchId: 5, text: 'Mentor is late', status: 'open' });
   });
 
   it('shows notifications oldest first, as the pages expect', async () => {

@@ -1,9 +1,11 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { MIN_SCORE } from '../../config/constants';
 import { waitingStudents } from '../../services/matching';
 import { recommendSmart } from '../../services/smartMatch';
 import { proposeMatch } from '../../services/actions';
+import { API_ON } from '../../services/api';
+import { smartRecommendations } from '../../services/remote';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { session } from '../../services/auth';
@@ -16,7 +18,26 @@ const props = defineProps({ perStudent: { type: Number, default: 1 }, compact: {
 const { db, commit } = useDb();
 const { toast } = useToast();
 
-const rows = computed(() => waitingStudents(db).map(student => ({ student, recs: recommendSmart(db, student.id, props.perStudent) })));
+/* Without the backend the recommendations are worked out in the browser. With it, the backend ranks the mentors
+   (OpenAI when it is on, simple rules otherwise) and says which one it used. */
+const liveRows = ref([]);
+const source = ref('');
+const loadError = ref('');
+
+async function loadLive() {
+  const rowsNow = [];
+  loadError.value = '';
+  for (const student of waitingStudents(db)) {
+    const answer = await smartRecommendations(student.id, props.perStudent);
+    if (answer.error) { loadError.value = answer.error; continue; }
+    source.value = answer.source;
+    rowsNow.push({ student, recs: answer.recs });
+  }
+  liveRows.value = rowsNow;
+}
+if (API_ON) watch(() => waitingStudents(db).map(s => s.id).join(','), loadLive, { immediate: true });
+
+const rows = computed(() => (API_ON ? liveRows.value : waitingStudents(db).map(student => ({ student, recs: recommendSmart(db, student.id, props.perStudent) }))));
 
 async function propose(studentId, mentorId) {
   const error = await proposeMatch(studentId, mentorId, 'Recommended by Smart Match', session.value.name);
@@ -27,6 +48,8 @@ async function propose(studentId, mentorId) {
 </script>
 
 <template>
+  <p v-if="API_ON && source" class="muted">Scored by {{ source === 'ai' ? 'the AI agent (OpenAI)' : 'simple rules (the AI is not switched on or did not answer)' }}.</p>
+  <p v-if="loadError" class="err" role="alert">{{ loadError }}</p>
   <p v-if="!rows.length" class="muted">Every student has an open match.</p>
   <div v-else class="table-wrap">
     <table>

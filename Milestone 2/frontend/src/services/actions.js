@@ -7,7 +7,7 @@ import * as local from './auth';
 import * as profiles from './profiles';
 import * as matches from './matches';
 import * as feedback from './feedback';
-import { submitCheckIn as submitLocalCheckIn } from './checkins';
+import { submitCheckIn as submitLocalCheckIn, markReviewed as markLocalReviewed } from './checkins';
 import * as remote from './remote';
 import { hasOpenMatch } from './matching';
 
@@ -70,3 +70,10 @@ export async function resolveConcern(id) {
 
 /* A student or mentor answers their weekly check-in. Returns an error message, or null when it was saved. */
 export async function submitCheckIn(id, form) { return API_ON ? remote.submitCheckIn(id, form) : submitLocalCheckIn(db, id, form); }
+
+/* The admin marks a flagged check-in as reviewed, with an optional note. Returns an error message, or null. */
+export async function markReviewed(id, note) {
+  if (API_ON) return remote.markReviewed(id, note);
+  markLocalReviewed(db, id, note);
+  return null;
+}

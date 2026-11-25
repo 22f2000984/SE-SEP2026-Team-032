@@ -5,6 +5,7 @@ import { waitingStudents, used, maxOf } from '../../services/matching';
 import { bothAccepted } from '../../services/matches';
 import { proposeMatch, setStatus } from '../../services/actions';
 import { session } from '../../services/auth';
+import { API_ON } from '../../services/api';
 import { useDb } from '../../composables/useDb';
 import { useToast } from '../../composables/useToast';
 import { userName, when } from '../../utils/format';
@@ -70,7 +71,7 @@ async function change(m, event) {
       Smart Match reads what each student and mentor wrote about their needs and skills, and scores every waiting student against each verified mentor with free places, out of 100.
       Unverified mentors and mentors who are full are not shown. A score under {{ MIN_SCORE }} is a weak fit. It only suggests; you decide.
     </p>
-    <p class="muted">Design preview: the AI agent is built in Sprint 2. This page uses an offline stand-in that compares the wording of the two texts and the topics and experience, and gives the same kind of score and reason.</p>
+    <p v-if="!API_ON" class="muted">Design preview: this page uses an offline stand-in that compares the wording of the two texts and the topics and experience, and gives the same kind of score and reason.</p>
     <RecommendationTable :per-student="3" />
   </div>
 

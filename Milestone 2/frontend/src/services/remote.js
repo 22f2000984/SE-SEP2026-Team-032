@@ -50,13 +50,14 @@ const toCheckIn = c => ({
   rating: c.rating, comment: c.comment || '', reminderSentAt: null,
   review: c.review ? { verdict: c.review.verdict, reason: c.review.reason, status: c.review.status, source: c.review.source, adminNote: c.review.admin_note || '' } : null
 });
+const toEmail = e => ({ id: e.email_id, to: e.to_email, text: e.subject + ': ' + e.body, at: utc(e.created_at), status: e.status });
 const notificationsOf = (list, userId) => list.slice().reverse().map(n => ({ id: n.notification_id, userId, text: n.message, at: utc(n.sent_at), read: n.is_read }));
 
 /* ---------- sync: copy the backend's data into db ---------- */
 async function loadAdmin(me) {
-  const [students, mentors, matches, notes, feedback, concerns] = await Promise.all([
+  const [students, mentors, matches, notes, feedback, concerns, emails] = await Promise.all([
     api('GET', '/api/admin/students'), api('GET', '/api/admin/mentors'), api('GET', '/api/admin/matches'), api('GET', '/api/notifications'),
-    api('GET', '/api/admin/feedback'), api('GET', '/api/admin/concerns')
+    api('GET', '/api/admin/feedback'), api('GET', '/api/admin/concerns'), api('GET', '/api/admin/emails')
   ]);
   const toUser = {};
   const next = { users: [{ id: me.id, email: '', name: me.name, role: 'admin' }], students: {}, mentors: {}, slots: [] };
@@ -73,7 +74,16 @@ async function loadAdmin(me) {
   next.notifications = notificationsOf(notes.notifications, me.id);
   next.feedback = feedback.feedback.slice().reverse().map(toFeedback);
   next.concerns = concerns.concerns.slice().reverse().map(toConcern);
+  next.emails = emails.emails.map(toEmail);
+  next.checkins = await loadCheckInsOfActiveMatches(matches.matches);
   return next;
+}
+
+/* The admin has no 'my check-ins' list: ask for the check-ins of each active match, week by week. */
+async function loadCheckInsOfActiveMatches(matchList) {
+  const active = matchList.filter(m => m.status === 'active');
+  const answers = await Promise.all(active.map(m => api('GET', `/api/admin/matches/${m.match_id}/checkins`)));
+  return answers.flatMap(a => a.checkins.map(toCheckIn));
 }
 
 async function loadStudent(me) {
@@ -116,7 +126,7 @@ export async function syncDb(force = false) {
       m.smartScore = smart.total; m.smartReason = smart.reason;
     });
   }
-  Object.assign(db, next); // the admin's check-in review queue is not loaded here yet
+  Object.assign(db, next); // the admin's check-ins and emails are loaded by loadAdmin
   lastSync = Date.now();
 }
 
@@ -164,3 +174,21 @@ export const sendFeedback = (matchId, _authorId, rating, comments) => change(() 
 export const sendConcern = (matchId, _userId, text) => change(() => api('POST', `/api/matches/${matchId}/concerns`, { text }));
 export const submitCheckIn = (id, f) => change(() => api('POST', `/api/checkins/${id}/answer`, { rating: Number(f.rating), comment: f.comment }));
 export const resolveConcern = id => change(() => api('PATCH', `/api/admin/concerns/${id}`, { status: 'resolved' }));
+
+export const markReviewed = (id, note) => change(() => api('PATCH', `/api/admin/checkins/${id}/review`, { note: note || '' }));
+
+/* Smart Match for one waiting student (user id). Returns { recs, source } or { error }.
+   recs use the page's names: mentorId is the mentor's user id, total is the score out of 100. */
+export async function smartRecommendations(studentUserId, limit) {
+  try {
+    const data = await api('GET', `/api/admin/students/${profileId.student[studentUserId]}/smart-recommendations?limit=${limit}`);
+    const userOfMentor = Object.fromEntries(Object.entries(profileId.mentor).map(([user, profile]) => [profile, Number(user)]));
+    const recs = data.recommendations.map(r => ({
+      mentorId: userOfMentor[r.mentor_id], total: r.score, ruleTotal: r.rule_score, reason: r.reasons.join('; '), source: r.source
+    }));
+    return { recs, source: data.source };
+  } catch (e) {
+    if (e instanceof ApiError) return { error: e.message };
+    throw e;
+  }
+}

@@ -15,7 +15,7 @@ function read() {
 }
 
 /* With the backend on, db starts empty and is filled from the API after login (see remote.js). */
-const empty = () => ({ nextId: 100, users: [], students: {}, mentors: {}, slots: [], matches: [], checkins: [], concerns: [], feedback: [], notifications: [] });
+const empty = () => ({ nextId: 100, users: [], students: {}, mentors: {}, slots: [], matches: [], checkins: [], concerns: [], feedback: [], notifications: [], emails: [] });
 export const db = reactive(API_ON ? empty() : read() || createSeed());
 
 /* Save after every change. */

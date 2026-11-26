@@ -1,5 +1,7 @@
 """Creates the fixed topics and the admin account the first time the app starts.
 The admin is the client (IIC team): it is not created through registration."""
+from flask import current_app
+
 from auth_utils import hash_password
 from constants import TOPICS
 from database import db
@@ -16,7 +18,7 @@ def seed_basics():
         if not Topic.query.filter_by(name=name).first():
             db.session.add(Topic(name=name))
     if not User.query.filter_by(email=ADMIN_EMAIL).first():
-        db.session.add(User(email=ADMIN_EMAIL, password_hash=hash_password(ADMIN_PASSWORD), full_name="Admin", role="admin"))
+        db.session.add(User(email=ADMIN_EMAIL, password_hash=hash_password(current_app.config["ADMIN_PASSWORD"] or ADMIN_PASSWORD), full_name="Admin", role="admin"))
     db.session.commit()
 
 

@@ -1184,6 +1184,52 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /api/quiz:
+    get:
+      tags: [Student]
+      summary: The level quiz questions
+      x-user-stories: [US-S03]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: The questions; an answer is the position of the chosen option (0, 1 or 2)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  questions: { type: array, items: { type: object, properties: { question: { type: string }, options: { type: array, items: { type: string } } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/students/me/quiz:
+    post:
+      tags: [Student]
+      summary: Take the level quiz for one topic
+      description: 'Score 0 to 3 is beginner, 4 to 7 intermediate, 8 to 10 advanced. Taking it again replaces the old result. Smart Match shows and uses the level.'
+      x-user-stories: [US-S03]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topic, answers]
+              properties:
+                topic: { type: string }
+                answers: { type: array, items: { type: integer, minimum: 0, maximum: 2 } }
+            example: { topic: Data Science, answers: [1, 1, 1, 1, 1] }
+      responses:
+        '200':
+          description: The result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result: { type: object, properties: { topic: { type: string }, score: { type: integer }, level: { type: string, enum: [beginner, intermediate, advanced] }, taken_at: { type: string, format: date-time } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /api/health:
     get:
       tags: [General]
@@ -1268,6 +1314,7 @@ components:
     StudentProfileInput:
       type: object
       properties:
+        levels: { type: object, additionalProperties: { type: string }, readOnly: true }
         looking_for_mentor: { type: boolean, default: true, description: 'False means the admin does not propose a mentor now' }
         programme_level: { type: string, example: Diploma }
         career_goals: { type: string, maxLength: 500 }

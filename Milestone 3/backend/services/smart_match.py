@@ -54,11 +54,18 @@ def keyword_fit(student, mentor):
     return round(fit), reason
 
 
+def level_reasons(student):
+    """One line with the student's quiz levels, so the admin sees them next to the score."""
+    levels = [f"{r.topic}: {r.level}" for r in student.quiz_results]
+    return ["Student level (quiz): " + ", ".join(levels)] if levels else []
+
+
 def ai_fits(student, mentors):
     """Asks the AI once for all mentors. Returns {mentor_id: (fit, reason)}; empty when the AI is off or failed."""
     answer = ask_json(AI_INSTRUCTIONS, {
         "student": {"needs": student.needs_text, "goals": student.career_goals,
-                    "topics": [t.name for t in student.topics]},
+                    "topics": [t.name for t in student.topics],
+                    "levels": {r.topic: r.level for r in student.quiz_results}},
         "mentors": [{"mentor_id": m.id, "bio": m.bio, "skills": m.skills_text, "qualifications": m.qualifications,
                      "topics": [t.name for t in m.topics]} for m in mentors]})
     fits = {}
@@ -88,7 +95,7 @@ def smart_recommend(student, limit=3):
         total = round((SMART_TEXT_WEIGHT * fit + SMART_RULE_WEIGHT * rule["total"]) / 100)
         results.append({"mentor_id": mentor.id, "mentor_name": mentor.user.full_name, "score": total,
                         "text_fit": fit, "rule_score": rule["total"], "source": source,
-                        "reasons": [reason] + rule["reasons"]})
+                        "reasons": [reason] + rule["reasons"] + level_reasons(student)})
     results.sort(key=lambda r: r["score"], reverse=True)
     overall = "ai" if any(r["source"] == "ai" for r in results) else "rules"
     return results[:limit], overall

@@ -47,7 +47,13 @@ router.beforeEach(async to => {
   if (API_ON) {
     /* With the backend on, the data comes from the API: refresh it on every page change. A wrong or expired token means log in again. */
     if (session.value) {
-      try { await syncDb(); } catch (e) { if (e.status === 401) { logout(); return '/login'; } }
+      try {
+        await syncDb();
+      } catch (e) {
+        /* Log in again when the token is refused, or when there is no data to show (the pages need it). */
+        const noData = !db.users.some(u => u.id === session.value.id);
+        if (e.status === 401 || e.status === 403 || noData) { logout(); return '/login'; }
+      }
     }
   } else if (import.meta.env.DEV && to.query.demo) {
     const { applyDemoState } = await import('../dev/demoStates');

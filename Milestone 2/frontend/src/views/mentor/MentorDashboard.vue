@@ -12,6 +12,7 @@ import PageHeading from '../../components/common/PageHeading.vue';
 import StatusPill from '../../components/common/StatusPill.vue';
 import CapacityBar from '../../components/common/CapacityBar.vue';
 import NotificationList from '../../components/common/NotificationList.vue';
+import FeedbackAndConcern from '../../components/match/FeedbackAndConcern.vue';
 
 const { db, commit } = useDb();
 const { toast } = useToast();
@@ -59,7 +60,7 @@ async function answer(match, value) {
     <h2>My mentees</h2>
     <p class="muted"><CapacityBar :mentor-id="me.id" /></p>
     <ul class="list">
-      <li v-for="m in mentees" :key="m.id"><b>{{ userName(db, m.studentId) }}</b> <StatusPill :value="m.status" /><br /><span class="muted">{{ db.students[m.studentId].goals }} · {{ db.users.find(u => u.id === m.studentId).email }}</span></li>
+      <li v-for="m in mentees" :key="m.id"><b>{{ userName(db, m.studentId) }}</b> <StatusPill :value="m.status" /><br /><span class="muted">{{ db.students[m.studentId].goals }} · {{ db.users.find(u => u.id === m.studentId).email }}</span><FeedbackAndConcern :match-id="m.id" /></li>
       <li v-if="!mentees.length" class="muted">No mentees yet.</li>
     </ul>
   </div>

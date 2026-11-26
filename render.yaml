@@ -1,5 +1,6 @@
 # Render blueprint: creates the backend web service from this repo.
-# Free plan: the service sleeps when idle and the SQLite file is wiped on a restart, so the sample data is loaded again each time.
+# Free plan: the service sleeps when idle. Set DATABASE_URL (Supabase) so the data survives restarts.
+# Variables marked 'sync: false' are typed in the Render dashboard and never stored in git.
 services:
   - type: web
     name: mentor-connect-api
@@ -16,5 +17,17 @@ services:
         value: "1"
       - key: CORS_ORIGINS
         value: "*"
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: JOBS_SECRET
+        sync: false
       - key: PYTHON_VERSION
         value: 3.11.9

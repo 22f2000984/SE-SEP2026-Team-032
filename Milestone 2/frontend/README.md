@@ -1,6 +1,8 @@
-# Team 032 – Mentor Connect: Milestone 2 Frontend (Vue 3)
+# Team 032 – Mentor Connect frontend (Vue 3)
 
-Student Mentoring and Career Support Platform. A Vue 3 + Vite frontend with sample data kept in the browser. There is no backend yet: the data layer is one folder (`src/services`) that the real APIs replace in Sprint 1.
+Student Mentoring and Career Support Platform. A Vue 3 + Vite frontend. Set `VITE_API_URL` to use the Flask backend (see `../../Milestone 3/DEPLOY.md`). Without it the app runs on sample data kept in the browser, with offline stand-ins for the two AI features.
+
+The demo accounts below are for the browser sample data; the backend's demo students use `@ds.study.iitm.ac.in` addresses.
 
 ## Run
 You need Node.js 18 or newer.

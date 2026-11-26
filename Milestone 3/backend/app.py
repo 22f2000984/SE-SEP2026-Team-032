@@ -4,7 +4,7 @@ from flask_cors import CORS
 
 from config import Config
 from database import db
-from routes import admin, auth, checkins, feedback, jobs, matches, notifications, profiles
+from routes import admin, auth, checkins, feedback, jobs, matches, notifications, profiles, quiz
 from seed import seed_basics, seed_demo
 
 
@@ -14,7 +14,7 @@ def create_app(config=Config):
     CORS(app, origins=[o.strip() for o in app.config["CORS_ORIGINS"].split(",")])
     db.init_app(app)
 
-    for module in (auth, profiles, admin, matches, feedback, checkins, jobs, notifications):
+    for module in (auth, profiles, admin, matches, feedback, checkins, jobs, notifications, quiz):
         app.register_blueprint(module.bp)
 
     @app.get("/api/health")

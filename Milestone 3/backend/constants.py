@@ -47,3 +47,20 @@ WORRYING_WORDS = ["not responding", "no response", "cancelled", "canceled", "no 
 SMART_TEXT_WEIGHT = 60   # points from how well the two free-text answers fit
 SMART_RULE_WEIGHT = 40   # points from the rule score (topics and experience)
 SMART_MAX_KEYWORDS = 5
+
+# ---- Level quiz (asked for in the Sprint 1 user feedback) ----
+# A short self-assessment for one topic. Each answer is worth 0, 1 or 2 points (its position in the list).
+QUIZ_QUESTIONS = [
+    {"question": "How long have you been learning this topic?",
+     "options": ["Not started or under 1 month", "1 to 12 months", "More than a year"]},
+    {"question": "What have you built or done in this topic?",
+     "options": ["Nothing yet", "Course exercises or small practice work", "A project or real work on my own"]},
+    {"question": "How well can you explain the basics to a friend?",
+     "options": ["Not yet", "Some of them", "Clearly, with examples"]},
+    {"question": "When you get stuck, what do you usually do?",
+     "options": ["I do not know where to start", "I follow guides until it works", "I find the cause and solve it myself"]},
+    {"question": "What do you want from a mentor?",
+     "options": ["Help to get started", "Help to get better", "Advice on advanced choices"]},
+]
+# Total points 0 to 10 -> level. Each pair is (highest score for this level, level name).
+QUIZ_LEVELS = [(3, "beginner"), (7, "intermediate"), (10, "advanced")]

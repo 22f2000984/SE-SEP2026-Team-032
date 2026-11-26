@@ -73,6 +73,7 @@ class StudentProfile(db.Model):
             "expected_duration": self.expected_duration, "preferences": self.preferences,
             "availability_note": self.availability_note, "topics": [t.name for t in self.topics],
             "looking_for_mentor": self.looking_for_mentor, "updated_at": to_text(self.updated_at),
+            "levels": {r.topic: r.level for r in self.quiz_results},
         }
 
 
@@ -287,3 +288,20 @@ class EmailLog(db.Model):
     def to_dict(self):
         return {"email_id": self.id, "to_email": self.to_email, "subject": self.subject, "body": self.body,
                 "status": self.status, "created_at": to_text(self.created_at)}
+
+
+class QuizResult(db.Model):
+    """The level a student reached in the quiz for one topic."""
+    __tablename__ = "quiz_result"
+    __table_args__ = (db.UniqueConstraint("student_id", "topic"),)
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student_profile.id"), nullable=False)
+    topic = db.Column(db.String(60), nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+    level = db.Column(db.String(20), nullable=False)  # beginner | intermediate | advanced
+    taken_at = db.Column(db.DateTime, default=now)
+
+    student = db.relationship("StudentProfile", backref="quiz_results")
+
+    def to_dict(self):
+        return {"topic": self.topic, "score": self.score, "level": self.level, "taken_at": to_text(self.taken_at)}

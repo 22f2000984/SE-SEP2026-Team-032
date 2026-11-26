@@ -17,7 +17,7 @@ const defined = obj => Object.fromEntries(Object.entries(obj).filter(([, v]) => 
 const toStudent = p => ({
   programme: p.programme_level || '', goals: p.career_goals || '', skills: p.skills || '', needsText: p.needs_text || '',
   topics: p.topics || [], format: p.mentoring_format, duration: p.expected_duration, preferences: p.preferences || '',
-  availability: p.availability_note || '', looking: p.looking_for_mentor !== false
+  availability: p.availability_note || '', looking: p.looking_for_mentor !== false, levels: p.levels || {}
 });
 const fromStudent = f => defined({
   programme_level: f.programme, career_goals: f.goals, skills: f.skills, needs_text: f.needsText, topics: f.topics,
@@ -192,3 +192,14 @@ export async function smartRecommendations(studentUserId, limit) {
     throw e;
   }
 }
+
+/* Level quiz. loadQuiz returns { questions } or { error }; sendQuiz returns an error message or null. */
+export async function loadQuiz() {
+  try {
+    return await api('GET', '/api/quiz');
+  } catch (e) {
+    if (e instanceof ApiError) return { error: e.message };
+    throw e;
+  }
+}
+export const sendQuiz = (topic, answers) => change(() => api('POST', '/api/students/me/quiz', { topic, answers }));

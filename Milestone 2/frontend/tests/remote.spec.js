@@ -147,4 +147,16 @@ describe('backend mode', () => {
       Object.assign(ANSWERS, original);
     }
   });
+
+  it('sends the quiz answers for a topic', async () => {
+    ANSWERS['POST /api/students/me/quiz'] = { result: { topic: 'Data Science', level: 'beginner' } };
+    try {
+      const { remote } = await loadModules();
+      await remote.login('admin@client.test', 'demo123');
+      expect(await remote.sendQuiz('Data Science', [0, 0, 0, 0, 0])).toBeNull();
+      expect(JSON.parse(calls.find(c => c.key === 'POST /api/students/me/quiz').options.body)).toEqual({ topic: 'Data Science', answers: [0, 0, 0, 0, 0] });
+    } finally {
+      delete ANSWERS['POST /api/students/me/quiz'];
+    }
+  });
 });

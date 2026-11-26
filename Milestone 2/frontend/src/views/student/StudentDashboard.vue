@@ -12,6 +12,8 @@ import { latestMatchOf, userName } from '../../utils/format';
 import PageHeading from '../../components/common/PageHeading.vue';
 import StatusPill from '../../components/common/StatusPill.vue';
 import NotificationList from '../../components/common/NotificationList.vue';
+import LevelQuiz from '../../components/student/LevelQuiz.vue';
+import { API_ON } from '../../services/api';
 
 const { db, commit } = useDb();
 const { toast } = useToast();
@@ -75,5 +77,6 @@ async function toggleLooking() {
     <p v-else>Not now: the admin will not propose a mentor to you until you ask for one.</p>
     <div class="actions"><button class="btn" :class="{ ghost: looking }" type="button" @click="toggleLooking">{{ looking ? 'I do not need a mentor now' : 'I need a mentor' }}</button></div>
   </div>
+  <LevelQuiz v-if="API_ON" />
   <div class="card"><h2>Notifications</h2><NotificationList :items="notes" /></div>
 </template>

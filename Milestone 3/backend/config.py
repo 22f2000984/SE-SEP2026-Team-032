@@ -10,7 +10,7 @@ except ImportError:
 
 def database_url():
     """DATABASE_URL as given by Supabase or Render. SQLAlchemy wants 'postgresql://', and Supabase needs SSL."""
-    url = os.environ.get("DATABASE_URL", "sqlite:///mentor_connect.db")
+    url = os.environ.get("DATABASE_URL") or "sqlite:///mentor_connect.db"  # an empty value also means SQLite
     if url.startswith("postgres://"):
         url = "postgresql://" + url[len("postgres://"):]
     if url.startswith("postgresql") and "sslmode" not in url:
@@ -19,7 +19,9 @@ def database_url():
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "mentor-connect-dev-secret-key-change-in-production")
+    SECRET_KEY = os.environ.get("SECRET_KEY") or "mentor-connect-dev-secret-key-change-in-production"
+    # Password of the admin account created on the first start. Set your own on the live site.
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
     SQLALCHEMY_DATABASE_URI = database_url()
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}  # reconnect if the database closed an idle connection
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -32,11 +34,11 @@ class Config:
 
     # OpenAI (Smart Match and Pulse review). Leave the key empty and the app uses its simple rules instead.
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-    OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    OPENAI_MODEL = os.environ.get("OPENAI_MODEL") or "gpt-4o-mini"
     # Brevo (emails). Leave the key empty and emails are only saved in the email log and as notifications.
     BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
     EMAIL_FROM = os.environ.get("EMAIL_FROM", "")  # a sender address you verified in Brevo
-    EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME", "Mentor Connect")
+    EMAIL_FROM_NAME = os.environ.get("EMAIL_FROM_NAME") or "Mentor Connect"
     # The scheduled job (GitHub Actions) sends this secret in the X-Job-Secret header. Empty means the job is switched off.
     JOBS_SECRET = os.environ.get("JOBS_SECRET", "")
 
@@ -47,4 +49,6 @@ class TestConfig(Config):
     OPENAI_API_KEY = ""   # the tests never call OpenAI or Brevo
     BREVO_API_KEY = ""
     JOBS_SECRET = "test-job-secret"
+    ADMIN_PASSWORD = ""   # the tests use the default admin password
+    LOAD_DEMO_DATA = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"

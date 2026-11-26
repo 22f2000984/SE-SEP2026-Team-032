@@ -21,7 +21,7 @@ Open `swagger.yaml` in https://editor.swagger.io to read the API.
 ## Run the tests
 
 ```bash
-pytest -v                         # 146 tests; each test uses its own in-memory database (no keys needed)
+pytest -v                         # 151 tests; each test uses its own in-memory database (no keys needed)
 ```
 
 After a run, `tests/test_cases.md` holds the test-case table (API, inputs, expected output, actual output, result).
@@ -36,10 +36,10 @@ After a run, `tests/test_cases.md` holds the test-case table (API, inputs, expec
 | `auth_utils.py` | Passwords, login tokens, `login_required` and `role_required` |
 | `validators.py` | Input checks that return an error message or `None` |
 | `responses.py` | The one error format `{"error": "message"}` |
-| `routes/` | One file per area: `auth`, `profiles`, `admin`, `matches`, `feedback`, `checkins`, `notifications`, `jobs` (thin: read input, call a function, return JSON) |
+| `routes/` | One file per area: `auth`, `profiles`, `admin`, `matches`, `feedback`, `checkins`, `notifications`, `quiz`, `jobs` (thin: read input, call a function, return JSON) |
 | `services/` | The logic: `matching`, `profiles`, `match_flow`, `notifications` |
 | | `checkins`, `pulse_review`, `reminders` (Mentorship Pulse) |
-| | `smart_match`, `ai` (OpenAI), `emailer` (Brevo), `readiness`, `analytics` |
+| | `smart_match`, `ai` (OpenAI), `emailer` (Brevo), `quiz`, `readiness`, `analytics` |
 | `seed.py` | Topics and the admin account, and optional sample people (`LOAD_DEMO_DATA=1`) |
 | `swagger.yaml` | The API description with user-story mapping and errors |
 | `tests/` | pytest tests |

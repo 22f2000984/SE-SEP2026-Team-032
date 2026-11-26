@@ -6,5 +6,5 @@ import { API_ON } from '../services/api';
 <template>
   <AppHeader />
   <main class="page"><slot /></main>
-  <footer class="page-footer">Team 032 – Himalayan Coders · {{ API_ON ? 'Connected to the Sprint 1 backend' : 'Milestone 2 frontend prototype (sample data, no backend)' }}</footer>
+  <footer class="page-footer">Team 032 – Himalayan Coders · {{ API_ON ? 'Connected to the Mentor Connect backend' : 'Milestone 2 frontend prototype (sample data, no backend)' }}</footer>
 </template>

@@ -4,6 +4,7 @@ import { MIN_SCORE } from '../../config/constants';
 import { eligible } from '../../services/matching';
 import { smartScore } from '../../services/smartMatch';
 import { slotText } from '../../services/profiles';
+import { API_ON } from '../../services/api';
 import { useDb } from '../../composables/useDb';
 import { topicsText } from '../../utils/format';
 import ScoreBar from '../common/ScoreBar.vue';
@@ -45,9 +46,10 @@ const problem = computed(() => (score.value ? eligible(db, props.studentId, prop
       </div>
     </div>
     <div class="info">
-      <b>Smart Match score:</b> <ScoreBar :total="score.total" /> &nbsp;
+      <b>{{ API_ON ? 'Quick estimate:' : 'Smart Match score:' }}</b> <ScoreBar :total="score.total" /> &nbsp;
       <span class="muted">rule score (topics and experience) {{ score.ruleTotal }}/100</span><br />
       {{ score.reason }}
+      <template v-if="API_ON"><br /><span class="muted">Worked out in your browser. The Smart Match scores are in the table above.</span></template>
       <template v-if="score.total < MIN_SCORE"><br /><b>Weak fit.</b> You can still propose it.</template>
       <template v-if="problem"><br /><b>{{ problem }}</b></template>
     </div>
